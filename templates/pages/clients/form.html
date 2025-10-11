@@ -1,0 +1,704 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}{% if client %}Editar{% else %}Nova{% endif %} Pessoa{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Clientes', 'url': url_for('admin.clients_list')},
+    {'name': 'Gestão de Pessoas', 'url': url_for('admin.clients_list')},
+    {'name': 'Editar Pessoa' if client else 'Nova Pessoa'}
+]) }}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tab-content {
+        display: none;
+    }
+    .tab-content.active {
+        display: block;
+    }
+    /* Hover apenas em tabs inativas */
+    .tab-item:not(.tab-active):hover {
+        color: #374151; /* text-gray-700 */
+        border-bottom-color: #d1d5db; /* border-gray-300 */
+    }
+
+    /* Day Picker Calendar */
+    .day-picker {
+        position: absolute;
+        z-index: 1000;
+        background: white;
+        border: 2px solid #3b82f6;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        padding: 16px;
+        margin-top: 4px;
+        display: none;
+    }
+    .day-picker.show {
+        display: block;
+    }
+    .day-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 6px;
+    }
+    .day-item {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+    }
+    .day-item:hover {
+        background: #dbeafe;
+        border-color: #3b82f6;
+        transform: scale(1.1);
+    }
+    .day-item.selected {
+        background: #3b82f6;
+        color: white;
+        border-color: #2563eb;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            <div class="flex items-center">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+                    <i class="fas fa-user-tie text-white text-2xl sm:text-3xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
+                        {% if client %}{{ client.name }}{% else %}Nova Pessoa{% endif %}
+                    </h1>
+                    <p class="text-sm sm:text-base text-gray-600">
+                        {% if client %}
+                            Editando cadastro - {{ client.document }}
+                        {% else %}
+                            Preencha os dados para cadastrar
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ url_for('admin.clients_list') }}"
+                   class="inline-flex items-center px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-all">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Voltar
+                </a>
+                <button type="submit" form="client-form"
+                        class="inline-flex items-center px-8 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg">
+                    <i class="fas fa-save mr-2"></i>
+                    Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="mb-6 p-4 rounded-xl {% if category == 'success' %}bg-green-100 text-green-700{% elif category == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %} animate-fade-in">
+                    <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} mr-2"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Formulário -->
+    <div class="card animate-fade-in">
+        <form id="client-form" action="{% if client %}{{ url_for('admin.client_update', client_id=client.id) }}{% else %}{{ url_for('admin.client_create') }}{% endif %}" method="POST">
+
+        <!-- Tabs Navigation -->
+        <div class="flex gap-6 md:gap-8 border-b-2 border-gray-200 px-4 md:px-6 py-2 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300">
+            <div class="tab-item tab-active py-3 font-semibold text-blue-600 border-b-4 border-blue-600 cursor-pointer transition-all whitespace-nowrap flex-shrink-0 active" data-tab="pessoa">
+                Pessoa
+            </div>
+            <div class="tab-item py-3 font-semibold text-gray-500 border-b-4 border-transparent cursor-pointer transition-all whitespace-nowrap flex-shrink-0" data-tab="cobranca">
+                Cobrança
+            </div>
+            <div class="tab-item py-3 font-semibold text-gray-500 border-b-4 border-transparent cursor-pointer transition-all whitespace-nowrap flex-shrink-0" data-tab="enderecos">
+                Endereços
+            </div>
+            <div class="tab-item py-3 font-semibold text-gray-500 border-b-4 border-transparent cursor-pointer transition-all whitespace-nowrap flex-shrink-0" data-tab="modulos">
+                Módulos
+            </div>
+            <div class="tab-item py-3 font-semibold text-gray-500 border-b-4 border-transparent cursor-pointer transition-all whitespace-nowrap flex-shrink-0" data-tab="contatos">
+                Contatos
+            </div>
+        </div>
+
+        <!-- Form Content -->
+        <div class="p-4 md:p-6 lg:p-8">
+            <!-- Tab: Pessoa -->
+            <div class="tab-content active" id="tab-pessoa">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                        <i class="fas fa-user-circle text-blue-600 mr-2"></i>
+                        Informações da Organização
+                    </h3>
+
+                    {% if client %}
+                    <!-- Toggle Ativo/Inativo -->
+                    <div class="inline-flex border border-green-500 rounded-lg overflow-hidden">
+                        <button type="button" class="status-btn px-6 py-2 bg-green-500 text-white font-semibold text-sm transition-all hover:bg-green-600">
+                            ATIVO
+                        </button>
+                        <button type="button" class="status-btn px-6 py-2 bg-white text-green-500 font-semibold text-sm transition-all hover:bg-gray-50">
+                            INATIVO
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Nome e Documento -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6">
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-red-600 uppercase mb-2">Nome / Razão Social *</label>
+                        <input type="text" id="name" name="name" value="{{ client.name if client else '' }}"
+                               placeholder="Nome da Organização"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-red-600 uppercase mb-2">CNPJ / CPF *</label>
+                        <input type="text" id="document" name="document" value="{{ client.document if client else '' }}"
+                               placeholder="00.000.000/0000-00"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    </div>
+                </div>
+
+                <!-- Email e Telefone -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Email</label>
+                        <input type="email" id="email" name="email" value="{{ client.email if client else '' }}"
+                               placeholder="contato@empresa.com"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Telefone</label>
+                        <input type="tel" id="phone" name="phone" value="{{ client.phone if client else '' }}"
+                               placeholder="(00) 00000-0000"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    </div>
+                </div>
+
+                <!-- Vinculação Movidesk -->
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-link text-blue-600 mr-2"></i>
+                        Vinculação com Organizações do Movidesk
+                    </h3>
+
+                    {% if client and client.organizations %}
+                        <div class="space-y-3 mb-4">
+                            {% for org in client.organizations %}
+                                <div class="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-xl">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center text-white mr-3">
+                                            <i class="fas fa-building"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-bold text-gray-900">{{ org.business_name }}</div>
+                                            <div class="text-xs text-gray-600">ID: {{ org.id }}</div>
+                                        </div>
+                                    </div>
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                                        <i class="fas fa-check-circle mr-1"></i>
+                                        Vinculado
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
+                            <p class="text-sm text-gray-700 flex items-center">
+                                <i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
+                                Este cliente ainda não está vinculado a nenhuma organização do Movidesk
+                            </p>
+                        </div>
+                    {% endif %}
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                        <p class="text-sm text-gray-700 flex items-center">
+                            <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                            Para vincular ou gerenciar organizações, acesse
+                            <a href="{{ url_for('admin.movidesk_organizations') }}" class="text-blue-600 hover:text-blue-700 font-semibold mx-1">
+                                Integrações → Movidesk → Organizações
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Cobrança -->
+            <div class="tab-content" id="tab-cobranca">
+                <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                    <i class="fas fa-calendar-alt text-blue-600 mr-2"></i>
+                    Período de Cobrança
+                </h3>
+
+                <!-- Descrição dos Tipos -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8">
+                    <!-- Ciclo Fixo -->
+                    <div class="border-2 border-blue-200 bg-blue-50 rounded-xl p-4">
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white mr-3 flex-shrink-0">
+                                <i class="fas fa-calendar-day text-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-gray-900 mb-1">Ciclo Fixo</h4>
+                                <p class="text-xs text-gray-700">
+                                    Define um dia específico do mês para início e fim do ciclo
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ciclo Mensal -->
+                    <div class="border-2 border-green-200 bg-green-50 rounded-xl p-4">
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center text-white mr-3 flex-shrink-0">
+                                <i class="fas fa-calendar text-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-gray-900 mb-1">Ciclo Mensal</h4>
+                                <p class="text-xs text-gray-700">
+                                    Segue o calendário mensal, do primeiro ao último dia
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tipo de Ciclo -->
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-red-600 uppercase mb-2">Tipo de Ciclo *</label>
+                    <select id="billing_cycle_type" name="billing_cycle_type"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <option value="">Selecione o tipo de ciclo</option>
+                        <option value="fixo" {% if client and client.billing_cycle_type == 'fixo' %}selected{% endif %}>Ciclo Fixo</option>
+                        <option value="mensal" {% if client and client.billing_cycle_type == 'mensal' %}selected{% endif %}>Ciclo Mensal</option>
+                    </select>
+                    <p class="mt-2 text-xs text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Escolha como será calculado o período de cobrança
+                    </p>
+                </div>
+
+                <!-- Configuração Ciclo Mensal -->
+                <div id="config-ciclo-mensal" class="hidden">
+                    <div class="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-xl p-6 mb-6">
+                        <h4 class="text-md font-bold text-gray-900 mb-4 flex items-center">
+                            <i class="fas fa-cog text-green-600 mr-2"></i>
+                            Configuração do Ciclo Mensal
+                        </h4>
+
+                        <div class="bg-white rounded-lg p-4">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center text-white mr-4 flex-shrink-0">
+                                    <i class="fas fa-check text-2xl"></i>
+                                </div>
+                                <div>
+                                    <h5 class="text-sm font-bold text-gray-900 mb-2">Configuração Automática</h5>
+                                    <p class="text-xs text-gray-700 mb-3">
+                                        O ciclo mensal não requer configuração adicional. O sistema automaticamente considerará:
+                                    </p>
+                                    <ul class="space-y-2 text-xs text-gray-600">
+                                        <li class="flex items-center">
+                                            <i class="fas fa-arrow-right text-green-500 mr-2"></i>
+                                            <strong>Início:</strong> Dia 01 de cada mês
+                                        </li>
+                                        <li class="flex items-center">
+                                            <i class="fas fa-arrow-right text-green-500 mr-2"></i>
+                                            <strong>Fim:</strong> Último dia do mês (28, 29, 30 ou 31)
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configuração Ciclo Fixo -->
+                <div id="config-ciclo-fixo" class="hidden">
+                    <div class="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6 mb-6">
+                        <h4 class="text-md font-bold text-gray-900 mb-4 flex items-center">
+                            <i class="fas fa-cog text-blue-600 mr-2"></i>
+                            Configuração do Ciclo Fixo
+                        </h4>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                            <div class="relative">
+                                <label class="block text-xs font-bold text-red-600 uppercase mb-2">Dia de Início *</label>
+                                <div class="relative">
+                                    <input type="text" id="fixed_start_day" name="fixed_start_day"
+                                           readonly
+                                           value="{{ client.fixed_start_day if client and client.fixed_start_day else '' }}"
+                                           placeholder="Selecione o dia"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer">
+                                    <i class="fas fa-calendar-day absolute right-4 top-1/2 transform -translate-y-1/2 text-blue-600 pointer-events-none"></i>
+                                </div>
+
+                                <!-- Day Picker Dropdown -->
+                                <div id="day-picker" class="day-picker">
+                                    <div class="text-center mb-3">
+                                        <h4 class="text-sm font-bold text-gray-900">Selecione o Dia do Mês</h4>
+                                    </div>
+                                    <div class="day-grid" id="day-grid">
+                                        <!-- Dias serão gerados via JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Dia de Fim</label>
+                                <div class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-100 text-gray-600">
+                                    <i class="fas fa-sync-alt mr-2"></i>
+                                    Mesmo dia do mês seguinte
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 bg-white rounded-lg p-4">
+                            <p class="text-xs text-gray-700">
+                                <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                                <strong>Como funciona:</strong> Se você escolher o dia <strong>12</strong>, o ciclo iniciará no dia 12 do mês atual e finalizará no dia 12 do mês seguinte.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informações Adicionais -->
+                <div class="border-l-4 border-blue-500 bg-blue-50 p-4 rounded-r-xl">
+                    <h4 class="text-sm font-bold text-gray-900 mb-2">
+                        <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                        Informações Importantes
+                    </h4>
+                    <ul class="space-y-1 text-xs text-gray-700">
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                            <span>O período de cobrança define quando os tickets e serviços serão contabilizados</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                            <span>Esta configuração afeta relatórios e fechamentos mensais</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                            <span>Você pode alterar o tipo de ciclo a qualquer momento</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Tab: Endereços -->
+            <div class="tab-content" id="tab-enderecos">
+                <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                    <i class="fas fa-map-marker-alt text-blue-600 mr-2"></i>
+                    Endereços
+                </h3>
+
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Endereço Completo</label>
+                    <input type="text" id="address" name="address" value="{{ client.address if client else '' }}"
+                           placeholder="Rua, Número, Complemento"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Cidade</label>
+                        <input type="text" id="city" name="city" value="{{ client.city if client else '' }}"
+                               placeholder="Cidade"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Estado</label>
+                        <input type="text" id="state" name="state" value="{{ client.state if client else '' }}"
+                               maxlength="2" placeholder="UF"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-2">CEP</label>
+                        <input type="text" id="zipcode" name="zipcode" value="{{ client.zipcode if client else '' }}"
+                               placeholder="00000-000"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Módulos -->
+            <div class="tab-content" id="tab-modulos">
+                <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                    <i class="fas fa-th-large text-blue-600 mr-2"></i>
+                    Módulos do Sistema
+                </h3>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-8 text-center">
+                    <i class="fas fa-th-large text-gray-300 text-5xl mb-4"></i>
+                    <p class="text-gray-500">Módulos e permissões serão exibidos aqui.</p>
+                </div>
+            </div>
+
+            <!-- Tab: Contatos -->
+            <div class="tab-content" id="tab-contatos">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                        <i class="fas fa-users text-blue-600 mr-2"></i>
+                        Pessoas de Contato
+                    </h3>
+                    <button type="button" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all shadow-md hover:shadow-lg">
+                        <i class="fas fa-plus mr-2"></i>
+                        Adicionar Contato
+                    </button>
+                </div>
+
+                <div class="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-12 text-center">
+                    <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-users text-gray-400 text-4xl"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-700 mb-2">Nenhum contato cadastrado</h4>
+                    <p class="text-gray-500 mb-4">Adicione pessoas de contato desta organização</p>
+                </div>
+
+                <!-- Lista de contatos será exibida aqui -->
+                <div id="contacts-list" class="mt-6 space-y-4">
+                    <!-- Contatos serão listados dinamicamente -->
+                </div>
+            </div>
+        </div>
+        </form>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // ===== MÁSCARAS DE ENTRADA =====
+
+    // Máscara de CPF/CNPJ com alternância automática
+    var options = {
+        onKeyPress: function(val, e, field, options) {
+            var masks = ['000.000.000-000', '00.000.000/0000-00'];
+            var mask = (val.replace(/\D/g, '').length > 11) ? masks[1] : masks[0];
+            $('#document').mask(mask, options);
+        }
+    };
+    $('#document').mask('000.000.000-000', options);
+
+    // Máscara de telefone com alternância celular/fixo
+    var phoneBehavior = function (val) {
+        return val.replace(/\D/g, '').length === 11 ? '(00) 00000-0000' : '(00) 0000-00009';
+    };
+    var phoneOptions = {
+        onKeyPress: function(val, e, field, options) {
+            $('#phone').mask(phoneBehavior(val), options);
+        }
+    };
+    $('#phone').mask(phoneBehavior($('#phone').val()), phoneOptions);
+
+    // Máscara de CEP
+    $('#zipcode').mask('00000-000');
+
+    // Máscara de Estado (apenas letras, max 2)
+    $('#state').mask('AA');
+
+    // ===== FIM MÁSCARAS =====
+
+    // ===== VALIDAÇÃO DO FORMULÁRIO =====
+    $('#client-form').on('submit', function(e) {
+        var errors = [];
+
+        // Validar Nome
+        var name = $('#name').val().trim();
+        if (!name) {
+            errors.push({field: '#name', message: 'O campo "Nome / Razão Social" é obrigatório'});
+        }
+
+        // Validar Documento
+        var document = $('#document').val().trim();
+        if (!document) {
+            errors.push({field: '#document', message: 'O campo "CNPJ / CPF" é obrigatório'});
+        }
+
+        // Validar Tipo de Ciclo
+        var billingCycleType = $('#billing_cycle_type').val();
+        if (!billingCycleType) {
+            errors.push({field: '#billing_cycle_type', message: 'O campo "Tipo de Ciclo" é obrigatório'});
+        }
+
+        // Validar Dia de Início (se ciclo fixo)
+        if (billingCycleType === 'fixo') {
+            var fixedStartDay = $('#fixed_start_day').val().trim();
+            if (!fixedStartDay) {
+                errors.push({field: '#fixed_start_day', message: 'Para ciclo fixo, o campo "Dia de Início" é obrigatório'});
+            }
+        }
+
+        // Se houver erros, impedir o envio e mostrar mensagens
+        if (errors.length > 0) {
+            e.preventDefault();
+
+            // Remover estilos de erro anteriores
+            $('.border-red-500').removeClass('border-red-500').addClass('border-gray-300');
+            $('.text-red-600').remove();
+
+            // Adicionar estilos de erro
+            errors.forEach(function(error) {
+                var field = $(error.field);
+                field.removeClass('border-gray-300').addClass('border-red-500');
+
+                // Adicionar mensagem de erro abaixo do campo
+                field.after('<p class="text-red-600 text-xs mt-1"><i class="fas fa-exclamation-circle mr-1"></i>' + error.message + '</p>');
+            });
+
+            // Navegar para a aba do PRIMEIRO campo com erro
+            var firstErrorField = $(errors[0].field);
+            var firstErrorTab = firstErrorField.closest('.tab-content').attr('id');
+            if (firstErrorTab) {
+                var tabName = firstErrorTab.replace('tab-', '');
+                $('.tab-item[data-tab="' + tabName + '"]').click();
+
+                // Aguardar a transição da aba e depois fazer o scroll
+                setTimeout(function() {
+                    $('html, body').animate({
+                        scrollTop: firstErrorField.offset().top - 150
+                    }, 300);
+                }, 100);
+            }
+
+            return false;
+        }
+    });
+
+    // Remover estilo de erro ao digitar
+    $('#name, #document, #billing_cycle_type, #fixed_start_day').on('input change', function() {
+        $(this).removeClass('border-red-500').addClass('border-gray-300');
+        $(this).next('.text-red-600').remove();
+    });
+
+    // ===== FIM VALIDAÇÃO =====
+
+    // Toggle status buttons usando jQuery com Tailwind
+    $('.status-btn').on('click', function() {
+        $('.status-btn').each(function() {
+            $(this).removeClass('bg-green-500 text-white').addClass('bg-white text-green-500');
+        });
+        $(this).removeClass('bg-white text-green-500').addClass('bg-green-500 text-white');
+    });
+
+    // Tab navigation usando jQuery com Tailwind
+    $('.tab-item').on('click', function() {
+        const tabName = $(this).data('tab');
+
+        // Remove active state from all tabs
+        $('.tab-item').each(function() {
+            $(this).removeClass('text-blue-600 border-blue-600 tab-active').addClass('text-gray-500 border-transparent');
+        });
+
+        // Remove active from all tab contents
+        $('.tab-content').removeClass('active');
+
+        // Add active state to clicked tab
+        $(this).removeClass('text-gray-500 border-transparent').addClass('text-blue-600 border-blue-600 tab-active');
+
+        // Show corresponding content
+        $('#tab-' + tabName).addClass('active');
+    });
+
+    // Controle do tipo de ciclo de cobrança
+    const billingCycleType = $('#billing_cycle_type');
+    const configCicloFixo = $('#config-ciclo-fixo');
+    const configCicloMensal = $('#config-ciclo-mensal');
+    const fixedStartDay = $('#fixed_start_day');
+
+    // Função para mostrar/ocultar configurações baseado no tipo de ciclo
+    function toggleBillingCycleConfig() {
+        const selectedType = billingCycleType.val();
+
+        // Esconder todos
+        configCicloFixo.addClass('hidden');
+        configCicloMensal.addClass('hidden');
+
+        // Mostrar o selecionado
+        if (selectedType === 'fixo') {
+            configCicloFixo.removeClass('hidden');
+        } else if (selectedType === 'mensal') {
+            configCicloMensal.removeClass('hidden');
+        }
+    }
+
+    // Executar ao mudar o tipo de ciclo
+    billingCycleType.on('change', toggleBillingCycleConfig);
+
+    // Executar ao carregar a página (para modo de edição)
+    toggleBillingCycleConfig();
+
+    // Day Picker Calendar
+    const dayInput = $('#fixed_start_day');
+    const dayPicker = $('#day-picker');
+    const dayGrid = $('#day-grid');
+
+    // Gerar dias do mês (1-31)
+    for (let day = 1; day <= 31; day++) {
+        const dayItem = $('<div>')
+            .addClass('day-item')
+            .text(day)
+            .data('day', day)
+            .on('click', function() {
+                const selectedDay = $(this).data('day');
+                dayInput.val(selectedDay);
+
+                // Remover seleção anterior
+                $('.day-item').removeClass('selected');
+
+                // Adicionar seleção atual
+                $(this).addClass('selected');
+
+                // Fechar o picker
+                dayPicker.removeClass('show');
+            });
+
+        dayGrid.append(dayItem);
+    }
+
+    // Abrir/fechar o day picker
+    dayInput.on('click', function(e) {
+        e.stopPropagation();
+        dayPicker.toggleClass('show');
+
+        // Marcar o dia selecionado
+        const currentValue = dayInput.val();
+        if (currentValue) {
+            $('.day-item').removeClass('selected');
+            $('.day-item').filter(function() {
+                return $(this).data('day') == currentValue;
+            }).addClass('selected');
+        }
+    });
+
+    // Fechar ao clicar fora
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.day-picker').length && !$(e.target).closest('#fixed_start_day').length) {
+            dayPicker.removeClass('show');
+        }
+    });
+});
+</script>
+{% endblock %}

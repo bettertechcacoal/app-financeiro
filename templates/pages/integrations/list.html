@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}Integrações{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Integrações'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Integrações</h1>
+        <p class="text-gray-600">Conecte seu sistema com outras plataformas</p>
+    </div>
+
+    <!-- Lista de Integrações -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for integration in integrations %}
+        <a href="{{ url_for('admin.movidesk_options') }}" class="block">
+            <div class="card p-6 hover:shadow-xl transition-all cursor-pointer animate-fade-in">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-{{ integration.color }}-500 to-{{ integration.color }}-600 rounded-2xl flex items-center justify-center shadow-lg">
+                        <i class="fas {{ integration.icon }} text-white text-2xl"></i>
+                    </div>
+                    <span class="badge bg-green-100 text-green-700 text-xs">
+                        <i class="fas fa-check-circle mr-1"></i>
+                        Disponível
+                    </span>
+                </div>
+
+                <h3 class="text-xl font-bold text-gray-900 mb-2">{{ integration.name }}</h3>
+                <p class="text-sm text-gray-600 mb-4">{{ integration.description }}</p>
+
+                <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <span class="text-sm font-semibold text-{{ integration.color }}-600">Acessar</span>
+                    <i class="fas fa-arrow-right text-{{ integration.color }}-600"></i>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Botão Voltar -->
+    <div class="mt-8 animate-fade-in">
+        <a href="{{ url_for('admin.dashboard') }}" class="text-blue-600 hover:text-blue-700 font-semibold">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Voltar ao Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

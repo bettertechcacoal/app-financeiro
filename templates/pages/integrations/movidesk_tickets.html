@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}Sincronizar Tickets - Movidesk{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Integrações', 'url': url_for('admin.integrations_list')},
+    {'name': 'Movidesk', 'url': url_for('admin.movidesk_options')},
+    {'name': 'Tickets'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex items-center mb-4">
+            <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg mr-4">
+                <i class="fas fa-ticket-alt text-white text-3xl"></i>
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-1">Sincronizar Tickets</h1>
+                <p class="text-gray-600">Importe tickets do Movidesk para seu sistema</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="mb-6 p-4 rounded-xl {% if category == 'success' %}bg-green-100 text-green-700{% elif category == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %} animate-fade-in">
+                    <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} mr-2"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Card de Sincronização -->
+    <div class="card p-8 animate-fade-in">
+        <div class="bg-green-50 border border-green-200 rounded-xl p-6 mb-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-3 flex items-center">
+                <i class="fas fa-info-circle text-green-600 mr-2"></i>
+                Como funciona?
+            </h3>
+            <ul class="space-y-2 text-sm text-gray-700">
+                <li class="flex items-start">
+                    <i class="fas fa-check text-green-600 mr-2 mt-1"></i>
+                    <span>Selecione um período de até 5 dias para sincronização</span>
+                </li>
+                <li class="flex items-start">
+                    <i class="fas fa-check text-green-600 mr-2 mt-1"></i>
+                    <span>Os tickets serão buscados diretamente da API do Movidesk</span>
+                </li>
+                <li class="flex items-start">
+                    <i class="fas fa-check text-green-600 mr-2 mt-1"></i>
+                    <span>Tickets existentes serão atualizados com os novos dados</span>
+                </li>
+                <li class="flex items-start">
+                    <i class="fas fa-check text-green-600 mr-2 mt-1"></i>
+                    <span>Após a sincronização, os tickets estarão disponíveis no sistema</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Seleção de Período -->
+        <div class="mb-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-calendar-alt text-green-600 mr-2"></i>
+                Período de Sincronização
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="startDate" class="block text-sm font-semibold text-gray-700 mb-2">Data Inicial *</label>
+                    <input type="date" id="startDate" required
+                           class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all">
+                </div>
+                <div>
+                    <label for="endDate" class="block text-sm font-semibold text-gray-700 mb-2">Data Final *</label>
+                    <input type="date" id="endDate" required
+                           class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all">
+                </div>
+            </div>
+            <div id="dateError" class="mt-2 text-sm text-red-600 hidden">
+                <i class="fas fa-exclamation-circle mr-1"></i>
+                <span id="dateErrorMsg"></span>
+            </div>
+        </div>
+
+        <!-- Mensagem de Progresso -->
+        <div id="syncMessage" class="mb-6"></div>
+
+        <!-- Botão de Sincronização -->
+        <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+            <a href="{{ url_for('admin.movidesk_options') }}" class="text-gray-600 hover:text-gray-700 font-semibold">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Voltar
+            </a>
+            <button onclick="syncTickets()" id="syncButton" class="btn-primary text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
+                <i class="fas fa-sync-alt mr-2"></i>
+                Sincronizar Agora
+            </button>
+        </div>
+    </div>
+
+    <!-- Estatísticas Permanentes -->
+    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
+        <!-- Total de Tickets -->
+        <div class="card p-6 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <span class="text-sm font-semibold text-gray-700 block mb-1">Total de Tickets</span>
+                    <span class="text-xs text-gray-500">Sincronizados no sistema</span>
+                </div>
+                <div class="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-ticket-alt text-white text-xl"></i>
+                </div>
+            </div>
+            <p class="text-5xl font-bold text-green-600" id="totalTickets">{{ stats.total }}</p>
+        </div>
+
+        <!-- Última Sincronização -->
+        <div class="card p-6 bg-gradient-to-br from-blue-50 to-sky-50 border-2 border-blue-200">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <span class="text-sm font-semibold text-gray-700 block mb-1">Última Sincronização</span>
+                    <span class="text-xs text-gray-500" id="lastSyncLabel">
+                        {% if stats.last_sync %}
+                            {{ stats.last_sync.synced_at[:16].replace('T', ' às ') if stats.last_sync.synced_at else 'Não disponível' }}
+                        {% else %}
+                            Nenhuma sincronização realizada
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-sync-alt text-white text-xl"></i>
+                </div>
+            </div>
+            <div id="lastSyncInfo">
+                {% if stats.last_sync %}
+                    <p class="text-2xl font-bold text-blue-600">
+                        <span id="syncedCount">{{ stats.last_sync.synced }}</span> novos
+                    </p>
+                    <p class="text-lg font-semibold text-gray-600 mt-1">
+                        <span id="updatedCount">{{ stats.last_sync.updated }}</span> atualizados
+                    </p>
+                {% else %}
+                    <p class="text-2xl font-bold text-blue-600">
+                        <span id="syncedCount">0</span> novos
+                    </p>
+                    <p class="text-lg font-semibold text-gray-600 mt-1">
+                        <span id="updatedCount">0</span> atualizados
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Definir data padrão (hoje)
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    document.getElementById('endDate').value = todayStr;
+
+    // Data inicial (5 dias atrás)
+    const fiveDaysAgo = new Date(today);
+    fiveDaysAgo.setDate(today.getDate() - 5);
+    const fiveDaysAgoStr = fiveDaysAgo.toISOString().split('T')[0];
+    document.getElementById('startDate').value = fiveDaysAgoStr;
+
+    // Validação de período
+    function validateDateRange() {
+        const startDate = new Date(document.getElementById('startDate').value);
+        const endDate = new Date(document.getElementById('endDate').value);
+        const dateError = document.getElementById('dateError');
+        const dateErrorMsg = document.getElementById('dateErrorMsg');
+
+        if (!document.getElementById('startDate').value || !document.getElementById('endDate').value) {
+            dateErrorMsg.textContent = 'Ambas as datas são obrigatórias';
+            dateError.classList.remove('hidden');
+            return false;
+        }
+
+        if (startDate > endDate) {
+            dateErrorMsg.textContent = 'A data inicial não pode ser maior que a data final';
+            dateError.classList.remove('hidden');
+            return false;
+        }
+
+        const diffTime = Math.abs(endDate - startDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays > 5) {
+            dateErrorMsg.textContent = 'O período não pode ser maior que 5 dias';
+            dateError.classList.remove('hidden');
+            return false;
+        }
+
+        dateError.classList.add('hidden');
+        return true;
+    }
+
+    // Adicionar listeners de validação
+    document.getElementById('startDate').addEventListener('change', validateDateRange);
+    document.getElementById('endDate').addEventListener('change', validateDateRange);
+
+    async function syncTickets() {
+        if (!validateDateRange()) {
+            return;
+        }
+
+        const syncButton = document.getElementById('syncButton');
+        const syncMessage = document.getElementById('syncMessage');
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        // Desabilita botão e mostra loading
+        syncButton.disabled = true;
+        syncButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sincronizando...';
+        syncMessage.innerHTML = '<div class="text-blue-600 bg-blue-50 border border-blue-200 rounded-xl p-4"><i class="fas fa-spinner fa-spin mr-2"></i>Buscando tickets do Movidesk...</div>';
+
+        try {
+            const response = await fetch('{{ url_for("admin.movidesk_sync_tickets") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    start_date: startDate,
+                    end_date: endDate
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                syncMessage.innerHTML = `
+                    <div class="text-green-600 bg-green-50 border border-green-200 rounded-xl p-4">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Sincronização concluída com sucesso!
+                    </div>
+                `;
+
+                // Atualiza métricas permanentes
+                document.getElementById('totalTickets').textContent = result.total;
+                document.getElementById('syncedCount').textContent = result.synced;
+                document.getElementById('updatedCount').textContent = result.updated;
+
+                // Atualiza label da última sincronização
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                document.getElementById('lastSyncLabel').textContent = `${dateStr} às ${timeStr}`;
+
+            } else {
+                syncMessage.innerHTML = `
+                    <div class="text-red-600 bg-red-50 border border-red-200 rounded-xl p-4">
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        Erro: ${result.error}
+                    </div>
+                `;
+            }
+
+        } catch (error) {
+            syncMessage.innerHTML = `
+                <div class="text-red-600 bg-red-50 border border-red-200 rounded-xl p-4">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    Erro ao sincronizar: ${error.message}
+                </div>
+            `;
+        } finally {
+            // Reabilita botão
+            syncButton.disabled = false;
+            syncButton.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Sincronizar Novamente';
+        }
+    }
+</script>
+{% endblock %}

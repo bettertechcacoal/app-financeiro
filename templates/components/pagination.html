@@ -1,0 +1,116 @@
+{#
+    Macro de Paginação Reutilizável
+
+    Parâmetros:
+    - page: Página atual (int)
+    - total_pages: Total de páginas (int)
+    - base_url: URL base para os links (string)
+    - query_params: Dicionário com parâmetros adicionais (dict, opcional)
+
+    Exemplo de uso:
+    {% from "macros/pagination.html" import render as pagination %}
+    {{ pagination(page=current_page, total_pages=total_pages, base_url=url_for('admin.organizations_list'), query_params={'search': search_term}) }}
+#}
+
+{% macro render(page, total_pages, base_url, query_params={}) %}
+    {% if total_pages > 1 %}
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 bg-gray-50 border-t border-gray-200">
+        <!-- Info de Página -->
+        <div class="text-sm text-gray-600">
+            Página <span class="font-bold text-gray-900">{{ page }}</span> de <span class="font-bold text-gray-900">{{ total_pages }}</span>
+        </div>
+
+        <!-- Navegação -->
+        <div class="flex items-center gap-2">
+            <!-- Primeira Página -->
+            {% if page > 1 %}
+                <a href="{{ base_url }}?page=1{% for key, value in query_params.items() %}&{{ key }}={{ value }}{% endfor %}"
+                   class="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-all"
+                   title="Primeira página">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+            {% else %}
+                <span class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-lg text-gray-400 cursor-not-allowed">
+                    <i class="fas fa-angle-double-left"></i>
+                </span>
+            {% endif %}
+
+            <!-- Página Anterior -->
+            {% if page > 1 %}
+                <a href="{{ base_url }}?page={{ page - 1 }}{% for key, value in query_params.items() %}&{{ key }}={{ value }}{% endfor %}"
+                   class="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-all"
+                   title="Página anterior">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            {% else %}
+                <span class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-lg text-gray-400 cursor-not-allowed">
+                    <i class="fas fa-chevron-left"></i>
+                </span>
+            {% endif %}
+
+            <!-- Páginas Numeradas -->
+            {% set start_page = [1, page - 2]|max %}
+            {% set end_page = [total_pages, page + 2]|min %}
+
+            {% if start_page > 1 %}
+                <a href="{{ base_url }}?page=1{% for key, value in query_params.items() %}&{{ key }}={{ value }}{% endfor %}"
+                   class="hidden sm:flex w-10 h-10 items-center justify-center border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-all font-semibold">
+                    1
+                </a>
+                {% if start_page > 2 %}
+                    <span class="hidden sm:flex w-10 h-10 items-center justify-center text-gray-500">...</span>
+                {% endif %}
+            {% endif %}
+
+            {% for p in range(start_page, end_page + 1) %}
+                {% if p == page %}
+                    <span class="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-lg font-bold shadow-md">
+                        {{ p }}
+                    </span>
+                {% else %}
+                    <a href="{{ base_url }}?page={{ p }}{% for key, value in query_params.items() %}&{{ key }}={{ value }}{% endfor %}"
+                       class="hidden sm:flex w-10 h-10 items-center justify-center border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-all font-semibold">
+                        {{ p }}
+                    </a>
+                {% endif %}
+            {% endfor %}
+
+            {% if end_page < total_pages %}
+                {% if end_page < total_pages - 1 %}
+                    <span class="hidden sm:flex w-10 h-10 items-center justify-center text-gray-500">...</span>
+                {% endif %}
+                <a href="{{ base_url }}?page={{ total_pages }}{% for key, value in query_params.items() %}&{{ key }}={{ value }}{% endfor %}"
+                   class="hidden sm:flex w-10 h-10 items-center justify-center border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-all font-semibold">
+                    {{ total_pages }}
+                </a>
+            {% endif %}
+
+            <!-- Próxima Página -->
+            {% if page < total_pages %}
+                <a href="{{ base_url }}?page={{ page + 1 }}{% for key, value in query_params.items() %}&{{ key }}={{ value }}{% endfor %}"
+                   class="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-all"
+                   title="Próxima página">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            {% else %}
+                <span class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-lg text-gray-400 cursor-not-allowed">
+                    <i class="fas fa-chevron-right"></i>
+                </span>
+            {% endif %}
+
+            <!-- Última Página -->
+            {% if page < total_pages %}
+                <a href="{{ base_url }}?page={{ total_pages }}{% for key, value in query_params.items() %}&{{ key }}={{ value }}{% endfor %}"
+                   class="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-all"
+                   title="Última página">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            {% else %}
+                <span class="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-lg text-gray-400 cursor-not-allowed">
+                    <i class="fas fa-angle-double-right"></i>
+                </span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+{% endmacro %}

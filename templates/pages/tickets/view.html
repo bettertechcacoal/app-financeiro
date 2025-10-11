@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}Tickets - {{ client.name }}{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Tickets', 'url': url_for('admin.tickets_list')},
+    {'name': client.name}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg mr-4">
+                    <i class="fas fa-ticket-alt text-white text-3xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-1">Tickets</h1>
+                    <p class="text-gray-600">{{ client.name }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info da Organização -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="card p-4">
+                <div class="text-sm text-gray-600 mb-1">Organização Movidesk</div>
+                <div class="text-lg font-bold text-gray-900">{{ client.organization_name }}</div>
+            </div>
+            <div class="card p-4">
+                <div class="text-sm text-gray-600 mb-1">Total de Tickets</div>
+                <div class="text-lg font-bold text-green-600">{{ tickets|length }}</div>
+            </div>
+            <div class="card p-4">
+                <div class="text-sm text-gray-600 mb-1">CNPJ</div>
+                <div class="text-lg font-bold text-gray-900">{{ client.document }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra de Pesquisa -->
+    <div class="card p-6 mb-6 animate-fade-in">
+        <div class="flex items-center gap-4">
+            <div class="flex-1">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="searchInput" placeholder="Pesquisar por assunto, status, responsável..."
+                           class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all">
+                </div>
+            </div>
+            <button onclick="clearSearch()" class="px-6 py-3 text-gray-600 hover:text-gray-800 font-semibold">
+                <i class="fas fa-times mr-2"></i>
+                Limpar
+            </button>
+        </div>
+    </div>
+
+    <!-- Lista de Tickets -->
+    <div class="card animate-fade-in">
+        {% if tickets %}
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                ID
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                Assunto
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                Responsável
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                Data Abertura
+                            </th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                Data Encerramento
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="ticketsTable">
+                        {% for ticket in tickets %}
+                        <tr class="hover:bg-gray-50 transition-colors ticket-row"
+                            data-search="{{ ticket.subject|lower if ticket.subject else '' }} {{ ticket.status|lower if ticket.status else '' }} {{ ticket.ownerName|lower if ticket.ownerName else '' }}">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-bold text-blue-600">#{{ ticket.id }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-semibold text-gray-900 mb-1">{{ ticket.subject or '-' }}</div>
+                                {% if ticket.serviceFull %}
+                                    <div class="text-xs text-gray-500">
+                                        <i class="fas fa-tag mr-1"></i>
+                                        {{ ticket.serviceFull }}
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if ticket.status %}
+                                    {% if ticket.status == 'Novo' %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                                            <i class="fas fa-circle mr-1 text-xs"></i>
+                                            {{ ticket.status }}
+                                        </span>
+                                    {% elif ticket.status == 'EmAndamento' %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
+                                            <i class="fas fa-circle mr-1 text-xs"></i>
+                                            Em Andamento
+                                        </span>
+                                    {% elif ticket.status == 'Resolvido' or ticket.status == 'Fechado' %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                                            <i class="fas fa-check-circle mr-1"></i>
+                                            {{ ticket.status }}
+                                        </span>
+                                    {% elif ticket.status == 'Cancelado' %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                                            <i class="fas fa-times-circle mr-1"></i>
+                                            {{ ticket.status }}
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
+                                            {{ ticket.status }}
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-sm text-gray-400">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ ticket.ownerName or '-' }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">
+                                    {% if ticket.createdDate %}
+                                        {{ ticket.createdDate }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">
+                                    {% if ticket.closedIn %}
+                                        {{ ticket.closedIn }}
+                                    {% else %}
+                                        <span class="text-gray-400">-</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Rodapé da Tabela -->
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-600">
+                        Total: <span class="font-bold text-gray-900" id="totalCount">{{ tickets|length }}</span> ticket(s)
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        Mostrando: <span class="font-bold text-gray-900" id="visibleCount">{{ tickets|length }}</span> registro(s)
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center py-16">
+                <div class="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-ticket-alt text-4xl text-gray-400"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Nenhum ticket encontrado</h3>
+                <p class="text-gray-600 mb-6">Esta organização ainda não possui tickets sincronizados</p>
+                <a href="{{ url_for('admin.movidesk_tickets') }}" class="inline-flex items-center btn-primary text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Sincronizar Tickets
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Botão Voltar -->
+    <div class="mt-6 animate-fade-in">
+        <a href="{{ url_for('admin.tickets_list') }}" class="text-blue-600 hover:text-blue-700 font-semibold">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Voltar para Lista de Organizações
+        </a>
+    </div>
+</div>
+
+<script>
+    // Função de pesquisa
+    const searchInput = document.getElementById('searchInput');
+    const ticketRows = document.querySelectorAll('.ticket-row');
+    const visibleCountEl = document.getElementById('visibleCount');
+    const totalCountEl = document.getElementById('totalCount');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            let visibleCount = 0;
+
+            ticketRows.forEach(row => {
+                const searchData = row.getAttribute('data-search');
+                if (searchData.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (visibleCountEl) {
+                visibleCountEl.textContent = visibleCount;
+            }
+        });
+    }
+
+    function clearSearch() {
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+            searchInput.focus();
+        }
+    }
+</script>
+{% endblock %}

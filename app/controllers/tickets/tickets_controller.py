@@ -12,17 +12,44 @@ def tickets_list():
 
 def tickets_view(client_id):
     """Visualiza tickets de um cliente/organização"""
+    from app.models.client_organization import ClientOrganization
+    from app.models.organization import Organization
+    from app.models.database import db_session
+
     client = client_service.get_client_by_id(client_id)
 
     if not client:
         return render_template('pages/tickets/list.html', clients=client_service.get_all_clients())
 
-    # Buscar tickets pela organização vinculada
-    tickets = []
-    if client.get('organization_name'):
-        tickets = ticket_service.get_tickets_by_organization(client['organization_name'])
+    # Buscar todas as organizações vinculadas ao cliente
+    organizations = db_session.query(Organization).join(
+        ClientOrganization,
+        Organization.id == ClientOrganization.organization_id
+    ).filter(
+        ClientOrganization.client_id == client_id
+    ).order_by(Organization.business_name).all()
 
-    return render_template('pages/tickets/view.html', client=client, tickets=tickets)
+    # Buscar tickets para cada organização
+    organizations_with_tickets = []
+    total_tickets = 0
+
+    for org in organizations:
+        tickets = ticket_service.get_tickets_by_organization(org.business_name)
+        organizations_with_tickets.append({
+            'id': org.id,
+            'business_name': org.business_name,
+            'person_type': org.person_type,
+            'tickets': tickets,
+            'tickets_count': len(tickets)
+        })
+        total_tickets += len(tickets)
+
+    return render_template(
+        'pages/tickets/view.html',
+        client=client,
+        organizations=organizations_with_tickets,
+        total_tickets=total_tickets
+    )
 
 
 def client_manage(client_id):

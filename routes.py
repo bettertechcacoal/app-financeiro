@@ -44,7 +44,7 @@ def register_routes(app: Flask):
 
     # Rotas de Tickets
     admin_bp.add_url_rule('/tickets', view_func=tickets_controller.tickets_list, methods=['GET'])
-    admin_bp.add_url_rule('/tickets/<int:client_id>', view_func=tickets_controller.tickets_view, methods=['GET'])
+    admin_bp.add_url_rule('/tickets/client/<int:client_id>', view_func=tickets_controller.tickets_view, methods=['GET'])
     admin_bp.add_url_rule('/tickets/<int:client_id>/manage', view_func=tickets_controller.client_manage, methods=['GET'])
 
     # Rotas de Clientes (Organizações)

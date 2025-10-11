@@ -19,7 +19,7 @@
             </div>
             <div>
                 <h1 class="text-3xl font-bold text-gray-900 mb-1">Tickets</h1>
-                <p class="text-gray-600">Visualize os tickets por organização</p>
+                <p class="text-gray-600">Visualize os tickets por cliente</p>
             </div>
         </div>
     </div>
@@ -30,7 +30,7 @@
             <div class="flex-1">
                 <div class="relative">
                     <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" id="searchInput" placeholder="Pesquisar por organização..."
+                    <input type="text" id="searchInput" placeholder="Pesquisar por cliente..."
                            class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all">
                 </div>
             </div>
@@ -41,7 +41,7 @@
         </div>
     </div>
 
-    <!-- Lista de Organizações -->
+    <!-- Lista de Clientes -->
     <div class="card animate-fade-in">
         {% if clients %}
             <div class="overflow-x-auto">
@@ -49,7 +49,7 @@
                     <thead class="bg-gray-50 border-b border-gray-200">
                         <tr>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                Organização
+                                Cliente
                             </th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                 CNPJ
@@ -96,7 +96,11 @@
                                 {% if cli.organizations %}
                                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
                                         <i class="fas fa-check-circle mr-1"></i>
-                                        {{ cli.organizations|length }} organização(ões)
+                                        {% if cli.organizations|length == 1 %}
+                                            1 vinculação
+                                        {% else %}
+                                            {{ cli.organizations|length }} vinculações
+                                        {% endif %}
                                     </span>
                                 {% else %}
                                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
@@ -135,10 +139,10 @@
             <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
                 <div class="flex items-center justify-between">
                     <div class="text-sm text-gray-600">
-                        Total: <span class="font-bold text-gray-900" id="totalCount">{{ clients|length }}</span> organização(ões)
+                        Total: <span class="font-bold text-gray-900" id="totalCount">{{ clients|length }}</span> cliente{% if clients|length != 1 %}s{% endif %}
                     </div>
                     <div class="text-sm text-gray-600">
-                        Mostrando: <span class="font-bold text-gray-900" id="visibleCount">{{ clients|length }}</span> registro(s)
+                        Mostrando: <span class="font-bold text-gray-900" id="visibleCount">{{ clients|length }}</span> registro{% if clients|length != 1 %}s{% endif %}
                     </div>
                 </div>
             </div>
@@ -147,8 +151,8 @@
                 <div class="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
                     <i class="fas fa-building text-4xl text-gray-400"></i>
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Nenhuma organização cadastrada</h3>
-                <p class="text-gray-600">Cadastre organizações primeiro para visualizar tickets</p>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Nenhum cliente cadastrado</h3>
+                <p class="text-gray-600">Cadastre clientes primeiro para visualizar tickets</p>
             </div>
         {% endif %}
     </div>

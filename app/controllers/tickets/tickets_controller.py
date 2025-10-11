@@ -52,36 +52,3 @@ def tickets_view(client_id):
     )
 
 
-def client_manage(client_id):
-    """Tela de gerenciamento de cliente com sidebar de organizações (para rota tickets)"""
-    from flask import render_template, redirect, url_for, flash
-    from app.models.client_organization import ClientOrganization
-    from app.models.organization import Organization
-    from app.models.database import db_session
-
-    # Buscar cliente
-    client = client_service.get_client_by_id(client_id)
-
-    if not client:
-        flash('Cliente não encontrado', 'error')
-        return redirect(url_for('admin.tickets_list'))
-
-    # Buscar organizações vinculadas
-    organizations = db_session.query(Organization).join(
-        ClientOrganization,
-        Organization.id == ClientOrganization.organization_id
-    ).filter(
-        ClientOrganization.client_id == client_id
-    ).order_by(Organization.business_name).all()
-
-    organizations_data = [{
-        'id': org.id,
-        'business_name': org.business_name,
-        'person_type': org.person_type
-    } for org in organizations]
-
-    return render_template(
-        'pages/tickets/manage_client.html',
-        client=client,
-        organizations=organizations_data
-    )

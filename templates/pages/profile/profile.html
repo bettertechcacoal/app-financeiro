@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Meu Perfil{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="mb-6 p-4 rounded-xl {% if category == 'success' %}bg-green-100 text-green-700{% elif category == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %} animate-fade-in">
+                    <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} mr-2"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Header com Botões de Ação -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            <div class="flex items-center">
+                <!-- Ícone -->
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+                    <i class="fas fa-user-circle text-white text-2xl sm:text-3xl"></i>
+                </div>
+
+                <!-- Título -->
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
+                        Meu Perfil
+                    </h1>
+                    <p class="text-sm sm:text-base text-gray-600">
+                        Gerencie suas informações pessoais
+                    </p>
+                </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ url_for('admin.dashboard') }}"
+                   class="inline-flex items-center px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-all">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Voltar
+                </a>
+
+                <button type="submit" form="profile-form"
+                        class="inline-flex items-center px-8 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg">
+                    <i class="fas fa-save mr-2"></i>
+                    Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulário Principal -->
+    <form id="profile-form" action="{{ url_for('admin.profile_update') }}" method="POST">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Coluna Esquerda: Dados Pessoais -->
+            <div class="lg:col-span-2 space-y-6">
+
+                <!-- Card: Informações Pessoais -->
+                <div class="card animate-fade-in">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-bold text-gray-900">Informações Pessoais</h2>
+                                <p class="text-sm text-gray-500">Atualize seus dados cadastrais</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Nome Completo -->
+                            <div>
+                                <label class="block text-xs font-bold text-red-600 uppercase mb-2">
+                                    Nome Completo *
+                                </label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value="{{ user.name }}"
+                                    placeholder="Digite seu nome completo"
+                                    required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                >
+                            </div>
+
+                            <!-- Email -->
+                            <div>
+                                <label class="block text-xs font-bold text-red-600 uppercase mb-2">
+                                    E-mail *
+                                </label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value="{{ user.email }}"
+                                    placeholder="seu@email.com"
+                                    required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                >
+                            </div>
+
+                            <!-- Telefone -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-2">
+                                    Telefone
+                                </label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <i class="fas fa-phone text-gray-400"></i>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        id="phone"
+                                        name="phone"
+                                        value="{{ user.phone or '' }}"
+                                        placeholder="(00) 00000-0000"
+                                        class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                    >
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card: Segurança (placeholder para futura implementação) -->
+                <div class="card animate-fade-in">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-shield-alt text-white"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-bold text-gray-900">Segurança</h2>
+                                <p class="text-sm text-gray-500">Gerencie sua senha e autenticação</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6">
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                            <div class="flex items-center">
+                                <i class="fas fa-key text-gray-400 mr-3"></i>
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-900">Senha</p>
+                                    <p class="text-xs text-gray-500">Última alteração há 30 dias</p>
+                                </div>
+                            </div>
+                            <button type="button" class="px-4 py-2 text-sm font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all">
+                                Alterar Senha
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Coluna Direita: Resumo do Perfil -->
+            <aside class="lg:col-span-1 space-y-6">
+
+                <!-- Card: Informações do Usuário -->
+                <div class="card animate-fade-in rounded-xl">
+                    <!-- Header -->
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center">
+                            <div class="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+                                <span class="text-3xl font-bold text-white">{{ user.name[:2].upper() }}</span>
+                            </div>
+                            <div class="ml-4">
+                                <h2 class="text-lg font-bold text-gray-900 mb-1">{{ user.name }}</h2>
+                                <p class="text-sm text-gray-600">{{ user.email }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Corpo -->
+                    <div class="p-6">
+                        <!-- Informações -->
+                        <div class="space-y-1">
+                            <!-- Status da Conta -->
+                            <div class="flex items-center justify-between py-4 border-b border-gray-100">
+                                <span class="text-sm font-medium text-gray-600">Status</span>
+                                {% if user.is_active %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-green-100 text-green-700">
+                                    <i class="fas fa-circle text-green-500 text-xs mr-2"></i>
+                                    Ativo
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700">
+                                    <i class="fas fa-circle text-gray-500 text-xs mr-2"></i>
+                                    Inativo
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Telefone -->
+                            {% if user.phone %}
+                            <div class="flex items-center justify-between py-4 border-b border-gray-100">
+                                <span class="text-sm font-medium text-gray-600">Telefone</span>
+                                <span class="text-sm font-semibold text-gray-900">{{ user.phone }}</span>
+                            </div>
+                            {% endif %}
+
+                            <!-- Último Acesso -->
+                            {% if user.last_login_at %}
+                            <div class="flex items-center justify-between py-4 border-b border-gray-100">
+                                <span class="text-sm font-medium text-gray-600">Último Acesso</span>
+                                <span class="text-sm font-semibold text-gray-900">
+                                    {{ user.last_login_at[8:10] }}/{{ user.last_login_at[5:7] }}/{{ user.last_login_at[:4] }}
+                                </span>
+                            </div>
+                            {% endif %}
+
+                            <!-- Cadastrado em -->
+                            <div class="flex items-center justify-between py-4 border-b border-gray-100">
+                                <span class="text-sm font-medium text-gray-600">Criado em</span>
+                                <span class="text-sm font-semibold text-gray-900">
+                                    {% if user.created_at %}
+                                        {{ user.created_at[8:10] }}/{{ user.created_at[5:7] }}/{{ user.created_at[:4] }}
+                                    {% endif %}
+                                </span>
+                            </div>
+
+                            <!-- Grupos -->
+                            {% if user.groups %}
+                            <div class="py-4">
+                                <span class="text-sm font-medium text-gray-600 block mb-3">Grupos</span>
+                                <div class="flex flex-wrap gap-2">
+                                    {% for group in user.groups %}
+                                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200">
+                                        <i class="fas {{ group.icon }} mr-2"></i>
+                                        {{ group.name }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+            </aside>
+
+        </div>
+    </form>
+</div>
+
+<script>
+    // Máscara de telefone
+    $(document).ready(function(){
+        $('#phone').mask('(00) 00000-0000');
+    });
+</script>
+{% endblock %}

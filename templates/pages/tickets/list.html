@@ -60,8 +60,8 @@
                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                 Telefone
                             </th>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                Vinculação Movidesk
+                            <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                Movidesk
                             </th>
                             <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
                                 Ações
@@ -92,7 +92,7 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">{{ cli.phone }}</div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
                                 {% if cli.organizations %}
                                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
                                         <i class="fas fa-check-circle mr-1"></i>
@@ -110,16 +110,11 @@
                                 {% endif %}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <button onclick="editClient({{ cli.id }})"
-                                        class="text-gray-400 hover:text-gray-600 transition-colors mr-3"
-                                        title="Editar">
-                                    <i class="fas fa-pencil-alt text-sm"></i>
-                                </button>
                                 {% if cli.organizations %}
                                     <a href="{{ url_for('admin.tickets_view', client_id=cli.id) }}"
                                        class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors">
                                         <i class="fas fa-eye mr-2"></i>
-                                        Visualizar Tickets
+                                        Visualizar
                                     </a>
                                 {% else %}
                                     <span class="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-500 rounded-lg font-semibold cursor-not-allowed"
@@ -200,10 +195,6 @@
             searchInput.dispatchEvent(new Event('input'));
             searchInput.focus();
         }
-    }
-
-    function editClient(clientId) {
-        window.location.href = `/admin/tickets/${clientId}/manage`;
     }
 </script>
 {% endblock %}

@@ -54,6 +54,8 @@ def client_create():
             'city': request.form.get('city'),
             'state': request.form.get('state'),
             'zipcode': request.form.get('zipcode'),
+            'billing_cycle': request.form.get('billing_cycle'),
+            'billing_day': request.form.get('billing_day'),
             'billing_cycle_type': billing_cycle_type,
             'fixed_start_day': request.form.get('fixed_start_day') if billing_cycle_type == 'fixo' else None
         }
@@ -115,6 +117,8 @@ def client_update(client_id):
             'city': request.form.get('city'),
             'state': request.form.get('state'),
             'zipcode': request.form.get('zipcode'),
+            'billing_cycle': request.form.get('billing_cycle'),
+            'billing_day': request.form.get('billing_day'),
             'billing_cycle_type': billing_cycle_type,
             'fixed_start_day': request.form.get('fixed_start_day') if billing_cycle_type == 'fixo' else None
         }
@@ -125,7 +129,7 @@ def client_update(client_id):
         else:
             flash('Organização não encontrada', 'error')
 
-        return redirect(url_for('admin.clients_list'))
+        return redirect(url_for('admin.client_edit', client_id=client_id))
     except Exception as e:
         flash(f'Erro ao atualizar organização: {str(e)}', 'error')
         return redirect(url_for('admin.client_edit', client_id=client_id))

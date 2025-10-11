@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}Viagens{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Viagens'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            <div class="flex items-center">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+                    <i class="fas fa-plane-departure text-white text-2xl sm:text-3xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Gerenciamento de Viagens</h1>
+                    <p class="text-sm sm:text-base text-gray-600">Agende e acompanhe suas viagens</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="{{ url_for('admin.travels_create') }}" class="btn-primary text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all inline-flex items-center">
+                    <i class="fas fa-plus-circle mr-2"></i>
+                    Nova Viagem
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layout com Sidebar -->
+    <div class="flex flex-col lg:flex-row gap-6">
+        <!-- Conteúdo Principal -->
+        <div class="flex-1 min-w-0">
+            {% if travels %}
+                <!-- Barra de Pesquisa -->
+                <div class="card p-6 mb-6 animate-fade-in">
+                    <div class="flex items-center gap-4">
+                        <div class="flex-1">
+                            <div class="relative">
+                                <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                <input type="text" id="searchInput" placeholder="Pesquisar por destino, usuário, motivo..."
+                                       class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                            </div>
+                        </div>
+                        <button onclick="clearSearch()" class="px-6 py-3 text-gray-600 hover:text-gray-800 font-semibold">
+                            <i class="fas fa-times mr-2"></i>
+                            Limpar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista de Viagens em Cards -->
+                <div class="space-y-3 animate-fade-in">
+                    {% for travel in travels %}
+                    <div class="card travel-row"
+                         data-search="{{ travel.city.name|lower if travel.city else '' }} {{ travel.user.name|lower if travel.user else '' }} {{ travel.purpose|lower if travel.purpose else '' }} {{ travel.status|lower if travel.status else '' }}">
+
+                        <!-- Header do Card -->
+                        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between flex-wrap gap-2">
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs font-bold text-blue-600">#{{ travel.id }}</span>
+                                <div class="flex items-center text-xs text-gray-600">
+                                    <i class="fas fa-user text-blue-600 mr-1"></i>
+                                    <span class="font-medium">{{ travel.user.name if travel.user else '-' }}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <!-- Status -->
+                                {% if travel.status == 'pending' %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-yellow-100 text-yellow-700">
+                                        <i class="fas fa-clock mr-1 text-xs"></i>
+                                        Pendente
+                                    </span>
+                                {% elif travel.status == 'approved' %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-700">
+                                        <i class="fas fa-check-circle mr-1 text-xs"></i>
+                                        Aprovada
+                                    </span>
+                                {% elif travel.status == 'in_progress' %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-700">
+                                        <i class="fas fa-plane mr-1 text-xs"></i>
+                                        Em Andamento
+                                    </span>
+                                {% elif travel.status == 'completed' %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-700">
+                                        <i class="fas fa-check mr-1 text-xs"></i>
+                                        Concluída
+                                    </span>
+                                {% elif travel.status == 'cancelled' %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700">
+                                        <i class="fas fa-times-circle mr-1 text-xs"></i>
+                                        Cancelada
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Corpo do Card -->
+                        <div class="px-4 py-3">
+                            <div class="mb-3">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <h3 class="text-sm font-semibold text-gray-900 leading-snug mb-1">
+                                            <i class="fas fa-map-marker-alt text-blue-600 mr-1"></i>
+                                            {{ travel.city.name if travel.city else 'Destino não informado' }}
+                                            {% if travel.city and travel.city.state %}
+                                                <span class="text-gray-500">- {{ travel.city.state.uf }}</span>
+                                            {% endif %}
+                                        </h3>
+                                        <p class="text-xs text-gray-700 font-medium">
+                                            {{ travel.purpose }}
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center gap-2 ml-4">
+                                        <a href="{{ url_for('admin.travels_edit', travel_id=travel.id) }}"
+                                           class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if travel.status == 'pending' %}
+                                        <button onclick="approveTravel({{ travel.id }})"
+                                                class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                                                title="Aprovar viagem">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        {% endif %}
+                                        <button onclick="deleteTravel({{ travel.id }})"
+                                                class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                                <div>
+                                    <span class="text-gray-500">Saída:</span>
+                                    <p class="font-medium text-gray-900 mt-0.5">
+                                        {% if travel.departure_date %}
+                                            {{ travel.departure_date[8:10] }}/{{ travel.departure_date[5:7] }}/{{ travel.departure_date[:4] }} {{ travel.departure_date[11:16] }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Retorno:</span>
+                                    <p class="font-medium text-gray-900 mt-0.5">
+                                        {% if travel.return_date %}
+                                            {{ travel.return_date[8:10] }}/{{ travel.return_date[5:7] }}/{{ travel.return_date[:4] }} {{ travel.return_date[11:16] }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Cadastrada em:</span>
+                                    <p class="font-medium text-gray-900 mt-0.5">
+                                        {% if travel.created_at %}
+                                            {{ travel.created_at[8:10] }}/{{ travel.created_at[5:7] }}/{{ travel.created_at[:4] }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {% if travel.description %}
+                            <div class="mt-3 pt-3 border-t border-gray-200">
+                                <p class="text-xs text-gray-600">{{ travel.description }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <!-- Rodapé da Lista -->
+                    <div class="card px-4 py-3 bg-gray-50">
+                        <div class="flex items-center justify-between text-xs sm:text-sm">
+                            <div class="text-gray-600">
+                                Total: <span class="font-bold text-gray-900" id="totalCount">{{ total_travels }}</span> viagen{% if total_travels != 1 %}s{% else %}m{% endif %}
+                            </div>
+                            <div class="text-gray-600">
+                                Mostrando: <span class="font-bold text-gray-900" id="visibleCount">{{ total_travels }}</span> registro{% if total_travels != 1 %}s{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card animate-fade-in">
+                    <div class="text-center py-16">
+                        <div class="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-plane-departure text-4xl text-gray-400"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Nenhuma viagem cadastrada</h3>
+                        <p class="text-gray-600 mb-6">Comece criando sua primeira viagem</p>
+                        <a href="{{ url_for('admin.travels_create') }}" class="inline-flex items-center btn-primary text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
+                            <i class="fas fa-plus-circle mr-2"></i>
+                            Cadastrar Primeira Viagem
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar de Métricas -->
+        <div class="w-full lg:w-80 flex-shrink-0">
+            <div class="sticky top-6 space-y-4 animate-fade-in">
+                <!-- Total de Viagens -->
+                <div class="card p-4">
+                    <div class="text-sm text-gray-600 mb-1">Total de Viagens</div>
+                    <div class="text-2xl font-bold text-blue-600">{{ total_travels }}</div>
+                </div>
+
+                <!-- Viagens por Status -->
+                <div class="card p-4">
+                    <h3 class="text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider">Status</h3>
+                    <div class="space-y-2 text-xs">
+                        {% set pending = travels|selectattr('status', 'equalto', 'pending')|list|length %}
+                        {% set approved = travels|selectattr('status', 'equalto', 'approved')|list|length %}
+                        {% set in_progress = travels|selectattr('status', 'equalto', 'in_progress')|list|length %}
+                        {% set completed = travels|selectattr('status', 'equalto', 'completed')|list|length %}
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Pendentes</span>
+                            <span class="font-bold text-yellow-600">{{ pending }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Aprovadas</span>
+                            <span class="font-bold text-green-600">{{ approved }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Em Andamento</span>
+                            <span class="font-bold text-blue-600">{{ in_progress }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Concluídas</span>
+                            <span class="font-bold text-gray-600">{{ completed }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botão Voltar -->
+    <div class="mt-6 animate-fade-in">
+        <a href="{{ url_for('admin.dashboard') }}" class="text-blue-600 hover:text-blue-700 font-semibold">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Voltar para Dashboard
+        </a>
+    </div>
+</div>
+
+<script>
+    // Função de pesquisa
+    const searchInput = document.getElementById('searchInput');
+    const travelRows = document.querySelectorAll('.travel-row');
+    const visibleCountEl = document.getElementById('visibleCount');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            let visibleCount = 0;
+
+            travelRows.forEach(row => {
+                const searchData = row.getAttribute('data-search');
+
+                if (searchData.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (visibleCountEl) {
+                visibleCountEl.textContent = visibleCount;
+            }
+        });
+    }
+
+    function clearSearch() {
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+            searchInput.focus();
+        }
+    }
+
+    function deleteTravel(travelId) {
+        if (confirm('Tem certeza que deseja excluir esta viagem?')) {
+            window.location.href = `/admin/travels/${travelId}/delete`;
+        }
+    }
+
+    function approveTravel(travelId) {
+        if (confirm('Deseja aprovar esta viagem?')) {
+            window.location.href = `/admin/travels/${travelId}/approve`;
+        }
+    }
+</script>
+{% endblock %}

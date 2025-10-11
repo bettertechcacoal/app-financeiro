@@ -141,7 +141,7 @@ class MovideskService:
     def get_tickets_from_api(self, start_date, end_date):
         """Busca tickets diretamente da API do Movidesk"""
         try:
-            select_fields = "id,subject,status,createdDate,owner,closedIn,serviceFull"
+            select_fields = "id,subject,status,category,createdDate,owner,resolvedIn,closedIn,serviceFull"
             filter_query = f"createdDate gt {start_date}T00:00:00.00z and createdDate le {end_date}T23:59:59.99z"
             expand = "owner,createdBy,clients($select=businessName),clients($expand=organization),customFieldValues($expand=items)"
 
@@ -196,6 +196,7 @@ class MovideskService:
                         # Atualiza ticket existente
                         existing_ticket.subject = ticket_info['subject']
                         existing_ticket.status = ticket_info['status']
+                        existing_ticket.category = ticket_info['category']
                         existing_ticket.service_full = ticket_info['service_full']
                         existing_ticket.organization_name = ticket_info['organization_name']
                         existing_ticket.client_name = ticket_info['client_name']
@@ -203,6 +204,7 @@ class MovideskService:
                         existing_ticket.created_by_name = ticket_info['created_by_name']
                         existing_ticket.created_by_email = ticket_info['created_by_email']
                         existing_ticket.created_date = ticket_info['created_date']
+                        existing_ticket.resolved_in = ticket_info['resolved_in']
                         existing_ticket.closed_in = ticket_info['closed_in']
                         existing_ticket.custom_field_module = ticket_info['custom_field_module']
                         updated_count += 1
@@ -212,6 +214,7 @@ class MovideskService:
                             id=ticket_id,
                             subject=ticket_info['subject'],
                             status=ticket_info['status'],
+                            category=ticket_info['category'],
                             service_full=ticket_info['service_full'],
                             organization_name=ticket_info['organization_name'],
                             client_name=ticket_info['client_name'],
@@ -219,6 +222,7 @@ class MovideskService:
                             created_by_name=ticket_info['created_by_name'],
                             created_by_email=ticket_info['created_by_email'],
                             created_date=ticket_info['created_date'],
+                            resolved_in=ticket_info['resolved_in'],
                             closed_in=ticket_info['closed_in'],
                             custom_field_module=ticket_info['custom_field_module']
                         )
@@ -264,6 +268,7 @@ class MovideskService:
         ticket_info = {
             'subject': ticket.get('subject'),
             'status': ticket.get('status'),
+            'category': ticket.get('category'),
             'service_full': ', '.join(ticket.get('serviceFull', [])) if ticket.get('serviceFull') else None,
             'organization_name': None,
             'client_name': None,
@@ -271,6 +276,7 @@ class MovideskService:
             'created_by_name': None,
             'created_by_email': None,
             'created_date': None,
+            'resolved_in': None,
             'closed_in': None,
             'custom_field_module': None
         }
@@ -298,18 +304,24 @@ class MovideskService:
             ticket_info['created_by_name'] = created_by.get('businessName')
             ticket_info['created_by_email'] = created_by.get('email')
 
-        # Datas
+        # Datas (mantém data e hora completas)
         created_date = ticket.get('createdDate')
         if created_date:
             ticket_info['created_date'] = datetime.fromisoformat(
                 created_date.replace('Z', '+00:00')
-            ).date()
+            )
+
+        resolved_in = ticket.get('resolvedIn')
+        if resolved_in:
+            ticket_info['resolved_in'] = datetime.fromisoformat(
+                resolved_in.replace('Z', '+00:00')
+            )
 
         closed_in = ticket.get('closedIn')
         if closed_in:
             ticket_info['closed_in'] = datetime.fromisoformat(
                 closed_in.replace('Z', '+00:00')
-            ).date()
+            )
 
         # Módulo
         custom_fields = ticket.get('customFieldValues', [])

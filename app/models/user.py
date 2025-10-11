@@ -1,0 +1,41 @@
+# -*- coding: utf-8 -*-
+from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+from app.models.database import Base
+
+
+class User(Base):
+    """Modelo de Usuario do sistema - padrao Laravel"""
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(100), nullable=False)
+    email = Column(String(100), unique=True, nullable=False, index=True)
+    phone = Column(String(20))
+    avatar = Column(String(255))
+
+    # Status e controle
+    is_active = Column(Boolean, default=True, nullable=False)
+    email_verified_at = Column(DateTime(timezone=True))
+    last_login_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relacionamento com viagens
+    travels = relationship('Travel', foreign_keys='Travel.user_id', back_populates='user')
+
+    def to_dict(self):
+        """Converte o modelo para dicionario"""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email,
+            'phone': self.phone,
+            'avatar': self.avatar,
+            'is_active': self.is_active,
+            'email_verified_at': self.email_verified_at.isoformat() if self.email_verified_at else None,
+            'last_login_at': self.last_login_at.isoformat() if self.last_login_at else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }

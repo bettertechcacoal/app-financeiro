@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}{{ 'Editar Viagem' if travel else 'Nova Viagem' }}{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Viagens', 'url': url_for('admin.travels_list')},
+    {'name': 'Editar Viagem' if travel else 'Nova Viagem'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex items-center">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+                <i class="fas fa-plane-departure text-white text-2xl sm:text-3xl"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
+                    {{ 'Editar Viagem' if travel else 'Nova Viagem' }}
+                </h1>
+                <p class="text-sm sm:text-base text-gray-600">
+                    {{ 'Atualize os dados da viagem' if travel else 'Preencha os dados para agendar uma nova viagem' }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulário -->
+    <div class="max-w-4xl mx-auto">
+        <form method="POST" action="{{ url_for('admin.travels_update', travel_id=travel.id) if travel else url_for('admin.travels_store') }}" class="card p-6 sm:p-8 animate-fade-in">
+
+            <!-- Usuário -->
+            <div class="mb-6">
+                <label for="user_id" class="block text-sm font-semibold text-gray-700 mb-2">
+                    Usuário <span class="text-red-500">*</span>
+                </label>
+                <select name="user_id" id="user_id" required
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                    <option value="">Selecione o usuário</option>
+                    {% for user in users %}
+                        <option value="{{ user.id }}" {{ 'selected' if travel and travel.user_id == user.id else '' }}>
+                            {{ user.name }} - {{ user.email }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Cidade de Destino -->
+            <div class="mb-6">
+                <label for="city_id" class="block text-sm font-semibold text-gray-700 mb-2">
+                    Cidade de Destino <span class="text-red-500">*</span>
+                </label>
+                <select name="city_id" id="city_id" required
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                    <option value="">Selecione a cidade</option>
+                    {% for city in cities %}
+                        <option value="{{ city.id }}" {{ 'selected' if travel and travel.city_id == city.id else '' }}>
+                            {{ city.name }} - {{ city.state.uf if city.state else '' }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Motivo da Viagem -->
+            <div class="mb-6">
+                <label for="purpose" class="block text-sm font-semibold text-gray-700 mb-2">
+                    Motivo da Viagem <span class="text-red-500">*</span>
+                </label>
+                <input type="text" name="purpose" id="purpose" required
+                       value="{{ travel.purpose if travel else '' }}"
+                       placeholder="Ex: Reunião de negócios, Treinamento, Visita técnica..."
+                       class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+            </div>
+
+            <!-- Descrição -->
+            <div class="mb-6">
+                <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">
+                    Descrição Detalhada
+                </label>
+                <textarea name="description" id="description" rows="4"
+                          placeholder="Descreva mais detalhes sobre a viagem..."
+                          class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">{{ travel.description if travel else '' }}</textarea>
+            </div>
+
+            <!-- Datas -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                <!-- Data de Saída -->
+                <div>
+                    <label for="departure_date" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Data e Hora de Saída <span class="text-red-500">*</span>
+                    </label>
+                    <input type="datetime-local" name="departure_date" id="departure_date" required
+                           value="{{ travel.departure_date[:16] if travel and travel.departure_date else '' }}"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                </div>
+
+                <!-- Data de Retorno -->
+                <div>
+                    <label for="return_date" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Data e Hora de Retorno <span class="text-red-500">*</span>
+                    </label>
+                    <input type="datetime-local" name="return_date" id="return_date" required
+                           value="{{ travel.return_date[:16] if travel and travel.return_date else '' }}"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                </div>
+            </div>
+
+            <!-- Status (apenas na edição) -->
+            {% if travel %}
+            <div class="mb-6">
+                <label for="status" class="block text-sm font-semibold text-gray-700 mb-2">
+                    Status
+                </label>
+                <select name="status" id="status"
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                    <option value="pending" {{ 'selected' if travel.status == 'pending' else '' }}>Pendente</option>
+                    <option value="approved" {{ 'selected' if travel.status == 'approved' else '' }}>Aprovada</option>
+                    <option value="in_progress" {{ 'selected' if travel.status == 'in_progress' else '' }}>Em Andamento</option>
+                    <option value="completed" {{ 'selected' if travel.status == 'completed' else '' }}>Concluída</option>
+                    <option value="cancelled" {{ 'selected' if travel.status == 'cancelled' else '' }}>Cancelada</option>
+                </select>
+            </div>
+            {% endif %}
+
+            <!-- Observações -->
+            <div class="mb-8">
+                <label for="notes" class="block text-sm font-semibold text-gray-700 mb-2">
+                    Observações
+                </label>
+                <textarea name="notes" id="notes" rows="3"
+                          placeholder="Observações adicionais sobre a viagem..."
+                          class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">{{ travel.notes if travel else '' }}</textarea>
+            </div>
+
+            <!-- Botões -->
+            <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                <a href="{{ url_for('admin.travels_list') }}" class="text-gray-600 hover:text-gray-800 font-semibold">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Cancelar
+                </a>
+                <button type="submit" class="btn-primary text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
+                    <i class="fas fa-save mr-2"></i>
+                    {{ 'Atualizar Viagem' if travel else 'Cadastrar Viagem' }}
+                </button>
+            </div>
+        </form>
+
+        <!-- Info adicional -->
+        {% if travel %}
+        <div class="card p-6 mt-6 bg-gray-50 animate-fade-in">
+            <h3 class="text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider">Informações Adicionais</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <span class="text-gray-500">ID da Viagem:</span>
+                    <p class="font-medium text-gray-900">#{{ travel.id }}</p>
+                </div>
+                <div>
+                    <span class="text-gray-500">Cadastrada em:</span>
+                    <p class="font-medium text-gray-900">
+                        {% if travel.created_at %}
+                            {{ travel.created_at[8:10] }}/{{ travel.created_at[5:7] }}/{{ travel.created_at[:4] }} às {{ travel.created_at[11:16] }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </p>
+                </div>
+                {% if travel.approved_at %}
+                <div>
+                    <span class="text-gray-500">Aprovada em:</span>
+                    <p class="font-medium text-gray-900">
+                        {{ travel.approved_at[8:10] }}/{{ travel.approved_at[5:7] }}/{{ travel.approved_at[:4] }} às {{ travel.approved_at[11:16] }}
+                    </p>
+                </div>
+                {% endif %}
+                <div>
+                    <span class="text-gray-500">Última atualização:</span>
+                    <p class="font-medium text-gray-900">
+                        {% if travel.updated_at %}
+                            {{ travel.updated_at[8:10] }}/{{ travel.updated_at[5:7] }}/{{ travel.updated_at[:4] }} às {{ travel.updated_at[11:16] }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Validação de datas
+    const departureDateInput = document.getElementById('departure_date');
+    const returnDateInput = document.getElementById('return_date');
+
+    returnDateInput.addEventListener('change', function() {
+        const departureDate = new Date(departureDateInput.value);
+        const returnDate = new Date(returnDateInput.value);
+
+        if (returnDate <= departureDate) {
+            alert('A data de retorno deve ser posterior à data de saída!');
+            returnDateInput.value = '';
+        }
+    });
+</script>
+{% endblock %}

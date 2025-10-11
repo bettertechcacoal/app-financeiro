@@ -4,6 +4,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 import os
 from urllib.parse import quote_plus
+from dotenv import load_dotenv
+
+# Carregar variáveis de ambiente do arquivo .env
+load_dotenv()
 
 # Base para os modelos
 Base = declarative_base()

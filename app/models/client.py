@@ -14,6 +14,9 @@ class Client(Base):
     phone = Column(String(50))
     document = Column(String(50), nullable=False, unique=True)
 
+    # FK para organization (mantido por compatibilidade, mas usar tabela pivot)
+    organization_id = Column(String(50))
+
     # Endereço
     address = Column(String(500))
     city = Column(String(100))
@@ -21,11 +24,13 @@ class Client(Base):
     zipcode = Column(String(20))
 
     # Ciclo de cobrança
-    billing_cycle_type = Column(String(20))  # 'fixo' ou 'mensal'
-    fixed_start_day = Column(Integer)  # Dia do mês (1-31) para ciclo fixo
+    billing_cycle = Column(Integer)  # Ciclo de cobrança em dias
+    billing_day = Column(Integer)  # Dia do mês para cobrança
+    billing_cycle_type = Column(String(20))  # Tipo de ciclo: 'fixo' ou 'mensal'
+    fixed_start_day = Column(Integer)  # Dia de início do ciclo fixo (1-31)
 
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     def to_dict(self, include_organizations=True):
         """Converte o modelo para dicionário
@@ -39,10 +44,13 @@ class Client(Base):
             'email': self.email,
             'phone': self.phone,
             'document': self.document,
+            'organization_id': self.organization_id,
             'address': self.address,
             'city': self.city,
             'state': self.state,
             'zipcode': self.zipcode,
+            'billing_cycle': self.billing_cycle,
+            'billing_day': self.billing_day,
             'billing_cycle_type': self.billing_cycle_type,
             'fixed_start_day': self.fixed_start_day,
             'created_at': self.created_at.isoformat() if self.created_at else None,

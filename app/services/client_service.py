@@ -38,6 +38,8 @@ class ClientService:
                 city=client_data.get('city'),
                 state=client_data.get('state'),
                 zipcode=client_data.get('zipcode'),
+                billing_cycle=client_data.get('billing_cycle'),
+                billing_day=client_data.get('billing_day'),
                 billing_cycle_type=client_data.get('billing_cycle_type'),
                 fixed_start_day=client_data.get('fixed_start_day')
             )
@@ -67,6 +69,8 @@ class ClientService:
             client.city = client_data.get('city', client.city)
             client.state = client_data.get('state', client.state)
             client.zipcode = client_data.get('zipcode', client.zipcode)
+            client.billing_cycle = client_data.get('billing_cycle', client.billing_cycle)
+            client.billing_day = client_data.get('billing_day', client.billing_day)
             client.billing_cycle_type = client_data.get('billing_cycle_type', client.billing_cycle_type)
             client.fixed_start_day = client_data.get('fixed_start_day', client.fixed_start_day)
 

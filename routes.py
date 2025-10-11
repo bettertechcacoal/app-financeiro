@@ -5,6 +5,8 @@ from app.controllers.dashboard import dashboard_controller
 from app.controllers.clients import clients_controller
 from app.controllers.tickets import tickets_controller
 from app.controllers.integrations import integrations_controller
+from app.controllers import travels_controller
+from app.controllers import profile_controller
 
 
 # Middleware de Autenticação
@@ -45,7 +47,6 @@ def register_routes(app: Flask):
     # Rotas de Tickets
     admin_bp.add_url_rule('/tickets', view_func=tickets_controller.tickets_list, methods=['GET'])
     admin_bp.add_url_rule('/tickets/client/<int:client_id>', view_func=tickets_controller.tickets_view, methods=['GET'])
-    admin_bp.add_url_rule('/tickets/<int:client_id>/manage', view_func=tickets_controller.client_manage, methods=['GET'])
 
     # Rotas de Clientes (Organizações)
     admin_bp.add_url_rule('/clients', view_func=clients_controller.clients_list, methods=['GET'])  # Lista de clientes
@@ -66,6 +67,19 @@ def register_routes(app: Flask):
     admin_bp.add_url_rule('/integrations/movidesk/tickets/sync', view_func=integrations_controller.movidesk_sync_tickets, methods=['POST'])
     admin_bp.add_url_rule('/integrations/movidesk/organizations', view_func=integrations_controller.movidesk_organizations, methods=['GET'])
     admin_bp.add_url_rule('/integrations/movidesk/organizations/sync', view_func=integrations_controller.movidesk_sync_organizations, methods=['POST'])
+
+    # Rotas de Viagens
+    admin_bp.add_url_rule('/travels', view_func=travels_controller.travels_list, methods=['GET'])
+    admin_bp.add_url_rule('/travels/new', view_func=travels_controller.travels_create, methods=['GET'])
+    admin_bp.add_url_rule('/travels/create', view_func=travels_controller.travels_store, methods=['POST'])
+    admin_bp.add_url_rule('/travels/<int:travel_id>/edit', view_func=travels_controller.travels_edit, methods=['GET'])
+    admin_bp.add_url_rule('/travels/<int:travel_id>/update', view_func=travels_controller.travels_update, methods=['POST'])
+    admin_bp.add_url_rule('/travels/<int:travel_id>/delete', view_func=travels_controller.travels_delete, methods=['GET'])
+    admin_bp.add_url_rule('/travels/<int:travel_id>/approve', view_func=travels_controller.travels_approve, methods=['GET'])
+
+    # Rotas de Perfil
+    admin_bp.add_url_rule('/profile', view_func=profile_controller.profile_view, methods=['GET'])
+    admin_bp.add_url_rule('/profile/update', view_func=profile_controller.profile_update, methods=['POST'])
 
     # Rotas de Edição de Organizações
     admin_bp.add_url_rule('/organizations/<string:org_id>/edit', view_func=integrations_controller.organization_edit, methods=['GET'])

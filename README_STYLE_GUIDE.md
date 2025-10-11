@@ -8,11 +8,13 @@
 
 ### Cores Principais
 ```css
-Azul Principal:    from-blue-500 to-blue-600   /* Gradientes de ícones */
+Azul Principal:    bg-blue-600                 /* Ícones e elementos principais (SEM gradientes) */
 Verde Sucesso:     bg-green-500, bg-green-600  /* Botões de ação positiva */
 Vermelho Alerta:   bg-red-500, bg-red-600      /* Labels obrigatórios, alertas */
 Cinza Neutro:      bg-gray-50, bg-gray-100     /* Backgrounds, borders */
 ```
+
+**IMPORTANTE:** Não usar gradientes no projeto. Sempre usar cores sólidas.
 
 ### Cores de Texto
 ```css
@@ -76,7 +78,7 @@ Bold:              font-bold (700)
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
         <div class="flex items-center">
             <!-- Ícone -->
-            <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
                 <i class="fas fa-icon-name text-white text-2xl sm:text-3xl"></i>
             </div>
 
@@ -121,7 +123,7 @@ Bold:              font-bold (700)
 
 **Especificações:**
 - Ícone: `w-14 h-14 sm:w-16 sm:h-16`
-- Gradiente: `from-blue-500 to-blue-600` (pode variar por contexto)
+- Cor: `bg-blue-600` (cor sólida, SEM gradientes)
 - Título: `text-2xl sm:text-3xl font-bold text-gray-900`
 - Subtítulo: `text-sm sm:text-base text-gray-600`
 - **Botões no Header**: sempre à direita, com `gap-3`
@@ -643,15 +645,112 @@ hover:shadow-xl      /* Sombra maior no hover */
 
 ---
 
+## 👤 Página de Perfil
+
+### Estrutura da Página
+
+A página de perfil deve seguir o padrão de 2 colunas: conteúdo principal à esquerda (lg:col-span-2) e sidebar à direita (lg:col-span-1).
+
+#### Card de Informações do Usuário (Sidebar)
+
+```html
+<!-- Card: Informações do Usuário -->
+<div class="card animate-fade-in rounded-xl">
+    <!-- Header com Avatar e Dados -->
+    <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center">
+            <!-- Avatar quadrado com bordas arredondadas -->
+            <div class="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+                <span class="text-3xl font-bold text-white">US</span>
+            </div>
+            <!-- Nome e Email ao lado -->
+            <div class="ml-4">
+                <h2 class="text-lg font-bold text-gray-900 mb-1">Nome do Usuário</h2>
+                <p class="text-sm text-gray-600">usuario@email.com</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Corpo: Lista de Informações -->
+    <div class="p-6">
+        <div class="space-y-1">
+            <!-- Item de informação -->
+            <div class="flex items-center justify-between py-4 border-b border-gray-100">
+                <span class="text-sm font-medium text-gray-600">Label</span>
+                <span class="text-sm font-semibold text-gray-900">Valor</span>
+            </div>
+
+            <!-- Status com badge -->
+            <div class="flex items-center justify-between py-4 border-b border-gray-100">
+                <span class="text-sm font-medium text-gray-600">Status</span>
+                <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-green-100 text-green-700">
+                    <i class="fas fa-circle text-green-500 text-xs mr-2"></i>
+                    Ativo
+                </span>
+            </div>
+
+            <!-- Último item sem border-bottom -->
+            <div class="flex items-center justify-between py-4">
+                <span class="text-sm font-medium text-gray-600">Criado em</span>
+                <span class="text-sm font-semibold text-gray-900">15/01/2024</span>
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+**Especificações:**
+- Avatar: `w-20 h-20 bg-blue-600 rounded-2xl` (quadrado com bordas arredondadas, SEM círculo)
+- Nome e Email: ao lado do avatar com `ml-4`
+- Lista de informações: `space-y-1` entre itens, `py-4` dentro de cada item
+- Labels: `text-sm font-medium text-gray-600`
+- Valores: `text-sm font-semibold text-gray-900`
+- Separadores: `border-b border-gray-100` (exceto último item)
+- Datas: formato brasileiro `DD/MM/YYYY`
+
+#### Cards de Formulário (Conteúdo Principal)
+
+```html
+<!-- Card com Header Descritivo -->
+<div class="card animate-fade-in">
+    <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center">
+            <!-- Ícone pequeno -->
+            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+                <i class="fas fa-user text-white"></i>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-gray-900">Título do Card</h2>
+                <p class="text-sm text-gray-500">Descrição breve</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-6">
+        <!-- Grid de campos 2 colunas -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Campos do formulário -->
+        </div>
+    </div>
+</div>
+```
+
+**Especificações:**
+- Ícone do header: `w-10 h-10 bg-blue-600 rounded-lg` (cor sólida)
+- Grid de campos: `grid-cols-1 md:grid-cols-2 gap-6`
+- Cards sempre com `rounded-xl`
+
+---
+
 ## ✅ Checklist de Implementação
 
 Ao criar uma nova tela, certifique-se de:
 
-- [ ] Usar header padrão com ícone gradiente
+- [ ] Usar header padrão com ícone (`bg-blue-600`, SEM gradientes)
 - [ ] Labels obrigatórios em vermelho (`text-red-600`)
 - [ ] Inputs com `rounded-xl` e `focus:ring-2 focus:ring-blue-500`
-- [ ] Botões de ação posicionados no final (`justify-end`)
-- [ ] Botão Voltar após o card (`mt-6`)
+- [ ] Botões de ação posicionados no header (não no final do formulário)
+- [ ] Cards com `rounded-xl`
 - [ ] Grid responsivo (`grid-cols-1 md:grid-cols-2`)
 - [ ] Padding responsivo (`p-4 md:p-6 lg:p-8`)
 - [ ] Animações (`animate-fade-in`, `transition-all`)
@@ -659,12 +758,15 @@ Ao criar uma nova tela, certifique-se de:
 - [ ] Ícones Font Awesome apropriados
 - [ ] Empty states para seções vazias
 - [ ] Mensagens flash padronizadas
+- [ ] Datas em formato brasileiro (`DD/MM/YYYY`)
+- [ ] Cores sólidas (NUNCA usar gradientes)
 
 ---
 
 ## 📚 Exemplos de Referência
 
 Telas de referência no projeto:
+- `templates/pages/profile/profile.html` - Página de perfil completa (sidebar + formulário)
 - `templates/clients/form.html` - Formulário completo com tabs
 - `templates/tickets/list.html` - Listagem com tabela
 - `templates/integrations/list.html` - Grid de cards

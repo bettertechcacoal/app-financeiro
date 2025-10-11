@@ -620,7 +620,16 @@ $(document).ready(function() {
 
         // Show corresponding content
         $('#tab-' + tabName).addClass('active');
+
+        // Salvar a aba ativa no localStorage
+        localStorage.setItem('activeClientTab', tabName);
     });
+
+    // Restaurar a aba ativa ao carregar a página
+    const savedTab = localStorage.getItem('activeClientTab');
+    if (savedTab) {
+        $('.tab-item[data-tab="' + savedTab + '"]').click();
+    }
 
     // Controle do tipo de ciclo de cobrança
     const billingCycleType = $('#billing_cycle_type');

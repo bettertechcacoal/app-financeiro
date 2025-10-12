@@ -34,6 +34,8 @@ def upgrade() -> None:
         sa.Column('zipcode', sa.String(length=20), nullable=True),
         sa.Column('billing_cycle', sa.Integer(), nullable=True),
         sa.Column('billing_day', sa.Integer(), nullable=True),
+        sa.Column('billing_cycle_type', sa.String(length=20), nullable=True),
+        sa.Column('fixed_start_day', sa.Integer(), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.ForeignKeyConstraint(['organization_id'], ['organizations.id']),

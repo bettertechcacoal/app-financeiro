@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum, Boolean, Table
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.models.database import Base
@@ -31,9 +31,9 @@ class Travel(Base):
 
     # Detalhes da viagem
     purpose = Column(String(255), nullable=False)  # Motivo da viagem
-    description = Column(Text)  # Descrição detalhada
     departure_date = Column(DateTime(timezone=True), nullable=False)  # Data/hora de saída
     return_date = Column(DateTime(timezone=True), nullable=False)  # Data/hora de retorno
+    needs_vehicle = Column(Boolean, default=False, nullable=False)  # Necessita reserva de veículo
 
     # Status e controle
     status = Column(Enum(TravelStatus), default=TravelStatus.PENDING, nullable=False)
@@ -47,6 +47,9 @@ class Travel(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
+    # Relacionamento com passageiros (many-to-many via travel_passengers)
+    travel_passengers = relationship('TravelPassenger', back_populates='travel', cascade='all, delete-orphan')
+
     def to_dict(self):
         """Converte o modelo para dicionário"""
         return {
@@ -56,14 +59,15 @@ class Travel(Base):
             'city_id': self.city_id,
             'city': self.city.to_dict() if self.city else None,
             'purpose': self.purpose,
-            'description': self.description,
             'departure_date': self.departure_date.isoformat() if self.departure_date else None,
             'return_date': self.return_date.isoformat() if self.return_date else None,
+            'needs_vehicle': self.needs_vehicle,
             'status': self.status.value if self.status else None,
             'approved_by': self.approved_by,
             'approved_at': self.approved_at.isoformat() if self.approved_at else None,
             'notes': self.notes,
             'admin_notes': self.admin_notes,
+            'passengers': [tp.user.to_dict() if tp.user else None for tp in self.travel_passengers] if self.travel_passengers else [],
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

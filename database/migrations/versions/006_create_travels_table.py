@@ -29,6 +29,7 @@ def upgrade() -> None:
         sa.Column('description', sa.Text(), nullable=True),
         sa.Column('departure_date', sa.DateTime(timezone=True), nullable=False),
         sa.Column('return_date', sa.DateTime(timezone=True), nullable=False),
+        sa.Column('needs_vehicle', sa.Boolean(), nullable=False, server_default='false'),
         sa.Column('status', sa.Enum('PENDING', 'APPROVED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', name='travelstatus'), nullable=False),
         sa.Column('approved_by', sa.Integer(), nullable=True),
         sa.Column('approved_at', sa.DateTime(timezone=True), nullable=True),

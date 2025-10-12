@@ -69,10 +69,10 @@ def travels_store():
         user_id = request.form.get('user_id')
         city_id = request.form.get('city_id')
         purpose = request.form.get('purpose')
-        description = request.form.get('description')
         departure_date = request.form.get('departure_date')
         return_date = request.form.get('return_date')
         notes = request.form.get('notes')
+        needs_vehicle = request.form.get('needs_vehicle') == '1'
 
         # Validações básicas
         if not all([user_id, city_id, purpose, departure_date, return_date]):
@@ -93,10 +93,10 @@ def travels_store():
             user_id=int(user_id),
             city_id=int(city_id),
             purpose=purpose,
-            description=description,
             departure_date=departure_datetime,
             return_date=return_datetime,
             notes=notes,
+            needs_vehicle=needs_vehicle,
             status=TravelStatus.PENDING
         )
 
@@ -166,10 +166,10 @@ def travels_update(travel_id):
         user_id = request.form.get('user_id')
         city_id = request.form.get('city_id')
         purpose = request.form.get('purpose')
-        description = request.form.get('description')
         departure_date = request.form.get('departure_date')
         return_date = request.form.get('return_date')
         notes = request.form.get('notes')
+        needs_vehicle = request.form.get('needs_vehicle') == '1'
         status = request.form.get('status')
 
         # Validações básicas
@@ -190,10 +190,10 @@ def travels_update(travel_id):
         travel.user_id = int(user_id)
         travel.city_id = int(city_id)
         travel.purpose = purpose
-        travel.description = description
         travel.departure_date = departure_datetime
         travel.return_date = return_datetime
         travel.notes = notes
+        travel.needs_vehicle = needs_vehicle
 
         if status:
             travel.status = TravelStatus(status)
@@ -202,7 +202,7 @@ def travels_update(travel_id):
         db.close()
 
         flash('Viagem atualizada com sucesso!', 'success')
-        return redirect(url_for('admin.travels_list'))
+        return redirect(url_for('admin.travels_edit', travel_id=travel_id))
 
     except Exception as e:
         db.rollback()
@@ -268,4 +268,38 @@ def travels_approve(travel_id):
         db.close()
         print(f"Erro ao aprovar viagem: {e}")
         flash('Erro ao aprovar viagem', 'error')
+        return redirect(url_for('admin.travels_list'))
+
+
+def travels_cancel(travel_id):
+    """Cancela uma viagem"""
+    try:
+        db = SessionLocal()
+
+        # Buscar viagem
+        travel = db.query(Travel).filter_by(id=travel_id).first()
+
+        if not travel:
+            flash('Viagem não encontrada', 'error')
+            return redirect(url_for('admin.travels_list'))
+
+        # Verificar se a viagem pode ser cancelada
+        if travel.status == TravelStatus.COMPLETED:
+            flash('Não é possível cancelar uma viagem já concluída', 'error')
+            return redirect(url_for('admin.travels_list'))
+
+        # Atualizar status para cancelada
+        travel.status = TravelStatus.CANCELLED
+
+        db.commit()
+        db.close()
+
+        flash('Viagem cancelada com sucesso!', 'success')
+        return redirect(url_for('admin.travels_list'))
+
+    except Exception as e:
+        db.rollback()
+        db.close()
+        print(f"Erro ao cancelar viagem: {e}")
+        flash('Erro ao cancelar viagem', 'error')
         return redirect(url_for('admin.travels_list'))

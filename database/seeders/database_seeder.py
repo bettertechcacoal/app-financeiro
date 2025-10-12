@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 from groups_seeder import seed_groups
 from users_seeder import seed_users
 from cities_seeder import seed_rondonia_cities
+from travels_seeder import seed_travels
 
 
 def seed_database():
@@ -23,16 +24,20 @@ def seed_database():
 
     try:
         # 1. Seeder de Grupos
-        print("[1/3] Executando seeder de Groups...")
+        print("[1/4] Executando seeder de Groups...")
         seed_groups()
 
         # 2. Seeder de Usuarios
-        print("[2/3] Executando seeder de Users...")
+        print("[2/4] Executando seeder de Users...")
         seed_users()
 
         # 3. Seeder de Cidades de Rondonia
-        print("[3/3] Executando seeder de Cities (Rondonia)...")
+        print("[3/4] Executando seeder de Cities (Rondonia)...")
         seed_rondonia_cities()
+
+        # 4. Seeder de Viagens
+        print("[4/4] Executando seeder de Travels...")
+        seed_travels()
 
         print("\n" + "="*60)
         print("TODOS OS SEEDERS FORAM EXECUTADOS COM SUCESSO!")
@@ -44,6 +49,7 @@ def seed_database():
         print("  [OK] User-Groups: 1 vinculo criado")
         print("  [OK] States: 1 estado (Rondonia)")
         print("  [OK] Cities: 52 cidades de Rondonia")
+        print("  [OK] Travels: 5 viagens de teste criadas")
         print()
 
     except Exception as e:

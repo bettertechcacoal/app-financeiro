@@ -3,6 +3,99 @@
 
 {% block title %}{{ 'Editar Viagem' if travel else 'Nova Viagem' }}{% endblock %}
 
+{% block extra_css %}
+<!-- jQuery UI CSS para Datepicker -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<style>
+    /* Modal styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        animation: fadeIn 0.2s;
+    }
+    .modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-content {
+        background-color: white;
+        border-radius: 1rem;
+        max-width: 450px;
+        width: 90%;
+        animation: slideIn 0.3s;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes slideIn {
+        from { transform: translateY(-50px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Dropdown pesquisável */
+    #user-dropdown, #city-dropdown, #passenger-dropdown {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+    }
+    #user-dropdown::-webkit-scrollbar, #city-dropdown::-webkit-scrollbar, #passenger-dropdown::-webkit-scrollbar {
+        width: 6px;
+    }
+    #user-dropdown::-webkit-scrollbar-track, #city-dropdown::-webkit-scrollbar-track, #passenger-dropdown::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 0 1rem 1rem 0;
+    }
+    #user-dropdown::-webkit-scrollbar-thumb, #city-dropdown::-webkit-scrollbar-thumb, #passenger-dropdown::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 1rem;
+    }
+    #user-dropdown::-webkit-scrollbar-thumb:hover, #city-dropdown::-webkit-scrollbar-thumb:hover, #passenger-dropdown::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    /* Datepicker Customização */
+    .ui-datepicker {
+        border-radius: 0.75rem !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+        border: 1px solid #d1d5db !important;
+        padding: 0.5rem !important;
+    }
+    .ui-datepicker-header {
+        border-radius: 0.5rem !important;
+        background: #3b82f6 !important;
+        border: none !important;
+        color: white !important;
+    }
+    .ui-datepicker-title {
+        color: white !important;
+    }
+    .ui-datepicker-prev, .ui-datepicker-next {
+        color: white !important;
+    }
+    .ui-state-default {
+        border-radius: 0.375rem !important;
+        border: 1px solid transparent !important;
+        text-align: center !important;
+    }
+    .ui-state-default:hover {
+        background: #eff6ff !important;
+        border-color: #3b82f6 !important;
+    }
+    .ui-state-active {
+        background: #3b82f6 !important;
+        color: white !important;
+        border-color: #3b82f6 !important;
+    }
+</style>
+{% endblock %}
+
 {% block breadcrumbs %}
 {{ breadcrumbs([
     {'name': 'Viagens', 'url': url_for('admin.travels_list')},
@@ -14,197 +107,866 @@
 <div class="py-8">
     <!-- Header -->
     <div class="mb-8 animate-fade-in">
-        <div class="flex items-center">
-            <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
-                <i class="fas fa-plane-departure text-white text-2xl sm:text-3xl"></i>
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            <div class="flex items-center">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+                    <i class="fas fa-plane-departure text-white text-2xl sm:text-3xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
+                        {{ 'Editar Viagem' if travel else 'Nova Viagem' }}
+                    </h1>
+                    <p class="text-sm sm:text-base text-gray-600">
+                        {{ 'Atualize os dados da viagem' if travel else 'Preencha os dados para agendar uma nova viagem' }}
+                    </p>
+                </div>
             </div>
-            <div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
-                    {{ 'Editar Viagem' if travel else 'Nova Viagem' }}
-                </h1>
-                <p class="text-sm sm:text-base text-gray-600">
-                    {{ 'Atualize os dados da viagem' if travel else 'Preencha os dados para agendar uma nova viagem' }}
-                </p>
+
+            <!-- Botões de Ação -->
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ url_for('admin.travels_list') }}"
+                   class="inline-flex items-center px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-all">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Voltar
+                </a>
+                <button type="submit" form="travel-form"
+                        class="inline-flex items-center px-8 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg">
+                    <i class="fas fa-save mr-2"></i>
+                    Salvar
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Formulário -->
-    <div class="max-w-4xl mx-auto">
-        <form method="POST" action="{{ url_for('admin.travels_update', travel_id=travel.id) if travel else url_for('admin.travels_store') }}" class="card p-6 sm:p-8 animate-fade-in">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="mb-6 p-4 rounded-xl {% if category == 'success' %}bg-green-100 text-green-700{% elif category == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %} animate-fade-in">
+                    <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} mr-2"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
-            <!-- Usuário -->
-            <div class="mb-6">
-                <label for="user_id" class="block text-sm font-semibold text-gray-700 mb-2">
-                    Usuário <span class="text-red-500">*</span>
-                </label>
-                <select name="user_id" id="user_id" required
-                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
-                    <option value="">Selecione o usuário</option>
-                    {% for user in users %}
-                        <option value="{{ user.id }}" {{ 'selected' if travel and travel.user_id == user.id else '' }}>
-                            {{ user.name }} - {{ user.email }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
+    <!-- Layout com 2 Colunas -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+        <!-- Coluna Principal - Formulário -->
+        <div class="lg:col-span-2">
+            <form id="travel-form" method="POST" action="{{ url_for('admin.travels_update', travel_id=travel.id) if travel else url_for('admin.travels_store') }}">
+                <!-- Card: Informações Básicas -->
+                <div class="card mb-6">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                            <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+                            Informações Básicas
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <!-- Solicitante -->
+                        <div class="mb-6">
+                            <label for="user_id" class="block text-xs font-bold text-red-600 uppercase mb-2">
+                                Solicitante *
+                            </label>
+                            <div class="relative">
+                                <input type="text" id="user_search" placeholder="Digite para pesquisar..."
+                                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                <i class="fas fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                <select name="user_id" id="user_id" required style="display: none;">
+                                    <option value="">Selecione o solicitante</option>
+                                    {% for user in users %}
+                                        <option value="{{ user.id }}" {{ 'selected' if travel and travel.user_id == user.id else '' }}>
+                                            {{ user.name }} - {{ user.email }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <!-- Dropdown de resultados -->
+                                <div id="user-dropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg hidden max-h-60 overflow-y-auto">
+                                    <!-- Resultados serão inseridos aqui -->
+                                </div>
+                            </div>
+                            <p class="mt-2 text-xs text-gray-500">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Em viagens com reserva de veículo, o solicitante será definido como motorista responsável
+                            </p>
+                        </div>
 
-            <!-- Cidade de Destino -->
-            <div class="mb-6">
-                <label for="city_id" class="block text-sm font-semibold text-gray-700 mb-2">
-                    Cidade de Destino <span class="text-red-500">*</span>
-                </label>
-                <select name="city_id" id="city_id" required
-                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
-                    <option value="">Selecione a cidade</option>
-                    {% for city in cities %}
-                        <option value="{{ city.id }}" {{ 'selected' if travel and travel.city_id == city.id else '' }}>
-                            {{ city.name }} - {{ city.state.uf if city.state else '' }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
+                        <!-- Motivo da Viagem -->
+                        <div class="mb-6">
+                            <label for="purpose" class="block text-xs font-bold text-red-600 uppercase mb-2">
+                                Motivo da Viagem *
+                            </label>
+                            <input type="text" name="purpose" id="purpose" required
+                                   value="{{ travel.purpose if travel else '' }}"
+                                   placeholder="Ex: Reunião de negócios, Treinamento, Visita técnica..."
+                                   class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        </div>
 
-            <!-- Motivo da Viagem -->
-            <div class="mb-6">
-                <label for="purpose" class="block text-sm font-semibold text-gray-700 mb-2">
-                    Motivo da Viagem <span class="text-red-500">*</span>
-                </label>
-                <input type="text" name="purpose" id="purpose" required
-                       value="{{ travel.purpose if travel else '' }}"
-                       placeholder="Ex: Reunião de negócios, Treinamento, Visita técnica..."
-                       class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
-            </div>
-
-            <!-- Descrição -->
-            <div class="mb-6">
-                <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">
-                    Descrição Detalhada
-                </label>
-                <textarea name="description" id="description" rows="4"
-                          placeholder="Descreva mais detalhes sobre a viagem..."
-                          class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">{{ travel.description if travel else '' }}</textarea>
-            </div>
-
-            <!-- Datas -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-                <!-- Data de Saída -->
-                <div>
-                    <label for="departure_date" class="block text-sm font-semibold text-gray-700 mb-2">
-                        Data e Hora de Saída <span class="text-red-500">*</span>
-                    </label>
-                    <input type="datetime-local" name="departure_date" id="departure_date" required
-                           value="{{ travel.departure_date[:16] if travel and travel.departure_date else '' }}"
-                           class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                        <!-- Observações -->
+                        <div class="mb-0">
+                            <label for="description" class="block text-xs font-bold text-gray-700 uppercase mb-2">
+                                Observações
+                            </label>
+                            <textarea name="description" id="description" rows="3"
+                                      placeholder="Observações sobre a viagem..."
+                                      class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">{{ travel.description if travel else '' }}</textarea>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Data de Retorno -->
-                <div>
-                    <label for="return_date" class="block text-sm font-semibold text-gray-700 mb-2">
-                        Data e Hora de Retorno <span class="text-red-500">*</span>
-                    </label>
-                    <input type="datetime-local" name="return_date" id="return_date" required
-                           value="{{ travel.return_date[:16] if travel and travel.return_date else '' }}"
-                           class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                <!-- Card: Destino e Datas -->
+                <div class="card mb-6">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                            <i class="fas fa-map-marker-alt text-blue-600 mr-2"></i>
+                            Destino e Período
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <!-- Destino -->
+                        <div class="mb-6">
+                            <label for="city_id" class="block text-xs font-bold text-red-600 uppercase mb-2">
+                                Destino *
+                            </label>
+                            <div class="relative">
+                                <input type="text" id="city_search" placeholder="Digite para pesquisar..."
+                                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                <i class="fas fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                <select name="city_id" id="city_id" required style="display: none;">
+                                    <option value="">Selecione a cidade</option>
+                                    {% for city in cities %}
+                                        <option value="{{ city.id }}" {{ 'selected' if travel and travel.city_id == city.id else '' }}>
+                                            {{ city.name }} - {{ city.state.uf if city.state else '' }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <!-- Dropdown de resultados -->
+                                <div id="city-dropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg hidden max-h-60 overflow-y-auto">
+                                    <!-- Resultados serão inseridos aqui -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Saída -->
+                        <div class="mb-6">
+                            <div class="grid gap-3" style="grid-template-columns: 1fr auto;">
+                                <div>
+                                    <label for="departure_date_picker" class="block text-xs font-bold text-red-600 uppercase mb-2">
+                                        Data de Saída *
+                                    </label>
+                                    <input type="text" id="departure_date_picker" placeholder="DD/MM/AAAA" readonly
+                                           class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer">
+                                </div>
+                                <div style="min-width: 140px;">
+                                    <label for="departure_time" class="block text-xs font-bold text-red-600 uppercase mb-2">
+                                        Hora de Saída *
+                                    </label>
+                                    <input type="time" id="departure_time" required value="07:30"
+                                           class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                </div>
+                            </div>
+                            <input type="hidden" name="departure_date" id="departure_date" required
+                                   value="{{ travel.departure_date[:16] if travel and travel.departure_date else '' }}">
+                        </div>
+
+                        <!-- Retorno -->
+                        <div class="mb-6">
+                            <div class="grid gap-3" style="grid-template-columns: 1fr auto;">
+                                <div>
+                                    <label for="return_date_picker" class="block text-xs font-bold text-red-600 uppercase mb-2">
+                                        Data de Retorno *
+                                    </label>
+                                    <input type="text" id="return_date_picker" placeholder="DD/MM/AAAA" readonly
+                                           class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer">
+                                </div>
+                                <div style="min-width: 140px;">
+                                    <label for="return_time" class="block text-xs font-bold text-red-600 uppercase mb-2">
+                                        Hora de Retorno *
+                                    </label>
+                                    <input type="time" id="return_time" required value="17:00"
+                                           class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                </div>
+                            </div>
+                            <input type="hidden" name="return_date" id="return_date" required
+                                   value="{{ travel.return_date[:16] if travel and travel.return_date else '' }}">
+                        </div>
+
+                        <!-- Status (apenas na edição) -->
+                        {% if travel %}
+                        <div class="mb-0">
+                            <label for="status" class="block text-xs font-bold text-gray-700 uppercase mb-2">
+                                Status
+                            </label>
+                            <select name="status" id="status"
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                <option value="pending" {{ 'selected' if travel.status == 'pending' else '' }}>Pendente</option>
+                                <option value="approved" {{ 'selected' if travel.status == 'approved' else '' }}>Aprovada</option>
+                                <option value="in_progress" {{ 'selected' if travel.status == 'in_progress' else '' }}>Em Andamento</option>
+                                <option value="completed" {{ 'selected' if travel.status == 'completed' else '' }}>Concluída</option>
+                                <option value="cancelled" {{ 'selected' if travel.status == 'cancelled' else '' }}>Cancelada</option>
+                            </select>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Coluna Lateral - Passageiros e Info -->
+        <div class="lg:col-span-1">
+            <!-- Card: Reserva de Veículo -->
+            <div class="card mb-6">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                        <i class="fas fa-car text-blue-600 mr-2"></i>
+                        Reserva de Veículo
+                    </h3>
+                </div>
+                <div class="p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <label for="needs_vehicle" class="text-sm font-semibold text-gray-900 cursor-pointer">
+                                Reservar veículo para esta viagem?
+                            </label>
+                        </div>
+                        <div class="ml-4 flex items-center gap-2">
+                            <span id="vehicle-status-text" class="text-xs font-bold text-gray-500">Não</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" name="needs_vehicle" id="needs_vehicle" class="sr-only peer" value="1">
+                                <div class="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Status (apenas na edição) -->
+            <!-- Card: Passageiros -->
+            <div class="card mb-6">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-bold text-gray-900 flex items-center">
+                            <i class="fas fa-users text-blue-600 mr-2"></i>
+                            Passageiros
+                            <span id="passenger-count" class="ml-2 inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-green-600 rounded-full hidden">
+                                0
+                            </span>
+                        </h3>
+                        <button type="button" id="btn-add-passenger" class="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all shadow-md" title="Adicionar Passageiro">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <!-- Estado Vazio -->
+                    <div id="passengers-empty" class="text-center py-8">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-users text-gray-400 text-2xl"></i>
+                        </div>
+                        <p class="text-sm text-gray-500">Nenhum passageiro</p>
+                    </div>
+
+                    <!-- Lista de Passageiros -->
+                    <div id="passengers-list" class="space-y-3 hidden">
+                        <!-- Passageiros serão listados aqui -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card: Informações Adicionais -->
             {% if travel %}
-            <div class="mb-6">
-                <label for="status" class="block text-sm font-semibold text-gray-700 mb-2">
-                    Status
-                </label>
-                <select name="status" id="status"
-                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
-                    <option value="pending" {{ 'selected' if travel.status == 'pending' else '' }}>Pendente</option>
-                    <option value="approved" {{ 'selected' if travel.status == 'approved' else '' }}>Aprovada</option>
-                    <option value="in_progress" {{ 'selected' if travel.status == 'in_progress' else '' }}>Em Andamento</option>
-                    <option value="completed" {{ 'selected' if travel.status == 'completed' else '' }}>Concluída</option>
-                    <option value="cancelled" {{ 'selected' if travel.status == 'cancelled' else '' }}>Cancelada</option>
-                </select>
+            <div class="card">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Informações</h3>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div>
+                        <span class="text-xs text-gray-500">ID da Viagem</span>
+                        <p class="font-medium text-gray-900">#{{ travel.id }}</p>
+                    </div>
+                    <div>
+                        <span class="text-xs text-gray-500">Cadastrada em</span>
+                        <p class="font-medium text-gray-900">
+                            {% if travel.created_at %}
+                                {{ travel.created_at[8:10] }}/{{ travel.created_at[5:7] }}/{{ travel.created_at[:4] }} às {{ travel.created_at[11:16] }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if travel.approved_at %}
+                    <div>
+                        <span class="text-xs text-gray-500">Aprovada em</span>
+                        <p class="font-medium text-gray-900">
+                            {{ travel.approved_at[8:10] }}/{{ travel.approved_at[5:7] }}/{{ travel.approved_at[:4] }} às {{ travel.approved_at[11:16] }}
+                        </p>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <span class="text-xs text-gray-500">Última atualização</span>
+                        <p class="font-medium text-gray-900">
+                            {% if travel.updated_at %}
+                                {{ travel.updated_at[8:10] }}/{{ travel.updated_at[5:7] }}/{{ travel.updated_at[:4] }} às {{ travel.updated_at[11:16] }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
             </div>
             {% endif %}
+        </div>
+    </div>
 
-            <!-- Observações -->
-            <div class="mb-8">
-                <label for="notes" class="block text-sm font-semibold text-gray-700 mb-2">
-                    Observações
-                </label>
-                <textarea name="notes" id="notes" rows="3"
-                          placeholder="Observações adicionais sobre a viagem..."
-                          class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">{{ travel.notes if travel else '' }}</textarea>
+    <!-- Modal Adicionar Passageiro -->
+    <div id="passenger-modal" class="modal">
+        <div class="modal-content">
+            <!-- Header do Modal -->
+            <div class="px-6 py-4 border-b border-gray-200 bg-blue-600">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-white flex items-center">
+                        <i class="fas fa-user-plus mr-2"></i>
+                        Adicionar Passageiro
+                    </h3>
+                    <button type="button" id="close-modal" class="text-white hover:text-gray-200 transition-all">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
             </div>
 
-            <!-- Botões -->
-            <div class="flex items-center justify-between pt-6 border-t border-gray-200">
-                <a href="{{ url_for('admin.travels_list') }}" class="text-gray-600 hover:text-gray-800 font-semibold">
-                    <i class="fas fa-arrow-left mr-2"></i>
+            <!-- Body do Modal -->
+            <div class="p-6">
+                <label class="block text-xs font-bold text-red-600 uppercase mb-2">
+                    Selecione um Usuário *
+                </label>
+                <div class="relative">
+                    <input type="text" id="passenger-search" placeholder="Digite para pesquisar..."
+                           class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    <i class="fas fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <select id="select-user" style="display: none;">
+                        <option value="">Escolha um usuário da lista</option>
+                    </select>
+                    <!-- Dropdown de resultados -->
+                    <div id="passenger-dropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg hidden max-h-60 overflow-y-auto">
+                        <!-- Resultados serão inseridos aqui -->
+                    </div>
+                </div>
+                <p class="mt-2 text-xs text-gray-500">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Selecione o usuário que participará da viagem
+                </p>
+            </div>
+
+            <!-- Footer do Modal -->
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+                <button type="button" id="cancel-modal" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-100 transition-all">
                     Cancelar
-                </a>
-                <button type="submit" class="btn-primary text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
-                    <i class="fas fa-save mr-2"></i>
-                    {{ 'Atualizar Viagem' if travel else 'Cadastrar Viagem' }}
+                </button>
+                <button type="button" id="save-passenger" class="px-6 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all shadow-md">
+                    <i class="fas fa-check mr-2"></i>
+                    Adicionar
                 </button>
             </div>
-        </form>
-
-        <!-- Info adicional -->
-        {% if travel %}
-        <div class="card p-6 mt-6 bg-gray-50 animate-fade-in">
-            <h3 class="text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider">Informações Adicionais</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                <div>
-                    <span class="text-gray-500">ID da Viagem:</span>
-                    <p class="font-medium text-gray-900">#{{ travel.id }}</p>
-                </div>
-                <div>
-                    <span class="text-gray-500">Cadastrada em:</span>
-                    <p class="font-medium text-gray-900">
-                        {% if travel.created_at %}
-                            {{ travel.created_at[8:10] }}/{{ travel.created_at[5:7] }}/{{ travel.created_at[:4] }} às {{ travel.created_at[11:16] }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </p>
-                </div>
-                {% if travel.approved_at %}
-                <div>
-                    <span class="text-gray-500">Aprovada em:</span>
-                    <p class="font-medium text-gray-900">
-                        {{ travel.approved_at[8:10] }}/{{ travel.approved_at[5:7] }}/{{ travel.approved_at[:4] }} às {{ travel.approved_at[11:16] }}
-                    </p>
-                </div>
-                {% endif %}
-                <div>
-                    <span class="text-gray-500">Última atualização:</span>
-                    <p class="font-medium text-gray-900">
-                        {% if travel.updated_at %}
-                            {{ travel.updated_at[8:10] }}/{{ travel.updated_at[5:7] }}/{{ travel.updated_at[:4] }} às {{ travel.updated_at[11:16] }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </p>
-                </div>
-            </div>
         </div>
-        {% endif %}
     </div>
 </div>
 
+<!-- jQuery UI JS para Datepicker -->
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
 <script>
-    // Validação de datas
-    const departureDateInput = document.getElementById('departure_date');
-    const returnDateInput = document.getElementById('return_date');
+$(document).ready(function() {
+    // ===== CONFIGURAÇÃO DO DATEPICKER =====
+    $.datepicker.setDefaults($.datepicker.regional['pt-BR']);
+    $.datepicker.regional['pt-BR'] = {
+        closeText: 'Fechar',
+        prevText: '&#x3C;Anterior',
+        nextText: 'Próximo&#x3E;',
+        currentText: 'Hoje',
+        monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+        monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+            'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+        dayNames: ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'],
+        dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+        dayNamesMin: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'],
+        weekHeader: 'Sm',
+        dateFormat: 'dd/mm/yy',
+        firstDay: 0,
+        isRTL: false,
+        showMonthAfterYear: false,
+        yearSuffix: ''
+    };
+    $.datepicker.setDefaults($.datepicker.regional['pt-BR']);
 
-    returnDateInput.addEventListener('change', function() {
-        const departureDate = new Date(departureDateInput.value);
-        const returnDate = new Date(returnDateInput.value);
-
-        if (returnDate <= departureDate) {
-            alert('A data de retorno deve ser posterior à data de saída!');
-            returnDateInput.value = '';
+    // Inicializar datepickers
+    $('#departure_date_picker').datepicker({
+        dateFormat: 'dd/mm/yy',
+        minDate: 0,
+        onSelect: function(dateText) {
+            updateHiddenDateTime('departure');
         }
     });
+
+    $('#return_date_picker').datepicker({
+        dateFormat: 'dd/mm/yy',
+        minDate: 0,
+        onSelect: function(dateText) {
+            updateHiddenDateTime('return');
+        }
+    });
+
+    // Atualizar campo hidden ao mudar a hora
+    $('#departure_time').on('change', function() {
+        updateHiddenDateTime('departure');
+    });
+
+    $('#return_time').on('change', function() {
+        updateHiddenDateTime('return');
+    });
+
+    // Função para atualizar campos hidden
+    function updateHiddenDateTime(type) {
+        const datePicker = $(`#${type}_date_picker`);
+        const timeInput = $(`#${type}_time`);
+        const hiddenInput = $(`#${type}_date`);
+
+        const dateValue = datePicker.val();
+        const timeValue = timeInput.val();
+
+        if (dateValue && timeValue) {
+            // Converter DD/MM/YYYY para YYYY-MM-DD
+            const parts = dateValue.split('/');
+            const isoDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            hiddenInput.val(`${isoDate}T${timeValue}`);
+        }
+    }
+
+    // Preencher campos em modo edição
+    const departureValue = $('#departure_date').val();
+    if (departureValue) {
+        const departureParts = departureValue.split('T');
+        if (departureParts.length === 2) {
+            const dateParts = departureParts[0].split('-');
+            $('#departure_date_picker').val(`${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`);
+            $('#departure_time').val(departureParts[1]);
+        }
+    } else {
+        // Modo nova viagem: manter os valores padrão (já definidos no HTML)
+        // Atualizar campo hidden se houver data selecionada
+        updateHiddenDateTime('departure');
+    }
+
+    const returnValue = $('#return_date').val();
+    if (returnValue) {
+        const returnParts = returnValue.split('T');
+        if (returnParts.length === 2) {
+            const dateParts = returnParts[0].split('-');
+            $('#return_date_picker').val(`${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`);
+            $('#return_time').val(returnParts[1]);
+        }
+    } else {
+        // Modo nova viagem: manter os valores padrão (já definidos no HTML)
+        // Atualizar campo hidden se houver data selecionada
+        updateHiddenDateTime('return');
+    }
+
+    // Validação ao enviar o formulário
+    $('#travel-form').on('submit', function(e) {
+        const departureDateTime = $('#departure_date').val();
+        const returnDateTime = $('#return_date').val();
+
+        if (!departureDateTime || !returnDateTime) {
+            e.preventDefault();
+            alert('Por favor, preencha a data e hora de saída e retorno!');
+            return false;
+        }
+
+        const departure = new Date(departureDateTime);
+        const returnDate = new Date(returnDateTime);
+
+        if (returnDate <= departure) {
+            e.preventDefault();
+            alert('A data e hora de retorno devem ser posteriores à data e hora de saída!');
+            return false;
+        }
+    });
+
+    // ===== CAMPO DE DESTINO PESQUISÁVEL =====
+    let allCities = [];
+
+    // Carregar todas as cidades do select
+    $('#city_id option').each(function() {
+        if ($(this).val()) {
+            allCities.push({
+                id: $(this).val(),
+                text: $(this).text()
+            });
+        }
+    });
+
+    // Mostrar cidade selecionada no input (modo edição)
+    const selectedCityId = $('#city_id').val();
+    if (selectedCityId) {
+        const selectedCity = allCities.find(c => c.id == selectedCityId);
+        if (selectedCity) {
+            $('#city_search').val(selectedCity.text);
+        }
+    }
+
+    // Função para renderizar o dropdown de cidades
+    function renderCityDropdown(cities) {
+        const dropdown = $('#city-dropdown');
+        dropdown.empty();
+
+        if (cities.length === 0) {
+            dropdown.html('<div class="p-4 text-center text-sm text-gray-500">Nenhuma cidade encontrada</div>');
+            dropdown.removeClass('hidden');
+            return;
+        }
+
+        cities.forEach(function(city) {
+            const item = $('<div>')
+                .addClass('p-3 hover:bg-blue-50 cursor-pointer transition-all border-b border-gray-100 last:border-0')
+                .html(`
+                    <div class="text-sm font-semibold text-gray-900">${city.text}</div>
+                `)
+                .on('click', function() {
+                    $('#city_id').val(city.id);
+                    $('#city_search').val(city.text);
+                    dropdown.addClass('hidden');
+                });
+            dropdown.append(item);
+        });
+
+        dropdown.removeClass('hidden');
+    }
+
+    // Pesquisa ao digitar
+    $('#city_search').on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+
+        if (searchTerm.length === 0) {
+            $('#city-dropdown').addClass('hidden');
+            $('#city_id').val('');
+            return;
+        }
+
+        const filteredCities = allCities.filter(function(city) {
+            return city.text.toLowerCase().includes(searchTerm);
+        });
+
+        renderCityDropdown(filteredCities);
+    });
+
+    // Mostrar todas as cidades ao focar no campo
+    $('#city_search').on('focus', function() {
+        if ($(this).val().length === 0) {
+            renderCityDropdown(allCities);
+        } else {
+            const searchTerm = $(this).val().toLowerCase();
+            const filteredCities = allCities.filter(function(city) {
+                return city.text.toLowerCase().includes(searchTerm);
+            });
+            renderCityDropdown(filteredCities);
+        }
+    });
+
+    // Fechar dropdown ao clicar fora
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#city_search, #city-dropdown').length) {
+            $('#city-dropdown').addClass('hidden');
+        }
+    });
+
+    // ===== CAMPO DE SOLICITANTE PESQUISÁVEL =====
+    let allUsers = [];
+
+    // Carregar todos os usuários do select
+    $('#user_id option').each(function() {
+        if ($(this).val()) {
+            allUsers.push({
+                id: $(this).val(),
+                text: $(this).text()
+            });
+        }
+    });
+
+    // Mostrar usuário selecionado no input (modo edição)
+    const selectedUserId = $('#user_id').val();
+    if (selectedUserId) {
+        const selectedUser = allUsers.find(u => u.id == selectedUserId);
+        if (selectedUser) {
+            $('#user_search').val(selectedUser.text);
+        }
+    }
+
+    // Função para renderizar o dropdown
+    function renderUserDropdown(users) {
+        const dropdown = $('#user-dropdown');
+        dropdown.empty();
+
+        if (users.length === 0) {
+            dropdown.html('<div class="p-4 text-center text-sm text-gray-500">Nenhum usuário encontrado</div>');
+            dropdown.removeClass('hidden');
+            return;
+        }
+
+        users.forEach(function(user) {
+            const item = $('<div>')
+                .addClass('p-3 hover:bg-blue-50 cursor-pointer transition-all border-b border-gray-100 last:border-0')
+                .html(`
+                    <div class="text-sm font-semibold text-gray-900">${user.text}</div>
+                `)
+                .on('click', function() {
+                    $('#user_id').val(user.id);
+                    $('#user_search').val(user.text);
+                    dropdown.addClass('hidden');
+                });
+            dropdown.append(item);
+        });
+
+        dropdown.removeClass('hidden');
+    }
+
+    // Pesquisa ao digitar
+    $('#user_search').on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+
+        if (searchTerm.length === 0) {
+            $('#user-dropdown').addClass('hidden');
+            $('#user_id').val('');
+            return;
+        }
+
+        const filteredUsers = allUsers.filter(function(user) {
+            return user.text.toLowerCase().includes(searchTerm);
+        });
+
+        renderUserDropdown(filteredUsers);
+    });
+
+    // Mostrar todos os usuários ao focar no campo
+    $('#user_search').on('focus', function() {
+        if ($(this).val().length === 0) {
+            renderUserDropdown(allUsers);
+        } else {
+            const searchTerm = $(this).val().toLowerCase();
+            const filteredUsers = allUsers.filter(function(user) {
+                return user.text.toLowerCase().includes(searchTerm);
+            });
+            renderUserDropdown(filteredUsers);
+        }
+    });
+
+    // Fechar dropdown ao clicar fora
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#user_search, #user-dropdown').length) {
+            $('#user-dropdown').addClass('hidden');
+        }
+    });
+
+    // ===== TOGGLE DE VEÍCULO =====
+    $('#needs_vehicle').on('change', function() {
+        const statusText = $('#vehicle-status-text');
+        if ($(this).is(':checked')) {
+            statusText.text('Sim').removeClass('text-gray-500').addClass('text-blue-600');
+        } else {
+            statusText.text('Não').removeClass('text-blue-600').addClass('text-gray-500');
+        }
+    });
+
+    // Verificar estado inicial (modo edição)
+    if ($('#needs_vehicle').is(':checked')) {
+        $('#vehicle-status-text').text('Sim').removeClass('text-gray-500').addClass('text-blue-600');
+    }
+
+    // ===== GERENCIAMENTO DE PASSAGEIROS =====
+    let passengers = [];
+    let availableUsers = [];
+
+    // Buscar usuários via API
+    $.get('{{ url_for("admin.get_clients_api") }}', function(response) {
+        if (response.success && response.clients) {
+            availableUsers = response.clients;
+
+            // Popular o select oculto com os usuários
+            const selectUser = $('#select-user');
+            availableUsers.forEach(function(user) {
+                selectUser.append(`<option value="${user.id}">${user.name}${user.email ? ' - ' + user.email : ''}</option>`);
+            });
+        }
+    });
+
+    // Função para renderizar o dropdown de passageiros
+    function renderPassengerDropdown(users) {
+        const dropdown = $('#passenger-dropdown');
+        dropdown.empty();
+
+        if (users.length === 0) {
+            dropdown.html('<div class="p-4 text-center text-sm text-gray-500">Nenhum usuário encontrado</div>');
+            dropdown.removeClass('hidden');
+            return;
+        }
+
+        users.forEach(function(user) {
+            const item = $('<div>')
+                .addClass('p-3 hover:bg-blue-50 cursor-pointer transition-all border-b border-gray-100 last:border-0')
+                .html(`
+                    <div class="text-sm font-semibold text-gray-900">${user.name}</div>
+                    ${user.email ? `<div class="text-xs text-gray-500">${user.email}</div>` : ''}
+                `)
+                .on('click', function() {
+                    $('#select-user').val(user.id);
+                    $('#passenger-search').val(user.name);
+                    dropdown.addClass('hidden');
+                });
+            dropdown.append(item);
+        });
+
+        dropdown.removeClass('hidden');
+    }
+
+    // Pesquisa ao digitar no modal
+    $('#passenger-search').on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+
+        if (searchTerm.length === 0) {
+            $('#passenger-dropdown').addClass('hidden');
+            $('#select-user').val('');
+            return;
+        }
+
+        const filteredUsers = availableUsers.filter(function(user) {
+            return user.name.toLowerCase().includes(searchTerm) ||
+                   (user.email && user.email.toLowerCase().includes(searchTerm));
+        });
+
+        renderPassengerDropdown(filteredUsers);
+    });
+
+    // Mostrar todos os usuários ao focar no campo
+    $('#passenger-search').on('focus', function() {
+        if ($(this).val().length === 0) {
+            renderPassengerDropdown(availableUsers);
+        } else {
+            const searchTerm = $(this).val().toLowerCase();
+            const filteredUsers = availableUsers.filter(function(user) {
+                return user.name.toLowerCase().includes(searchTerm) ||
+                       (user.email && user.email.toLowerCase().includes(searchTerm));
+            });
+            renderPassengerDropdown(filteredUsers);
+        }
+    });
+
+    // Fechar dropdown de passageiros ao clicar fora
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#passenger-search, #passenger-dropdown').length) {
+            $('#passenger-dropdown').addClass('hidden');
+        }
+    });
+
+    // Abrir modal
+    $('#btn-add-passenger').on('click', function() {
+        $('#passenger-modal').addClass('show');
+        $('#select-user').val('');
+        $('#passenger-search').val('');
+        $('#passenger-dropdown').addClass('hidden');
+    });
+
+    // Fechar modal
+    $('#close-modal, #cancel-modal').on('click', function() {
+        $('#passenger-modal').removeClass('show');
+    });
+
+    // Fechar modal ao clicar fora
+    $('#passenger-modal').on('click', function(e) {
+        if ($(e.target).is('#passenger-modal')) {
+            $(this).removeClass('show');
+        }
+    });
+
+    // Salvar passageiro
+    $('#save-passenger').on('click', function() {
+        const userId = $('#select-user').val();
+
+        if (!userId) {
+            alert('Por favor, selecione um usuário!');
+            return;
+        }
+
+        const user = availableUsers.find(u => u.id == userId);
+        if (!user) {
+            alert('Usuário não encontrado!');
+            return;
+        }
+
+        // Verificar se já foi adicionado
+        const exists = passengers.some(p => p.id == userId);
+        if (exists) {
+            alert('Este usuário já foi adicionado como passageiro!');
+            return;
+        }
+
+        passengers.push({
+            id: user.id,
+            name: user.name,
+            email: user.email || 'Não informado',
+            phone: user.phone || 'Não informado'
+        });
+
+        renderPassengers();
+        $('#passenger-modal').removeClass('show');
+    });
+
+    // Renderizar lista de passageiros
+    function renderPassengers() {
+        const passengersList = $('#passengers-list');
+        const passengersEmpty = $('#passengers-empty');
+        const passengerCount = $('#passenger-count');
+
+        if (passengers.length === 0) {
+            passengersEmpty.show();
+            passengersList.addClass('hidden');
+            passengerCount.addClass('hidden');
+            return;
+        }
+
+        passengersEmpty.hide();
+        passengersList.removeClass('hidden').empty();
+        passengerCount.removeClass('hidden').text(passengers.length);
+
+        passengers.forEach(function(passenger) {
+            const card = `
+                <div class="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg hover:border-blue-300 transition-all">
+                    <div class="flex items-center flex-1 min-w-0">
+                        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white flex-shrink-0">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="ml-3 min-w-0 flex-1">
+                            <p class="text-sm font-bold text-gray-900 truncate">${passenger.name}</p>
+                            <p class="text-xs text-gray-500 truncate">${passenger.email}</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="removePassenger(${passenger.id})" class="ml-2 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all flex-shrink-0" title="Remover">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            passengersList.append(card);
+        });
+    }
+
+    // Remover passageiro
+    window.removePassenger = function(passengerId) {
+        if (confirm('Deseja remover este passageiro?')) {
+            passengers = passengers.filter(p => p.id != passengerId);
+            renderPassengers();
+        }
+    };
+
+    // Inicializar
+    renderPassengers();
+});
 </script>
 {% endblock %}

@@ -221,3 +221,22 @@ body {
 .tooltip:hover::before {
     opacity: 1;
 }
+
+/* Inputs Pesquisáveis - Remover outline padrão */
+#user_search,
+#city_search,
+#departure_date_picker,
+#return_date_picker,
+#passenger-search {
+    outline: none !important;
+}
+
+#user_search:focus,
+#city_search:focus,
+#departure_date_picker:focus,
+#return_date_picker:focus,
+#passenger-search:focus {
+    outline: none !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}

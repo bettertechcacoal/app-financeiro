@@ -76,6 +76,7 @@ def register_routes(app: Flask):
     admin_bp.add_url_rule('/travels/<int:travel_id>/update', view_func=travels_controller.travels_update, methods=['POST'])
     admin_bp.add_url_rule('/travels/<int:travel_id>/delete', view_func=travels_controller.travels_delete, methods=['GET'])
     admin_bp.add_url_rule('/travels/<int:travel_id>/approve', view_func=travels_controller.travels_approve, methods=['GET'])
+    admin_bp.add_url_rule('/travels/<int:travel_id>/cancel', view_func=travels_controller.travels_cancel, methods=['GET'])
 
     # Rotas de Perfil
     admin_bp.add_url_rule('/profile', view_func=profile_controller.profile_view, methods=['GET'])

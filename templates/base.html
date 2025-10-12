@@ -6,6 +6,7 @@
     <title>{% block title %}Dashboard{% endblock %} - ContaAzul</title>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,39 +22,54 @@
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between py-4">
                 <!-- Logo & Menu -->
-                <div class="flex items-center space-x-8">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                            <i class="fas fa-chart-line text-2xl"></i>
-                        </div>
-                        <div>
-                            <span class="text-xl font-bold block leading-tight">ContaAzul</span>
-                            <span class="text-xs text-blue-100">Pro</span>
-                        </div>
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                        <i class="fas fa-chart-line text-3xl"></i>
                     </div>
                     <div class="hidden lg:flex space-x-1">
                         <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %} px-4 py-2 rounded-lg font-medium text-sm hover:bg-white/10">Visão Geral</a>
-                        <a href="#" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-white/10">Vendas</a>
-                        <a href="#" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-white/10">Compras</a>
-                        <a href="#" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-white/10">Financeiro</a>
-                        <a href="#" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-white/10">Relatórios</a>
-                        <a href="#" class="nav-link px-4 py-2 rounded-lg font-medium text-sm hover:bg-white/10">Integrações</a>
                     </div>
                 </div>
 
                 <!-- Right Actions -->
                 <div class="flex items-center space-x-3">
-                    <button class="hidden sm:block px-5 py-2.5 btn-success text-white rounded-xl font-semibold text-sm">
-                        <i class="fas fa-crown mr-2"></i>
-                        Assine Já
-                    </button>
-                    <button class="tooltip w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-xl transition-all" data-tooltip="Notificações">
-                        <i class="far fa-bell text-lg"></i>
-                        <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                    </button>
-                    <button class="tooltip w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-xl transition-all" data-tooltip="Ajuda">
-                        <i class="fas fa-question-circle text-lg"></i>
-                    </button>
+                    <!-- Notifications Dropdown -->
+                    <div class="relative" id="notificationsDropdown">
+                        <button onclick="toggleNotificationsDropdown()" class="relative w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-xl transition-all">
+                            <i class="far fa-bell text-lg"></i>
+                            <span id="notificationBadge" class="hidden absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1"></span>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div id="notificationsDropdownMenu" class="hidden absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50">
+                            <!-- Header -->
+                            <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-sm font-bold text-gray-900">Notificações</h3>
+                                    <button onclick="markAllAsRead()" class="text-xs text-blue-600 hover:text-blue-700 font-semibold">
+                                        Marcar todas como lidas
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Notifications List -->
+                            <div id="notificationsList" class="max-h-96 overflow-y-auto">
+                                <div class="flex items-center justify-center py-12">
+                                    <div class="text-center">
+                                        <i class="far fa-bell text-4xl text-gray-300 mb-3"></i>
+                                        <p class="text-sm text-gray-500">Carregando notificações...</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Footer -->
+                            <div class="px-4 py-3 border-t border-gray-200 bg-gray-50 text-center">
+                                <a href="{{ url_for('admin.notifications_list') }}" class="text-xs text-blue-600 hover:text-blue-700 font-semibold">
+                                    Ver todas as notificações
+                                </a>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- User Dropdown -->
                     <div class="relative" id="userDropdown">
@@ -99,19 +115,228 @@
     </div>
 
     <script>
+        // ===== SOCKET.IO E NOTIFICAÇÕES =====
+        let socket = null;
+        let notificationsData = [];
+
+        // Inicializar Socket.IO
+        function initSocket() {
+            socket = io();
+
+            socket.on('connect', function() {
+                console.log('[SOCKET] Conectado ao servidor');
+                loadNotifications();
+            });
+
+            socket.on('disconnect', function() {
+                console.log('[SOCKET] Desconectado do servidor');
+            });
+
+            socket.on('new_notification', function(notification) {
+                console.log('[SOCKET] Nova notificação recebida', notification);
+                notificationsData.unshift(notification);
+                updateNotificationsUI();
+                showNotificationToast(notification);
+            });
+
+            socket.on('notifications_update', function(data) {
+                console.log('[SOCKET] Notificações atualizadas', data);
+                notificationsData = data.notifications;
+                updateNotificationsUI();
+                updateBadge(data.unread_count);
+            });
+
+            socket.on('notification_marked_read', function(data) {
+                console.log('[SOCKET] Notificação marcada como lida', data);
+                const notification = notificationsData.find(n => n.id === data.notification_id);
+                if (notification) {
+                    notification.is_read = true;
+                }
+                updateNotificationsUI();
+                updateBadge(data.unread_count);
+            });
+
+            socket.on('error', function(error) {
+                console.error('[SOCKET] Erro:', error);
+            });
+        }
+
+        // Carregar notificações
+        function loadNotifications() {
+            if (socket) {
+                socket.emit('request_notifications', { limit: 10 });
+            }
+        }
+
+        // Atualizar badge de contador
+        function updateBadge(count) {
+            const badge = document.getElementById('notificationBadge');
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        // Atualizar UI de notificações
+        function updateNotificationsUI() {
+            const container = document.getElementById('notificationsList');
+
+            if (notificationsData.length === 0) {
+                container.innerHTML = `
+                    <div class="flex items-center justify-center py-12">
+                        <div class="text-center">
+                            <i class="far fa-bell text-4xl text-gray-300 mb-3"></i>
+                            <p class="text-sm text-gray-500">Nenhuma notificação</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = notificationsData.map(n => {
+                const typeColors = {
+                    'info': 'bg-blue-100 text-blue-600',
+                    'success': 'bg-green-100 text-green-600',
+                    'warning': 'bg-yellow-100 text-yellow-600',
+                    'error': 'bg-red-100 text-red-600',
+                    'travel': 'bg-purple-100 text-purple-600',
+                    'ticket': 'bg-indigo-100 text-indigo-600',
+                    'system': 'bg-gray-100 text-gray-600'
+                };
+
+                const typeIcons = {
+                    'info': 'fa-info-circle',
+                    'success': 'fa-check-circle',
+                    'warning': 'fa-exclamation-triangle',
+                    'error': 'fa-times-circle',
+                    'travel': 'fa-plane-departure',
+                    'ticket': 'fa-ticket',
+                    'system': 'fa-cog'
+                };
+
+                const colorClass = typeColors[n.type] || typeColors['info'];
+                const iconClass = typeIcons[n.type] || typeIcons['info'];
+                const unreadClass = !n.is_read ? 'bg-blue-50' : 'bg-white hover:bg-gray-50';
+
+                const date = new Date(n.created_at);
+                const timeAgo = formatTimeAgo(date);
+
+                return `
+                    <div class="${unreadClass} px-4 py-3 border-b border-gray-100 cursor-pointer transition-colors" onclick="markNotificationAsRead(${n.id})">
+                        <div class="flex items-start gap-3">
+                            <div class="${colorClass} w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fas ${iconClass}"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-start justify-between gap-2 mb-1">
+                                    <h4 class="text-sm font-semibold text-gray-900 leading-tight">${n.title}</h4>
+                                    ${!n.is_read ? '<span class="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 mt-1"></span>' : ''}
+                                </div>
+                                <p class="text-xs text-gray-600 mb-1">${n.message}</p>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-gray-400">${timeAgo}</span>
+                                    ${n.action_url ? `<a href="${n.action_url}" class="text-xs text-blue-600 hover:text-blue-700 font-semibold">${n.action_text || 'Ver detalhes'}</a>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Atualizar contador
+            const unreadCount = notificationsData.filter(n => !n.is_read).length;
+            updateBadge(unreadCount);
+        }
+
+        // Formatar tempo relativo
+        function formatTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            const intervals = {
+                ano: 31536000,
+                mês: 2592000,
+                semana: 604800,
+                dia: 86400,
+                hora: 3600,
+                minuto: 60
+            };
+
+            for (const [name, secondsInInterval] of Object.entries(intervals)) {
+                const interval = Math.floor(seconds / secondsInInterval);
+                if (interval >= 1) {
+                    return interval === 1 ? `Há 1 ${name}` : `Há ${interval} ${name}s`;
+                }
+            }
+            return 'Agora mesmo';
+        }
+
+        // Marcar notificação como lida
+        function markNotificationAsRead(notificationId) {
+            if (socket) {
+                socket.emit('mark_as_read', { notification_id: notificationId });
+            }
+        }
+
+        // Marcar todas como lidas
+        function markAllAsRead() {
+            fetch('/admin/api/notifications/read-all', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    notificationsData.forEach(n => n.is_read = true);
+                    updateNotificationsUI();
+                    updateBadge(0);
+                }
+            })
+            .catch(error => console.error('Erro ao marcar todas como lidas:', error));
+        }
+
+        // Mostrar toast de nova notificação
+        function showNotificationToast(notification) {
+            // Você pode implementar um toast notification aqui
+            console.log('[TOAST] Nova notificação:', notification.title);
+        }
+
+        // Toggle dropdown de notificações
+        function toggleNotificationsDropdown() {
+            const menu = document.getElementById('notificationsDropdownMenu');
+            menu.classList.toggle('hidden');
+            if (!menu.classList.contains('hidden')) {
+                loadNotifications();
+            }
+        }
+
+        // ===== USER DROPDOWN =====
         function toggleUserDropdown() {
             const menu = document.getElementById('userDropdownMenu');
             menu.classList.toggle('hidden');
         }
 
-        // Fechar dropdown ao clicar fora
+        // Fechar dropdowns ao clicar fora
         document.addEventListener('click', function(event) {
-            const dropdown = document.getElementById('userDropdown');
-            const menu = document.getElementById('userDropdownMenu');
+            const userDropdown = document.getElementById('userDropdown');
+            const userMenu = document.getElementById('userDropdownMenu');
+            const notifDropdown = document.getElementById('notificationsDropdown');
+            const notifMenu = document.getElementById('notificationsDropdownMenu');
 
-            if (dropdown && !dropdown.contains(event.target)) {
-                menu.classList.add('hidden');
+            if (userDropdown && !userDropdown.contains(event.target)) {
+                userMenu.classList.add('hidden');
             }
+
+            if (notifDropdown && !notifDropdown.contains(event.target)) {
+                notifMenu.classList.add('hidden');
+            }
+        });
+
+        // Inicializar quando o DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', function() {
+            initSocket();
         });
     </script>
 

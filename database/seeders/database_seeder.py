@@ -13,6 +13,7 @@ from groups_seeder import seed_groups
 from users_seeder import seed_users
 from cities_seeder import seed_rondonia_cities
 from travels_seeder import seed_travels
+from notifications_seeder import seed_notifications
 
 
 def seed_database():
@@ -24,20 +25,24 @@ def seed_database():
 
     try:
         # 1. Seeder de Grupos
-        print("[1/4] Executando seeder de Groups...")
+        print("[1/5] Executando seeder de Groups...")
         seed_groups()
 
         # 2. Seeder de Usuarios
-        print("[2/4] Executando seeder de Users...")
+        print("[2/5] Executando seeder de Users...")
         seed_users()
 
         # 3. Seeder de Cidades de Rondonia
-        print("[3/4] Executando seeder de Cities (Rondonia)...")
+        print("[3/5] Executando seeder de Cities (Rondonia)...")
         seed_rondonia_cities()
 
         # 4. Seeder de Viagens
-        print("[4/4] Executando seeder de Travels...")
+        print("[4/5] Executando seeder de Travels...")
         seed_travels()
+
+        # 5. Seeder de Notificações
+        print("[5/5] Executando seeder de Notifications...")
+        seed_notifications()
 
         print("\n" + "="*60)
         print("TODOS OS SEEDERS FORAM EXECUTADOS COM SUCESSO!")
@@ -50,6 +55,7 @@ def seed_database():
         print("  [OK] States: 1 estado (Rondonia)")
         print("  [OK] Cities: 52 cidades de Rondonia")
         print("  [OK] Travels: 5 viagens de teste criadas")
+        print("  [OK] Notifications: 8 notificações de teste criadas")
         print()
 
     except Exception as e:

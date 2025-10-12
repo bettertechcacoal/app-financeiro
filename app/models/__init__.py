@@ -10,6 +10,7 @@ from app.models.state import State
 from app.models.city import City
 from app.models.travel import Travel
 from app.models.travel_passenger import TravelPassenger
+from app.models.notification import Notification
 
 __all__ = [
     'Base',
@@ -20,5 +21,6 @@ __all__ = [
     'State',
     'City',
     'Travel',
-    'TravelPassenger'
+    'TravelPassenger',
+    'Notification'
 ]

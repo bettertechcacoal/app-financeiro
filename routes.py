@@ -7,6 +7,7 @@ from app.controllers.tickets import tickets_controller
 from app.controllers.integrations import integrations_controller
 from app.controllers import travels_controller
 from app.controllers import profile_controller
+from app.controllers import notifications_controller
 
 
 # Middleware de Autenticação
@@ -81,6 +82,14 @@ def register_routes(app: Flask):
     # Rotas de Perfil
     admin_bp.add_url_rule('/profile', view_func=profile_controller.profile_view, methods=['GET'])
     admin_bp.add_url_rule('/profile/update', view_func=profile_controller.profile_update, methods=['POST'])
+
+    # Rotas de Notificações
+    admin_bp.add_url_rule('/notifications', view_func=notifications_controller.notifications_list, methods=['GET'])
+    admin_bp.add_url_rule('/api/notifications', view_func=notifications_controller.notifications_api_list, methods=['GET'])
+    admin_bp.add_url_rule('/api/notifications/unread-count', view_func=notifications_controller.get_unread_count, methods=['GET'])
+    admin_bp.add_url_rule('/api/notifications/<int:notification_id>/read', view_func=notifications_controller.mark_as_read, methods=['POST'])
+    admin_bp.add_url_rule('/api/notifications/read-all', view_func=notifications_controller.mark_all_as_read, methods=['POST'])
+    admin_bp.add_url_rule('/api/notifications/<int:notification_id>/delete', view_func=notifications_controller.delete_notification, methods=['DELETE'])
 
     # Rotas de Edição de Organizações
     admin_bp.add_url_rule('/organizations/<string:org_id>/edit', view_func=integrations_controller.organization_edit, methods=['GET'])

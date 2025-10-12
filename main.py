@@ -1,6 +1,7 @@
 import sys
 import argparse
 from flask import Flask
+from flask_socketio import SocketIO
 from routes import register_routes
 from config import config
 from app.models.database import init_db
@@ -9,11 +10,18 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = config.SECRET_KEY
 app.config['DEBUG'] = config.DEBUG
 
+# Inicializar SocketIO
+socketio = SocketIO(app, cors_allowed_origins="*")
+
 # Inicializar banco de dados
 with app.app_context():
     init_db()
 
 register_routes(app)
+
+# Registrar eventos Socket.IO
+from app.socketio_events import register_socketio_events
+register_socketio_events(socketio)
 
 def run_migrations():
     """Executa as migrations do Alembic"""
@@ -50,6 +58,6 @@ if __name__ == '__main__':
         success = run_migrations()
         sys.exit(0 if success else 1)
 
-    # Caso contrário, iniciar o servidor
+    # Caso contrário, iniciar o servidor com SocketIO
     debug_mode = args.debug or config.DEBUG
-    app.run(debug=debug_mode, host=args.host, port=args.port)
+    socketio.run(app, debug=debug_mode, host=args.host, port=args.port)

@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}Notificações{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Notificações'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            <div class="flex items-center">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+                    <i class="fas fa-bell text-white text-2xl sm:text-3xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Notificações</h1>
+                    <p class="text-sm sm:text-base text-gray-600">Acompanhe todas as suas notificações</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="markAllAsReadPage()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all inline-flex items-center">
+                    <i class="fas fa-check-double mr-2"></i>
+                    Marcar todas como lidas
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layout com Sidebar -->
+    <div class="flex flex-col lg:flex-row gap-6">
+        <!-- Conteúdo Principal -->
+        <div class="flex-1 min-w-0">
+            {% if notifications %}
+                <!-- Lista de Notificações em Cards -->
+                <div class="space-y-3 animate-fade-in" id="notificationsListPage">
+                    {% for notification in notifications %}
+                    <div class="card notification-card {% if not notification.is_read %}bg-blue-50{% endif %}" data-id="{{ notification.id }}">
+                        <div class="px-6 py-4">
+                            <div class="grid grid-cols-1 md:grid-cols-[auto_1fr_auto] gap-4 items-start">
+                                <!-- Coluna 1: Apenas Ícone -->
+                                <div class="
+                                    {% if notification.type.value == 'info' %}bg-blue-100 text-blue-600
+                                    {% elif notification.type.value == 'success' %}bg-green-100 text-green-600
+                                    {% elif notification.type.value == 'warning' %}bg-yellow-100 text-yellow-600
+                                    {% elif notification.type.value == 'error' %}bg-red-100 text-red-600
+                                    {% elif notification.type.value == 'travel' %}bg-purple-100 text-purple-600
+                                    {% elif notification.type.value == 'ticket' %}bg-indigo-100 text-indigo-600
+                                    {% elif notification.type.value == 'system' %}bg-gray-100 text-gray-600
+                                    {% endif %}
+                                    w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="fas
+                                    {% if notification.type.value == 'info' %}fa-info-circle
+                                    {% elif notification.type.value == 'success' %}fa-check-circle
+                                    {% elif notification.type.value == 'warning' %}fa-exclamation-triangle
+                                    {% elif notification.type.value == 'error' %}fa-times-circle
+                                    {% elif notification.type.value == 'travel' %}fa-plane-departure
+                                    {% elif notification.type.value == 'ticket' %}fa-ticket
+                                    {% elif notification.type.value == 'system' %}fa-cog
+                                    {% endif %}
+                                    text-lg"></i>
+                                </div>
+
+                                <!-- Coluna 2: Conteúdo (Título, Mensagem, Data) -->
+                                <div class="min-w-0">
+                                    <div class="flex items-start gap-2 mb-2">
+                                        <h3 class="text-base font-semibold text-gray-900">{{ notification.title }}</h3>
+                                        {% if not notification.is_read %}
+                                        <span class="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-sm text-gray-700 mb-2">{{ notification.message }}</p>
+                                    <span class="text-xs text-gray-500">
+                                        <i class="far fa-clock mr-1"></i>
+                                        {{ notification.created_at.strftime('%d/%m/%Y às %H:%M') if notification.created_at else '-' }}
+                                    </span>
+                                </div>
+
+                                <!-- Coluna 3: Apenas Botões de Ação -->
+                                <div class="flex flex-col items-start md:items-end gap-2">
+                                    {% if not notification.is_read %}
+                                    <button onclick="markAsReadSingle({{ notification.id }})" class="text-xs text-blue-600 hover:text-blue-700 font-semibold whitespace-nowrap">
+                                        <i class="fas fa-check mr-1"></i>
+                                        Marcar como lida
+                                    </button>
+                                    {% endif %}
+                                    <button onclick="deleteNotificationSingle({{ notification.id }})" class="text-xs text-red-600 hover:text-red-700 font-semibold whitespace-nowrap">
+                                        <i class="fas fa-trash mr-1"></i>
+                                        Excluir
+                                    </button>
+                                    {% if notification.action_url %}
+                                    <a href="{{ notification.action_url }}" class="text-xs text-blue-600 hover:text-blue-700 font-semibold whitespace-nowrap">
+                                        <i class="fas fa-arrow-right mr-1"></i>
+                                        {{ notification.action_text or 'Ver detalhes' }}
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card animate-fade-in">
+                    <div class="text-center py-16">
+                        <div class="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-bell text-4xl text-gray-400"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Nenhuma notificação</h3>
+                        <p class="text-gray-600">Você não possui notificações no momento</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar de Métricas -->
+        <div class="w-full lg:w-80 flex-shrink-0">
+            <div class="sticky top-6 space-y-4 animate-fade-in">
+                <!-- Total de Notificações -->
+                <div class="card p-4">
+                    <div class="text-sm text-gray-600 mb-1">Total de Notificações</div>
+                    <div class="text-2xl font-bold text-blue-600">{{ notifications|length }}</div>
+                </div>
+
+                <!-- Não Lidas -->
+                <div class="card p-4">
+                    <div class="text-sm text-gray-600 mb-1">Não Lidas</div>
+                    <div class="text-2xl font-bold text-red-600" id="unreadCountSidebar">{{ unread_count }}</div>
+                </div>
+
+                <!-- Filtros por Tipo -->
+                <div class="card p-4">
+                    <h3 class="text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider">Por Tipo</h3>
+                    <div class="space-y-2 text-xs">
+                        {% set type_counts = {} %}
+                        {% for n in notifications %}
+                            {% set _ = type_counts.update({n.type.value: type_counts.get(n.type.value, 0) + 1}) %}
+                        {% endfor %}
+
+                        {% if type_counts.get('info', 0) > 0 %}
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600"><i class="fas fa-info-circle text-blue-600 mr-2"></i>Informação</span>
+                            <span class="font-bold text-blue-600">{{ type_counts.get('info', 0) }}</span>
+                        </div>
+                        {% endif %}
+
+                        {% if type_counts.get('success', 0) > 0 %}
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600"><i class="fas fa-check-circle text-green-600 mr-2"></i>Sucesso</span>
+                            <span class="font-bold text-green-600">{{ type_counts.get('success', 0) }}</span>
+                        </div>
+                        {% endif %}
+
+                        {% if type_counts.get('warning', 0) > 0 %}
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600"><i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>Aviso</span>
+                            <span class="font-bold text-yellow-600">{{ type_counts.get('warning', 0) }}</span>
+                        </div>
+                        {% endif %}
+
+                        {% if type_counts.get('error', 0) > 0 %}
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600"><i class="fas fa-times-circle text-red-600 mr-2"></i>Erro</span>
+                            <span class="font-bold text-red-600">{{ type_counts.get('error', 0) }}</span>
+                        </div>
+                        {% endif %}
+
+                        {% if type_counts.get('travel', 0) > 0 %}
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600"><i class="fas fa-plane-departure text-purple-600 mr-2"></i>Viagens</span>
+                            <span class="font-bold text-purple-600">{{ type_counts.get('travel', 0) }}</span>
+                        </div>
+                        {% endif %}
+
+                        {% if type_counts.get('ticket', 0) > 0 %}
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600"><i class="fas fa-ticket text-indigo-600 mr-2"></i>Tickets</span>
+                            <span class="font-bold text-indigo-600">{{ type_counts.get('ticket', 0) }}</span>
+                        </div>
+                        {% endif %}
+
+                        {% if type_counts.get('system', 0) > 0 %}
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600"><i class="fas fa-cog text-gray-600 mr-2"></i>Sistema</span>
+                            <span class="font-bold text-gray-600">{{ type_counts.get('system', 0) }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botão Voltar -->
+    <div class="mt-6 animate-fade-in">
+        <a href="{{ url_for('admin.dashboard') }}" class="text-blue-600 hover:text-blue-700 font-semibold">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Voltar para Dashboard
+        </a>
+    </div>
+</div>
+
+<script>
+    function markAsReadSingle(notificationId) {
+        fetch(`/admin/api/notifications/${notificationId}/read`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const card = document.querySelector(`.notification-card[data-id="${notificationId}"]`);
+                if (card) {
+                    card.classList.remove('bg-blue-50');
+                    const badge = card.querySelector('.bg-blue-600.rounded-full');
+                    if (badge) badge.remove();
+                    const button = card.querySelector('button[onclick*="markAsReadSingle"]');
+                    if (button) button.remove();
+                }
+                updateUnreadCount(data.unread_count);
+            }
+        })
+        .catch(error => console.error('Erro:', error));
+    }
+
+    function markAllAsReadPage() {
+        if (!confirm('Deseja marcar todas as notificações como lidas?')) return;
+
+        fetch('/admin/api/notifications/read-all', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelectorAll('.notification-card').forEach(card => {
+                    card.classList.remove('bg-blue-50');
+                    const badge = card.querySelector('.bg-blue-600.rounded-full');
+                    if (badge) badge.remove();
+                    const button = card.querySelector('button[onclick*="markAsReadSingle"]');
+                    if (button) button.remove();
+                });
+                updateUnreadCount(0);
+                location.reload();
+            }
+        })
+        .catch(error => console.error('Erro:', error));
+    }
+
+    function deleteNotificationSingle(notificationId) {
+        if (!confirm('Deseja excluir esta notificação?')) return;
+
+        fetch(`/admin/api/notifications/${notificationId}/delete`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const card = document.querySelector(`.notification-card[data-id="${notificationId}"]`);
+                if (card) {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateX(-20px)';
+                    setTimeout(() => card.remove(), 300);
+                }
+                updateUnreadCount(data.unread_count);
+            }
+        })
+        .catch(error => console.error('Erro:', error));
+    }
+
+    function updateUnreadCount(count) {
+        const sidebar = document.getElementById('unreadCountSidebar');
+        if (sidebar) {
+            sidebar.textContent = count;
+        }
+    }
+</script>
+{% endblock %}

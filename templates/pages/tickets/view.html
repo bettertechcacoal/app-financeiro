@@ -24,6 +24,14 @@
                     <p class="text-sm sm:text-base text-gray-600">Visualize todos os tickets deste cliente</p>
                 </div>
             </div>
+            {% if organizations %}
+            <div class="flex items-center gap-3">
+                <button onclick="openReportModal()" class="inline-flex items-center px-4 sm:px-6 py-2.5 sm:py-3 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all">
+                    <i class="fas fa-file-pdf mr-2"></i>
+                    Emitir Relatório
+                </button>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -264,6 +272,138 @@
     </div>
 </div>
 
+<!-- Modal de Seleção de Relatório -->
+<div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-fade-in">
+        <!-- Header do Modal -->
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-gray-900">
+                <i class="fas fa-file-pdf text-green-600 mr-2"></i>
+                Emitir Relatório de Serviço
+            </h3>
+            <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Corpo do Modal -->
+        <form id="reportForm" method="GET" action="{{ url_for('admin.tickets_report_pdf', client_id=client.id) }}" target="_blank">
+            <div class="px-6 py-6 space-y-6">
+                <!-- Informações do Cliente -->
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <div class="text-xs text-gray-500 mb-1">Cliente</div>
+                    <div class="font-bold text-gray-900">{{ client.name }}</div>
+                    <div class="text-xs text-gray-600 mt-1">CNPJ: {{ client.document }}</div>
+                </div>
+
+                <!-- Número do Ofício -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Número do Ofício</label>
+                    <div class="relative">
+                        <div class="flex items-center gap-2 border border-gray-200 rounded-xl px-4 py-3 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-200 transition-all">
+                            <input type="text" id="oficioNumero" placeholder="Número" maxlength="3"
+                                   class="w-16 border-0 focus:ring-0 focus:outline-none p-0">
+                            <span class="text-gray-400 font-medium">/</span>
+                            <input type="text" id="oficioAno" maxlength="4"
+                                   class="w-16 text-center border-0 focus:ring-0 focus:outline-none p-0">
+                        </div>
+                        <i class="fas fa-file-alt absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <!-- Número da Nota Fiscal -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Número da Nota Fiscal</label>
+                    <div class="relative">
+                        <input type="text" name="invoice_number" id="invoiceNumber"
+                               placeholder="Nº da Nota Fiscal"
+                               class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all">
+                        <i class="fas fa-receipt absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- Tipo de Relatório -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Relatório</label>
+                    <div class="relative">
+                        <select name="report_type" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all">
+                            <option value="servico">Relatório de Serviço</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Seleção de Mês/Ano -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Selecione o Mês</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <select name="month" id="monthSelect" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all" required>
+                                <option value="">Mês</option>
+                                <option value="1">Janeiro</option>
+                                <option value="2">Fevereiro</option>
+                                <option value="3">Março</option>
+                                <option value="4">Abril</option>
+                                <option value="5">Maio</option>
+                                <option value="6">Junho</option>
+                                <option value="7">Julho</option>
+                                <option value="8">Agosto</option>
+                                <option value="9">Setembro</option>
+                                <option value="10">Outubro</option>
+                                <option value="11">Novembro</option>
+                                <option value="12">Dezembro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select name="year" id="yearSelect" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all" required>
+                                <option value="">Ano</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Período Calculado -->
+                <div id="periodInfo" class="bg-blue-50 border border-blue-200 rounded-xl p-4 hidden">
+                    <div class="flex items-start gap-2">
+                        <i class="fas fa-info-circle text-blue-600 mt-0.5"></i>
+                        <div>
+                            <div class="text-xs font-semibold text-blue-900 mb-1">Período do Relatório</div>
+                            <div id="periodText" class="text-xs text-blue-700"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer do Modal -->
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-end gap-3 rounded-b-2xl">
+                <button type="button" onclick="closeReportModal()" class="px-4 py-2 text-gray-700 hover:text-gray-900 font-semibold transition-colors">
+                    Cancelar
+                </button>
+
+                <!-- Dropdown Button -->
+                <div class="relative" id="pdfDropdown">
+                    <button type="button" onclick="toggleDropdown()" class="inline-flex items-center px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all">
+                        <i class="fas fa-file-pdf mr-2"></i>
+                        Gerar PDF
+                        <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <div id="dropdownMenu" class="hidden absolute bottom-full right-0 mb-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50">
+                        <button type="button" onclick="downloadPDF()" class="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors flex items-center text-sm text-gray-700 font-medium">
+                            <i class="fas fa-download mr-3 text-green-600"></i>
+                            Baixar PDF
+                        </button>
+                        <button type="button" onclick="viewPDF()" class="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors flex items-center text-sm text-gray-700 font-medium">
+                            <i class="fas fa-eye mr-3 text-green-600"></i>
+                            Visualizar PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     // Função de pesquisa
     const searchInput = document.getElementById('searchInput');
@@ -300,5 +440,292 @@
             searchInput.focus();
         }
     }
+
+    // ===== Funções do Modal de Relatório =====
+
+    // Dados do cliente para cálculo de período
+    const clientData = {
+        billingCycleType: '{{ client.billing_cycle_type }}',
+        billingDay: {{ client.billing_day or 'null' }},
+        billingCycle: {{ client.billing_cycle or 'null' }},
+        fixedStartDay: {{ client.fixed_start_day or 'null' }}
+    };
+
+    // Popular anos (últimos 5 anos + ano atual, sem anos futuros)
+    function populateYears() {
+        const yearSelect = document.getElementById('yearSelect');
+        const currentYear = new Date().getFullYear();
+
+        for (let year = currentYear - 5; year <= currentYear; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            if (year === currentYear) {
+                option.selected = true;
+            }
+            yearSelect.appendChild(option);
+        }
+
+        // Atualizar disponibilidade dos meses após popular anos
+        updateMonthsAvailability();
+    }
+
+    // Atualizar disponibilidade dos meses (desabilitar mês atual e seguintes)
+    function updateMonthsAvailability() {
+        const yearSelect = document.getElementById('yearSelect');
+        const monthSelect = document.getElementById('monthSelect');
+        const selectedYear = parseInt(yearSelect.value);
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth() + 1;
+
+        // Obter todos os options de mês (exceto o primeiro que é placeholder)
+        const monthOptions = monthSelect.querySelectorAll('option');
+
+        monthOptions.forEach((option, index) => {
+            if (index === 0) return; // Pular o placeholder "Mês"
+
+            const monthValue = parseInt(option.value);
+
+            // Se o ano selecionado for o ano atual, desabilitar mês atual e seguintes
+            if (selectedYear === currentYear && monthValue >= currentMonth) {
+                option.disabled = true;
+                option.style.color = '#9ca3af';
+                option.style.fontStyle = 'italic';
+            } else {
+                option.disabled = false;
+                option.style.color = '';
+                option.style.fontStyle = '';
+            }
+        });
+
+        // Se o mês selecionado está desabilitado, limpar seleção
+        const selectedMonth = parseInt(monthSelect.value);
+        if (selectedYear === currentYear && selectedMonth >= currentMonth) {
+            monthSelect.value = '';
+            document.getElementById('periodInfo').classList.add('hidden');
+        }
+    }
+
+    // Selecionar mês anterior ao atual
+    function selectPreviousMonth() {
+        const monthSelect = document.getElementById('monthSelect');
+        const yearSelect = document.getElementById('yearSelect');
+        const currentMonth = new Date().getMonth() + 1;
+        const currentYear = new Date().getFullYear();
+        const selectedYear = parseInt(yearSelect.value);
+
+        // Se o ano selecionado é o atual, selecionar o mês anterior
+        if (selectedYear === currentYear) {
+            const previousMonth = currentMonth - 1;
+            if (previousMonth > 0) {
+                monthSelect.value = previousMonth;
+            } else {
+                // Se estamos em janeiro, não selecionar nada
+                monthSelect.value = '';
+            }
+        } else {
+            // Se não é o ano atual, selecionar dezembro
+            monthSelect.value = 12;
+        }
+
+        calculatePeriod();
+    }
+
+    // Calcular período baseado no ciclo de cobrança
+    function calculatePeriod() {
+        const month = parseInt(document.getElementById('monthSelect').value);
+        const year = parseInt(document.getElementById('yearSelect').value);
+
+        if (!month || !year) {
+            document.getElementById('periodInfo').classList.add('hidden');
+            return;
+        }
+
+        let startDate, endDate;
+
+        if (clientData.billingCycleType === 'mensal') {
+            // Ciclo Mensal: sempre do dia 1 até o último dia do mês
+            startDate = new Date(year, month - 1, 1);
+            endDate = new Date(year, month, 0); // Último dia do mês
+
+        } else if (clientData.billingCycleType === 'fixo') {
+            // Ciclo Fixo: do dia fixo até o mesmo dia do mês seguinte
+            const startDay = clientData.fixedStartDay || 1;
+
+            startDate = new Date(year, month - 1, startDay);
+            endDate = new Date(year, month, startDay);
+
+            // Se o dia não existir no próximo mês (ex: 31 em fevereiro), usar último dia
+            if (endDate.getDate() !== startDay) {
+                endDate = new Date(year, month, 0); // Último dia do mês seguinte
+            }
+
+        } else {
+            // Se não houver ciclo definido, usar o mês completo
+            startDate = new Date(year, month - 1, 1);
+            endDate = new Date(year, month, 0); // Último dia do mês
+        }
+
+        // Formatar datas
+        const formatDate = (date) => {
+            const day = String(date.getDate()).padStart(2, '0');
+            const mon = String(date.getMonth() + 1).padStart(2, '0');
+            const yr = date.getFullYear();
+            return `${day}/${mon}/${yr}`;
+        };
+
+        const periodText = `${formatDate(startDate)} até ${formatDate(endDate)}`;
+        document.getElementById('periodText').textContent = periodText;
+        document.getElementById('periodInfo').classList.remove('hidden');
+    }
+
+    // Máscaras para número do ofício
+    $('#oficioNumero').mask('000');
+    $('#oficioAno').mask('0000');
+
+    // Preencher ano automaticamente com ano atual
+    const currentYear = new Date().getFullYear();
+    $('#oficioAno').val(currentYear);
+
+    // Formatar número com zeros à esquerda ao sair do campo
+    $('#oficioNumero').on('blur', function() {
+        const val = $(this).val().replace(/\D/g, ''); // Remove não-dígitos
+        if (val.length > 0) {
+            $(this).val(val.padStart(3, '0')); // Preenche com zeros à esquerda
+        }
+    });
+
+    // Auto-foco: quando digitar 3 números, pular para o campo ano
+    $('#oficioNumero').on('input', function() {
+        const val = $(this).val().replace(/\D/g, '');
+        if (val.length === 3) {
+            // Formatar antes de pular
+            $(this).val(val.padStart(3, '0'));
+            $('#oficioAno').focus().select();
+        }
+    });
+
+    // Abrir modal
+    function openReportModal() {
+        document.getElementById('reportModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+
+        // Garantir que o ano está preenchido
+        if (!$('#oficioAno').val()) {
+            $('#oficioAno').val(currentYear);
+        }
+    }
+
+    // Fechar modal
+    function closeReportModal() {
+        document.getElementById('reportModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Event listeners
+    document.getElementById('monthSelect').addEventListener('change', calculatePeriod);
+    document.getElementById('yearSelect').addEventListener('change', function() {
+        updateMonthsAvailability();
+        calculatePeriod();
+    });
+
+    // Fechar modal ao clicar fora
+    document.getElementById('reportModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeReportModal();
+        }
+    });
+
+    // ===== Funções do Dropdown PDF =====
+
+    // Toggle dropdown
+    function toggleDropdown() {
+        const dropdown = document.getElementById('dropdownMenu');
+        dropdown.classList.toggle('hidden');
+    }
+
+    // Fechar dropdown ao clicar fora
+    document.addEventListener('click', function(e) {
+        const dropdown = document.getElementById('pdfDropdown');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+
+        if (dropdown && !dropdown.contains(e.target)) {
+            dropdownMenu.classList.add('hidden');
+        }
+    });
+
+    // Função para baixar PDF
+    function downloadPDF() {
+        const form = document.getElementById('reportForm');
+        const month = document.getElementById('monthSelect').value;
+        const year = document.getElementById('yearSelect').value;
+        const oficioNumero = document.getElementById('oficioNumero').value;
+        const oficioAno = document.getElementById('oficioAno').value;
+        const invoiceNumber = document.getElementById('invoiceNumber').value;
+
+        if (!month || !year) {
+            alert('Por favor, selecione o mês e o ano.');
+            return;
+        }
+
+        // Criar URL com parâmetros
+        let url = form.action + '?month=' + month + '&year=' + year + '&download=1';
+
+        // Combinar número e ano do ofício
+        if (oficioNumero && oficioAno) {
+            const oficioNumber = oficioNumero + '/' + oficioAno;
+            url += '&oficio_number=' + encodeURIComponent(oficioNumber);
+        }
+
+        if (invoiceNumber) {
+            url += '&invoice_number=' + encodeURIComponent(invoiceNumber);
+        }
+
+        // Abrir em nova aba para download
+        window.open(url, '_blank');
+
+        // Fechar dropdown e modal
+        document.getElementById('dropdownMenu').classList.add('hidden');
+        closeReportModal();
+    }
+
+    // Função para visualizar PDF
+    function viewPDF() {
+        const form = document.getElementById('reportForm');
+        const month = document.getElementById('monthSelect').value;
+        const year = document.getElementById('yearSelect').value;
+        const oficioNumero = document.getElementById('oficioNumero').value;
+        const oficioAno = document.getElementById('oficioAno').value;
+        const invoiceNumber = document.getElementById('invoiceNumber').value;
+
+        if (!month || !year) {
+            alert('Por favor, selecione o mês e o ano.');
+            return;
+        }
+
+        // Criar URL com parâmetros (sem forçar download)
+        let url = form.action + '?month=' + month + '&year=' + year;
+
+        // Combinar número e ano do ofício
+        if (oficioNumero && oficioAno) {
+            const oficioNumber = oficioNumero + '/' + oficioAno;
+            url += '&oficio_number=' + encodeURIComponent(oficioNumber);
+        }
+
+        if (invoiceNumber) {
+            url += '&invoice_number=' + encodeURIComponent(invoiceNumber);
+        }
+
+        // Abrir em nova aba para visualização
+        window.open(url, '_blank');
+
+        // Fechar dropdown e modal
+        document.getElementById('dropdownMenu').classList.add('hidden');
+        closeReportModal();
+    }
+
+    // Inicializar
+    populateYears();
+    selectPreviousMonth();
 </script>
 {% endblock %}

@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}Todas as Notas{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Dashboard', 'url': url_for('admin.dashboard')},
+    {'name': 'Notas'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg mr-4">
+                    <i class="fas fa-sticky-note text-white text-2xl sm:text-3xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Minhas Notas</h1>
+                    <p class="text-sm sm:text-base text-gray-600">Gerenciar todas as suas anotações</p>
+                </div>
+            </div>
+            <button onclick="openNoteModal()" class="btn-primary">
+                <i class="fas fa-plus mr-2"></i>
+                Nova Nota
+            </button>
+        </div>
+    </div>
+
+    <!-- Grid de Notas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-fade-in">
+        {% if notes %}
+            {% for note in notes %}
+            {% set color_classes = {
+                'yellow': 'from-yellow-100 to-yellow-200 border-yellow-400',
+                'pink': 'from-pink-100 to-pink-200 border-pink-400',
+                'green': 'from-green-100 to-green-200 border-green-400',
+                'blue': 'from-blue-100 to-blue-200 border-blue-400',
+                'purple': 'from-purple-100 to-purple-200 border-purple-400'
+            } %}
+            {% set color_accent = {
+                'yellow': 'bg-yellow-300 text-yellow-600',
+                'pink': 'bg-pink-300 text-pink-600',
+                'green': 'bg-green-300 text-green-600',
+                'blue': 'bg-blue-300 text-blue-600',
+                'purple': 'bg-purple-300 text-purple-600'
+            } %}
+            <div class="relative p-4 bg-gradient-to-br {{ color_classes[note.color.value] }} border-l-4 rounded-sm shadow-md hover:shadow-lg transition-shadow cursor-pointer" onclick="openEditModal({{ note.id }})">
+                <div class="absolute top-0 right-4 w-16 h-6 {{ color_accent[note.color.value].split()[0] }} opacity-50 rounded-b-lg"></div>
+                <p class="text-sm font-bold text-gray-800 mb-2">{{ note.title }}</p>
+                <p class="text-xs text-gray-600 line-clamp-3">{{ note.content }}</p>
+                <div class="mt-3 flex items-center justify-between">
+                    {% if note.label %}
+                    <span class="text-xs text-gray-500">
+                        <i class="{{ note.icon }} mr-1"></i>{{ note.label }}
+                    </span>
+                    {% else %}
+                    <span></span>
+                    {% endif %}
+                    <i class="fas fa-thumbtack {{ color_accent[note.color.value].split()[1] }}"></i>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-span-full card text-center py-16">
+                <div class="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-sticky-note text-4xl text-gray-400"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Nenhuma nota criada</h3>
+                <p class="text-gray-600 mb-6">Comece criando sua primeira nota</p>
+                <button onclick="openNoteModal()" class="btn-primary">
+                    <i class="fas fa-plus mr-2"></i>
+                    Criar Nota
+                </button>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Botão Voltar -->
+    <div class="mt-6 animate-fade-in">
+        <a href="{{ url_for('admin.dashboard') }}" class="text-blue-600 hover:text-blue-700 font-semibold">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Voltar para Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Modal para Criar/Editar Nota (mesmo do dashboard) -->
+<div id="noteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 id="modalTitle" class="text-xl font-bold text-gray-900">Nova Nota</h3>
+            <button onclick="closeNoteModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <form id="noteForm" onsubmit="saveNote(event)">
+            <input type="hidden" id="noteId" value="">
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Título</label>
+                <input type="text" id="noteTitle" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Conteúdo</label>
+                <textarea id="noteContent" required rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Cor</label>
+                <div class="flex gap-2">
+                    <button type="button" onclick="selectColor('yellow')" class="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-100 to-yellow-200 border-2 border-transparent hover:border-yellow-500" data-color="yellow"></button>
+                    <button type="button" onclick="selectColor('pink')" class="w-10 h-10 rounded-lg bg-gradient-to-br from-pink-100 to-pink-200 border-2 border-transparent hover:border-pink-500" data-color="pink"></button>
+                    <button type="button" onclick="selectColor('green')" class="w-10 h-10 rounded-lg bg-gradient-to-br from-green-100 to-green-200 border-2 border-transparent hover:border-green-500" data-color="green"></button>
+                    <button type="button" onclick="selectColor('blue')" class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 border-2 border-transparent hover:border-blue-500" data-color="blue"></button>
+                    <button type="button" onclick="selectColor('purple')" class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-100 to-purple-200 border-2 border-transparent hover:border-purple-500" data-color="purple"></button>
+                </div>
+                <input type="hidden" id="noteColor" value="yellow">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Etiqueta (opcional)</label>
+                <input type="text" id="noteLabel" placeholder="Ex: Hoje, Urgente" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div class="flex gap-3">
+                <button type="button" onclick="closeNoteModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancelar
+                </button>
+                <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Salvar
+                </button>
+                <button type="button" id="deleteBtn" onclick="deleteNote()" class="hidden px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let selectedColor = 'yellow';
+
+function openNoteModal() {
+    document.getElementById('noteModal').classList.remove('hidden');
+    document.getElementById('noteModal').classList.add('flex');
+    document.getElementById('modalTitle').textContent = 'Nova Nota';
+    document.getElementById('noteForm').reset();
+    document.getElementById('noteId').value = '';
+    document.getElementById('deleteBtn').classList.add('hidden');
+    selectColor('yellow');
+}
+
+function closeNoteModal() {
+    document.getElementById('noteModal').classList.add('hidden');
+    document.getElementById('noteModal').classList.remove('flex');
+}
+
+function selectColor(color) {
+    selectedColor = color;
+    document.getElementById('noteColor').value = color;
+
+    // Remove border de todos
+    document.querySelectorAll('[data-color]').forEach(btn => {
+        btn.classList.remove('border-yellow-500', 'border-pink-500', 'border-green-500', 'border-blue-500', 'border-purple-500');
+        btn.classList.add('border-transparent');
+    });
+
+    // Adiciona border no selecionado
+    const selectedBtn = document.querySelector(`[data-color="${color}"]`);
+    selectedBtn.classList.remove('border-transparent');
+    selectedBtn.classList.add(`border-${color}-500`);
+}
+
+function saveNote(event) {
+    event.preventDefault();
+
+    const noteId = document.getElementById('noteId').value;
+    const data = {
+        title: document.getElementById('noteTitle').value,
+        content: document.getElementById('noteContent').value,
+        color: document.getElementById('noteColor').value,
+        label: document.getElementById('noteLabel').value,
+        icon: 'fa-sticky-note'
+    };
+
+    const url = noteId ? `/admin/notes/${noteId}/update` : '/admin/notes/create';
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            closeNoteModal();
+            location.reload();
+        } else {
+            alert('Erro: ' + result.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao salvar nota');
+    });
+}
+
+function openEditModal(noteId) {
+    fetch(`/admin/api/notes`)
+        .then(response => response.json())
+        .then(result => {
+            const note = result.notes.find(n => n.id === noteId);
+            if (note) {
+                document.getElementById('noteModal').classList.remove('hidden');
+                document.getElementById('noteModal').classList.add('flex');
+                document.getElementById('modalTitle').textContent = 'Editar Nota';
+                document.getElementById('noteId').value = note.id;
+                document.getElementById('noteTitle').value = note.title;
+                document.getElementById('noteContent').value = note.content;
+                document.getElementById('noteLabel').value = note.label || '';
+                selectColor(note.color);
+                document.getElementById('deleteBtn').classList.remove('hidden');
+            }
+        });
+}
+
+function deleteNote() {
+    const noteId = document.getElementById('noteId').value;
+    if (confirm('Deseja realmente excluir esta nota?')) {
+        fetch(`/admin/notes/${noteId}/delete`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                closeNoteModal();
+                location.reload();
+            } else {
+                alert('Erro: ' + result.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao excluir nota');
+        });
+    }
+}
+</script>
+{% endblock %}

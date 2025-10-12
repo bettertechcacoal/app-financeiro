@@ -10,85 +10,111 @@
         <div class="space-y-6">
             
             <!-- User Profile Card -->
-            <div class="card p-6 text-center animate-fade-in">
-                <!-- Avatar Placeholder -->
-                <div class="relative inline-block mb-4">
-                    <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto shadow-lg">
-                        <i class="fas fa-user text-white text-3xl"></i>
-                    </div>
-                    <!-- Badge de Status Online -->
-                    <div class="absolute bottom-0 right-0 w-5 h-5 bg-green-500 border-4 border-white rounded-full"></div>
-                </div>
+            <div class="relative overflow-hidden rounded-2xl shadow-lg animate-fade-in">
+                <!-- Background Base -->
+                <div class="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-700"></div>
 
-                <!-- User Info -->
-                <h3 class="text-lg font-bold text-gray-900 mb-1">{{ session.get('user_name', 'Usuário') }}</h3>
-                <p class="text-xs text-gray-500 mb-2">{{ session.get('user_email', '') }}</p>
-                <span class="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
-                    Administrador
-                </span>
+                <!-- Wavy Splash SVG Background -->
+                <svg class="absolute bottom-0 left-0 w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" preserveAspectRatio="none">
+                    <!-- Large organic wave 1 -->
+                    <path d="M0,60 C80,30 120,80 200,70 C280,60 320,90 400,60 L400,120 L0,120 Z" fill="rgba(99, 102, 241, 0.4)" opacity="0.8"/>
+
+                    <!-- Medium wave 2 -->
+                    <path d="M0,75 C100,50 150,95 250,80 C320,70 360,100 400,75 L400,120 L0,120 Z" fill="rgba(139, 92, 246, 0.5)" opacity="0.7"/>
+
+                    <!-- Small wave 3 -->
+                    <path d="M0,85 C70,70 140,100 220,90 C300,80 350,105 400,90 L400,120 L0,120 Z" fill="rgba(168, 85, 247, 0.4)" opacity="0.6"/>
+
+                    <!-- Splash drops/circles - bem espaçados -->
+                    <circle cx="60" cy="15" r="18" fill="rgba(236, 72, 153, 0.3)" />
+
+                    <circle cx="320" cy="20" r="22" fill="rgba(59, 130, 246, 0.3)" />
+
+                    <circle cx="180" cy="25" r="14" fill="rgba(251, 191, 36, 0.35)" />
+
+                    <!-- Small accent circles -->
+                    <circle cx="140" cy="10" r="8" fill="rgba(255, 255, 255, 0.25)" />
+                    <circle cx="260" cy="35" r="10" fill="rgba(168, 85, 247, 0.3)" />
+                </svg>
+
+                <!-- Content -->
+                <div class="relative px-4 py-4 z-10">
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <div class="w-14 h-14 bg-white bg-opacity-95 rounded-full flex items-center justify-center flex-shrink-0 shadow-xl">
+                                <i class="fas fa-user text-purple-600 text-xl"></i>
+                            </div>
+                            <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 border-3 border-white rounded-full shadow-md"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-sm font-bold text-white truncate drop-shadow-md">{{ session.get('user_name', 'Usuário') }}</h3>
+                            <p class="text-xs text-white text-opacity-95 truncate drop-shadow">{{ session.get('user_email', '') }}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Accounts -->
+            <!-- Minhas Notas (Sticky Notes) -->
             <div class="card p-6 animate-fade-in">
                 <div class="flex items-center justify-between mb-5">
-                    <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide">Minhas Contas</h3>
-                    <button class="text-blue-600 hover:text-blue-700">
+                    <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide">Minhas Notas</h3>
+                    <button onclick="openNoteModal()" class="text-blue-600 hover:text-blue-700">
                         <i class="fas fa-plus-circle"></i>
                     </button>
                 </div>
-                
-                <div class="space-y-3">
-                    <div class="account-card active flex items-center justify-between p-4 rounded-xl">
-                        <div class="flex items-center">
-                            <div class="icon-wrapper w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center text-white mr-4 shadow-lg">
-                                <i class="fas fa-wallet text-lg"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm font-bold text-gray-900">Conta Corrente</p>
-                                <p class="text-xs text-gray-500 font-medium">Banco Principal</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-base font-bold text-gray-900 block">R$4.942,36</span>
-                            <span class="text-xs text-green-600 font-semibold">+2.5%</span>
-                        </div>
-                    </div>
 
-                    <div class="account-card flex items-center justify-between p-4 rounded-xl">
-                        <div class="flex items-center">
-                            <div class="icon-wrapper w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white mr-4 shadow-lg">
-                                <i class="fas fa-piggy-bank text-lg"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm font-bold text-gray-900">Conta Poupança</p>
-                                <p class="text-xs text-gray-500 font-medium">Caixa Econômica</p>
+                <div class="space-y-3" id="notes-container">
+                    {% if notes %}
+                        {% for note in notes %}
+                        {% set color_classes = {
+                            'yellow': 'from-yellow-100 to-yellow-200 border-yellow-400',
+                            'pink': 'from-pink-100 to-pink-200 border-pink-400',
+                            'green': 'from-green-100 to-green-200 border-green-400',
+                            'blue': 'from-blue-100 to-blue-200 border-blue-400',
+                            'purple': 'from-purple-100 to-purple-200 border-purple-400'
+                        } %}
+                        {% set color_accent = {
+                            'yellow': 'bg-yellow-300 text-yellow-600',
+                            'pink': 'bg-pink-300 text-pink-600',
+                            'green': 'bg-green-300 text-green-600',
+                            'blue': 'bg-blue-300 text-blue-600',
+                            'purple': 'bg-purple-300 text-purple-600'
+                        } %}
+                        <div class="relative p-4 bg-gradient-to-br {{ color_classes[note.color.value] }} border-l-4 rounded-sm shadow-md hover:shadow-lg transition-shadow cursor-pointer" onclick="openEditModal({{ note.id }})">
+                            <div class="absolute top-0 right-4 w-16 h-6 {{ color_accent[note.color.value].split()[0] }} opacity-50 rounded-b-lg"></div>
+                            <p class="text-sm font-bold text-gray-800 mb-2">{{ note.title }}</p>
+                            <p class="text-xs text-gray-600">{{ note.content }}</p>
+                            <div class="mt-3 flex items-center justify-between">
+                                {% if note.label %}
+                                <span class="text-xs text-gray-500">
+                                    <i class="{{ note.icon }} mr-1"></i>{{ note.label }}
+                                </span>
+                                {% else %}
+                                <span></span>
+                                {% endif %}
+                                <i class="fas fa-thumbtack {{ color_accent[note.color.value].split()[1] }}"></i>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <span class="text-base font-bold text-gray-900 block">R$19.321,59</span>
-                            <span class="text-xs text-green-600 font-semibold">+1.8%</span>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-sticky-note text-4xl mb-3"></i>
+                            <p class="text-sm">Nenhuma nota criada</p>
                         </div>
-                    </div>
+                    {% endif %}
                 </div>
 
-                <button class="w-full mt-4 text-blue-600 text-sm font-semibold py-3 hover:bg-blue-50 rounded-xl flex items-center justify-center transition-all">
-                    <i class="fas fa-file-import mr-2"></i>
-                    Importar Extrato Bancário
+                <button onclick="openNoteModal()" class="w-full mt-4 text-blue-600 text-sm font-semibold py-3 hover:bg-blue-50 rounded-xl flex items-center justify-center transition-all">
+                    <i class="fas fa-sticky-note mr-2"></i>
+                    Nova Nota
                 </button>
-            </div>
 
-            <!-- Total Balance -->
-            <div class="card p-6 bg-gradient-to-br from-blue-600 to-purple-600 text-white animate-fade-in">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-semibold opacity-90">Saldo Total</span>
-                    <i class="fas fa-chart-line text-xl opacity-75"></i>
-                </div>
-                <p class="text-4xl font-bold mb-1">R$24.263,95</p>
-                <div class="flex items-center text-sm">
-                    <i class="fas fa-arrow-up mr-1"></i>
-                    <span class="font-semibold">12.5%</span>
-                    <span class="opacity-75 ml-1">vs. mês passado</span>
-                </div>
+                {% if total_notes > 5 %}
+                <a href="{{ url_for('admin.notes_list') }}" class="block w-full mt-2 text-gray-600 text-sm font-semibold py-3 hover:bg-gray-50 rounded-xl text-center transition-all border border-gray-300">
+                    <i class="fas fa-list mr-2"></i>
+                    Ver Todas ({{ total_notes }})
+                </a>
+                {% endif %}
             </div>
         </div>
     </aside>
@@ -247,4 +273,172 @@
         </div>
     </main>
 </div>
+
+<!-- Modal para Criar/Editar Nota -->
+<div id="noteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 id="modalTitle" class="text-xl font-bold text-gray-900">Nova Nota</h3>
+            <button onclick="closeNoteModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <form id="noteForm" onsubmit="saveNote(event)">
+            <input type="hidden" id="noteId" value="">
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Título</label>
+                <input type="text" id="noteTitle" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Conteúdo</label>
+                <textarea id="noteContent" required rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Cor</label>
+                <div class="flex gap-2">
+                    <button type="button" onclick="selectColor('yellow')" class="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-100 to-yellow-200 border-2 border-transparent hover:border-yellow-500" data-color="yellow"></button>
+                    <button type="button" onclick="selectColor('pink')" class="w-10 h-10 rounded-lg bg-gradient-to-br from-pink-100 to-pink-200 border-2 border-transparent hover:border-pink-500" data-color="pink"></button>
+                    <button type="button" onclick="selectColor('green')" class="w-10 h-10 rounded-lg bg-gradient-to-br from-green-100 to-green-200 border-2 border-transparent hover:border-green-500" data-color="green"></button>
+                    <button type="button" onclick="selectColor('blue')" class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 border-2 border-transparent hover:border-blue-500" data-color="blue"></button>
+                    <button type="button" onclick="selectColor('purple')" class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-100 to-purple-200 border-2 border-transparent hover:border-purple-500" data-color="purple"></button>
+                </div>
+                <input type="hidden" id="noteColor" value="yellow">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Etiqueta (opcional)</label>
+                <input type="text" id="noteLabel" placeholder="Ex: Hoje, Urgente" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <div class="flex gap-3">
+                <button type="button" onclick="closeNoteModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancelar
+                </button>
+                <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Salvar
+                </button>
+                <button type="button" id="deleteBtn" onclick="deleteNote()" class="hidden px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let selectedColor = 'yellow';
+
+function openNoteModal() {
+    document.getElementById('noteModal').classList.remove('hidden');
+    document.getElementById('noteModal').classList.add('flex');
+    document.getElementById('modalTitle').textContent = 'Nova Nota';
+    document.getElementById('noteForm').reset();
+    document.getElementById('noteId').value = '';
+    document.getElementById('deleteBtn').classList.add('hidden');
+    selectColor('yellow');
+}
+
+function closeNoteModal() {
+    document.getElementById('noteModal').classList.add('hidden');
+    document.getElementById('noteModal').classList.remove('flex');
+}
+
+function selectColor(color) {
+    selectedColor = color;
+    document.getElementById('noteColor').value = color;
+
+    // Remove border de todos
+    document.querySelectorAll('[data-color]').forEach(btn => {
+        btn.classList.remove('border-yellow-500', 'border-pink-500', 'border-green-500', 'border-blue-500', 'border-purple-500');
+        btn.classList.add('border-transparent');
+    });
+
+    // Adiciona border no selecionado
+    const selectedBtn = document.querySelector(`[data-color="${color}"]`);
+    selectedBtn.classList.remove('border-transparent');
+    selectedBtn.classList.add(`border-${color}-500`);
+}
+
+function saveNote(event) {
+    event.preventDefault();
+
+    const noteId = document.getElementById('noteId').value;
+    const data = {
+        title: document.getElementById('noteTitle').value,
+        content: document.getElementById('noteContent').value,
+        color: document.getElementById('noteColor').value,
+        label: document.getElementById('noteLabel').value,
+        icon: 'fa-sticky-note'
+    };
+
+    const url = noteId ? `/admin/notes/${noteId}/update` : '/admin/notes/create';
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            closeNoteModal();
+            location.reload();
+        } else {
+            alert('Erro: ' + result.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao salvar nota');
+    });
+}
+
+function openEditModal(noteId) {
+    fetch(`/admin/api/notes`)
+        .then(response => response.json())
+        .then(result => {
+            const note = result.notes.find(n => n.id === noteId);
+            if (note) {
+                document.getElementById('noteModal').classList.remove('hidden');
+                document.getElementById('noteModal').classList.add('flex');
+                document.getElementById('modalTitle').textContent = 'Editar Nota';
+                document.getElementById('noteId').value = note.id;
+                document.getElementById('noteTitle').value = note.title;
+                document.getElementById('noteContent').value = note.content;
+                document.getElementById('noteLabel').value = note.label || '';
+                selectColor(note.color);
+                document.getElementById('deleteBtn').classList.remove('hidden');
+            }
+        });
+}
+
+function deleteNote() {
+    const noteId = document.getElementById('noteId').value;
+    if (confirm('Deseja realmente excluir esta nota?')) {
+        fetch(`/admin/notes/${noteId}/delete`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                closeNoteModal();
+                location.reload();
+            } else {
+                alert('Erro: ' + result.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao excluir nota');
+        });
+    }
+}
+</script>
+
 {% endblock %}

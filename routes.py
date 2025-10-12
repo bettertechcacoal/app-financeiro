@@ -9,6 +9,7 @@ from app.controllers import travels_controller
 from app.controllers import profile_controller
 from app.controllers import notifications_controller
 from app.controllers.settings import settings_controller
+from app.controllers import notes_controller
 
 
 # Middleware de Autenticação
@@ -105,6 +106,13 @@ def register_routes(app: Flask):
     # Rotas de Configurações
     admin_bp.add_url_rule('/settings', view_func=settings_controller.settings_list, methods=['GET'])
     admin_bp.add_url_rule('/settings/<int:parameter_id>/update', view_func=settings_controller.settings_update, methods=['POST'])
+
+    # Rotas de Notes (Sticky Notes)
+    admin_bp.add_url_rule('/notes', view_func=notes_controller.notes_list, methods=['GET'])
+    admin_bp.add_url_rule('/notes/create', view_func=notes_controller.notes_create, methods=['POST'])
+    admin_bp.add_url_rule('/notes/<int:note_id>/update', view_func=notes_controller.notes_update, methods=['POST', 'PUT'])
+    admin_bp.add_url_rule('/notes/<int:note_id>/delete', view_func=notes_controller.notes_delete, methods=['POST', 'DELETE'])
+    admin_bp.add_url_rule('/api/notes', view_func=notes_controller.notes_api_list, methods=['GET'])
 
     # Registrar Blueprints
     app.register_blueprint(auth_bp)

@@ -13,6 +13,7 @@ from app.models.travel_passenger import TravelPassenger
 from app.models.notification import Notification
 from app.models.parameter_group import ParameterGroup
 from app.models.parameter import Parameter
+from app.models.note import Note
 
 __all__ = [
     'Base',
@@ -26,5 +27,6 @@ __all__ = [
     'TravelPassenger',
     'Notification',
     'ParameterGroup',
-    'Parameter'
+    'Parameter',
+    'Note'
 ]

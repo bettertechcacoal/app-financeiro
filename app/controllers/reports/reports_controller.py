@@ -2,6 +2,7 @@
 from flask import make_response, request
 from datetime import datetime, timedelta
 from io import BytesIO
+import os
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import cm
@@ -15,6 +16,32 @@ from app.services.ticket_service import ticket_service
 from app.models.client_organization import ClientOrganization
 from app.models.organization import Organization
 from app.models.database import db_session
+
+
+def add_page_number(canvas, doc):
+    """Adiciona rodapé e número de página em todas as páginas"""
+    page_num = canvas.getPageNumber()
+
+    # Linha decorativa fina acima do rodapé
+    canvas.setStrokeColor(colors.HexColor('#CCCCCC'))
+    canvas.setLineWidth(0.5)
+    canvas.line(2.5*cm, 1.5*cm, A4[0] - 2.5*cm, 1.5*cm)
+
+    # Informações do rodapé
+    canvas.setFont('Helvetica', 7)
+    canvas.setFillColor(colors.HexColor('#333333'))
+
+    # Endereço à esquerda
+    text = "Rua Leonório Perdocini, nº 1997, Cacoal/RO"
+    canvas.drawString(2.5*cm, 1*cm, text)
+
+    # Número da página centralizado
+    text = f"Página {page_num}"
+    canvas.drawCentredString(A4[0] / 2, 1*cm, text)
+
+    # Telefone à direita
+    text = "(69) 3441-1304"
+    canvas.drawRightString(A4[0] - 2.5*cm, 1*cm, text)
 
 
 def tickets_report_pdf(client_id):
@@ -89,7 +116,7 @@ def tickets_report_pdf(client_id):
         pagesize=A4,
         rightMargin=2.5*cm,
         leftMargin=2.5*cm,
-        topMargin=1.5*cm,
+        topMargin=0.8*cm,
         bottomMargin=2*cm
     )
 
@@ -101,7 +128,7 @@ def tickets_report_pdf(client_id):
         'Header',
         parent=styles['Normal'],
         fontSize=9,
-        textColor=colors.HexColor('#333333'),
+        textColor=colors.black,
         alignment=TA_CENTER,
         spaceAfter=0.1*cm,
         leading=12
@@ -144,7 +171,7 @@ def tickets_report_pdf(client_id):
         'Body',
         parent=styles['Normal'],
         fontSize=11,
-        textColor=colors.HexColor('#333333'),
+        textColor=colors.black,
         alignment=TA_JUSTIFY,
         spaceAfter=0.4*cm,
         leading=16,
@@ -157,7 +184,7 @@ def tickets_report_pdf(client_id):
         parent=styles['Normal'],
         fontSize=12,
         fontName='Helvetica-Bold',
-        textColor=colors.HexColor('#2C3E50'),
+        textColor=colors.black,
         alignment=TA_LEFT,
         spaceAfter=0.4*cm,
         spaceBefore=0.3*cm
@@ -189,7 +216,7 @@ def tickets_report_pdf(client_id):
         parent=styles['Normal'],
         fontSize=11,
         fontName='Helvetica-Bold',
-        textColor=colors.HexColor('#2C3E50'),
+        textColor=colors.black,
         alignment=TA_LEFT,
         spaceAfter=0.4*cm,
         spaceBefore=0.3*cm,
@@ -200,8 +227,8 @@ def tickets_report_pdf(client_id):
     style_ticket = ParagraphStyle(
         'Ticket',
         parent=styles['Normal'],
-        fontSize=10,
-        textColor=colors.HexColor('#555555'),
+        fontSize=8,
+        textColor=colors.black,
         alignment=TA_LEFT,
         spaceAfter=0.15*cm,
         leftIndent=0.5*cm
@@ -210,10 +237,18 @@ def tickets_report_pdf(client_id):
     # Conteúdo
     story = []
 
-    # CABEÇALHO DA EMPRESA
+    # LOGO DA EMPRESA CENTRALIZADA
+    logo_path = 'static/images/letterhead_logo.png'
+    if os.path.exists(logo_path):
+        logo = Image(logo_path, width=6*cm, height=3*cm, kind='proportional')
+        logo.hAlign = 'CENTER'
+        story.append(logo)
+        story.append(Spacer(1, 0.3*cm))
+
+    # CABEÇALHO DA EMPRESA CENTRALIZADO
     story.append(Paragraph("<b>BETTER TECH INFORMÁTICA, SERVIÇOS DE AUTOMAÇÃO LTDA.</b>", style_header))
-    story.append(Paragraph("Rua Leonório Perdocini, nº 1997 – Bairro Eldorado – CEP 76.966-192 – Cacoal/RO", style_header))
-    story.append(Paragraph("CNPJ: 07.114.391/0001-14 | Telefone: (69) 3441-1304 | E-mail: contato@bettertech.com.br", style_header))
+    story.append(Paragraph("Rua Leonório Perdocini, nº 1997 • Bairro Eldorado • CEP 76.966-192 • Cacoal/RO", style_header))
+    story.append(Paragraph("CNPJ: 07.114.391/0001-14 • Telefone: (69) 3441-1304 • E-mail: contato@bettertech.com.br", style_header))
     story.append(Spacer(1, 0.8*cm))
 
     # NÚMERO DO OFÍCIO
@@ -357,24 +392,27 @@ def tickets_report_pdf(client_id):
     story.append(Paragraph("Na oportunidade, renovamos nossos votos de elevada estima e consideração.", style_body))
     story.append(Spacer(1, 0.3*cm))
     story.append(Paragraph("Atenciosamente,", style_body))
-    story.append(Spacer(1, 2*cm))
+    story.append(Spacer(1, 0.5*cm))
 
-    # ASSINATURA
-    story.append(Paragraph("_______________________________", style_assinatura))
+    # ASSINATURA - IMAGEM
+    signature_path = 'static/images/signature_ronildo_pauli.png'
+    if os.path.exists(signature_path):
+        signature = Image(signature_path, width=6*cm, height=3*cm, kind='proportional')
+        signature.hAlign = 'CENTER'
+        story.append(signature)
+    else:
+        # Fallback caso a assinatura não exista
+        story.append(Spacer(1, 2*cm))
+        story.append(Paragraph("_______________________________", style_assinatura))
+
     story.append(Paragraph("<b>Better Tech Informática, Serviços de Automação LTDA.</b>", style_assinatura))
     story.append(Paragraph("CNPJ: 07.114.391/0001-14", style_assinatura))
     story.append(Spacer(1, 0.3*cm))
     story.append(Paragraph("Ronildo Pauli", style_assinatura))
     story.append(Paragraph("Sócio Administrador", style_assinatura))
-    story.append(Spacer(1, 1*cm))
 
-    # RODAPÉ
-    story.append(Paragraph("<b>Better Tech Informática, Serviços de Automação LTDA.</b>", style_footer))
-    story.append(Paragraph("Rua Leonório Perdocini, nº 1997 – Bairro Eldorado – CEP 76.966-192 – Cacoal/RO", style_footer))
-    story.append(Paragraph("CNPJ: 07.114.391/0001-14 | Telefone: (69) 3441-1304 | E-mail: contato@bettertech.com.br", style_footer))
-
-    # Gerar PDF
-    pdf.build(story)
+    # Gerar PDF com rodapé automático em todas as páginas
+    pdf.build(story, onFirstPage=add_page_number, onLaterPages=add_page_number)
 
     # Preparar resposta
     buffer.seek(0)

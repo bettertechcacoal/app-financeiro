@@ -213,13 +213,15 @@
                     </div>
 
                     <!-- Configurações -->
-                    <div class="module-card">
-                        <div class="module-icon bg-gradient-to-br from-gray-600 to-gray-700">
-                            <i class="fas fa-cog"></i>
+                    <a href="{{ url_for('admin.settings_list') }}" class="block">
+                        <div class="module-card">
+                            <div class="module-icon bg-gradient-to-br from-gray-600 to-gray-700">
+                                <i class="fas fa-cog"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2">Configurações</h3>
+                            <p class="text-sm text-gray-600">Preferências e ajustes do sistema</p>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">Configurações</h3>
-                        <p class="text-sm text-gray-600">Preferências e ajustes do sistema</p>
-                    </div>
+                    </a>
 
                     <!-- Usuários -->
                     <div class="module-card">
@@ -240,38 +242,6 @@
                             <p class="text-sm text-gray-600">Conecte com outras plataformas</p>
                         </div>
                     </a>
-                </div>
-            </div>
-
-            <!-- Bottom Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                <!-- Todos recebimentos em atraso -->
-                <div class="card p-6 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 animate-fade-in">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-bold text-gray-800">Total a Receber</h3>
-                        <div class="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center">
-                            <i class="fas fa-arrow-trend-up text-white"></i>
-                        </div>
-                    </div>
-                    <div class="py-4">
-                        <p class="text-5xl font-bold text-green-600 mb-2">R$4.829,18</p>
-                        <p class="text-sm text-gray-600 font-medium">Valores pendentes de recebimento</p>
-                    </div>
-                </div>
-
-                <!-- Todos pagamentos em atraso -->
-                <div class="card p-6 bg-gradient-to-br from-red-50 to-rose-50 border-2 border-red-200 animate-fade-in">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-bold text-gray-800">Total a Pagar</h3>
-                        <div class="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center">
-                            <i class="fas fa-arrow-trend-down text-white"></i>
-                        </div>
-                    </div>
-                    <div class="py-4">
-                        <p class="text-5xl font-bold text-red-600 mb-2">R$3.749,17</p>
-                        <p class="text-sm text-gray-600 font-medium">Valores pendentes de pagamento</p>
-                    </div>
                 </div>
             </div>
         </div>

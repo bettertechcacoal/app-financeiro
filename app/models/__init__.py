@@ -11,6 +11,8 @@ from app.models.city import City
 from app.models.travel import Travel
 from app.models.travel_passenger import TravelPassenger
 from app.models.notification import Notification
+from app.models.parameter_group import ParameterGroup
+from app.models.parameter import Parameter
 
 __all__ = [
     'Base',
@@ -22,5 +24,7 @@ __all__ = [
     'City',
     'Travel',
     'TravelPassenger',
-    'Notification'
+    'Notification',
+    'ParameterGroup',
+    'Parameter'
 ]

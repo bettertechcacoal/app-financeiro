@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}Editar Parâmetro{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Configurações', 'url': url_for('admin.settings_list')},
+    {'name': 'Editar Parâmetro'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex items-center">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-gray-600 to-gray-700 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+                <i class="fas fa-edit text-white text-2xl sm:text-3xl"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Editar Parâmetro</h1>
+                <p class="text-sm sm:text-base text-gray-600">{{ parameter.parameter }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulário -->
+    <div class="card p-6 animate-fade-in">
+        <form method="POST" action="{{ url_for('admin.settings_edit', parameter_id=parameter.id) }}">
+            <div class="space-y-6">
+                <!-- Nome do Parâmetro (Somente leitura) -->
+                <div>
+                    <label for="parameter" class="block text-sm font-bold text-gray-700 mb-2">
+                        Nome do Parâmetro
+                    </label>
+                    <input
+                        type="text"
+                        id="parameter"
+                        value="{{ parameter.parameter }}"
+                        disabled
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-600"
+                    >
+                    <p class="text-xs text-gray-500 mt-1">O nome do parâmetro não pode ser alterado</p>
+                </div>
+
+                <!-- Tipo (Somente leitura) -->
+                <div>
+                    <label for="type" class="block text-sm font-bold text-gray-700 mb-2">
+                        Tipo
+                    </label>
+                    <div class="px-4 py-3 border border-gray-300 rounded-xl bg-gray-50">
+                        {% if parameter.type.value == 'text' %}
+                        <span class="badge bg-blue-100 text-blue-700">
+                            <i class="fas fa-font mr-1"></i>
+                            Texto
+                        </span>
+                        {% elif parameter.type.value == 'checkbox' %}
+                        <span class="badge bg-green-100 text-green-700">
+                            <i class="fas fa-check-square mr-1"></i>
+                            Checkbox (S/N)
+                        </span>
+                        {% elif parameter.type.value == 'select' %}
+                        <span class="badge bg-purple-100 text-purple-700">
+                            <i class="fas fa-list mr-1"></i>
+                            Select
+                        </span>
+                        {% endif %}
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">O tipo do parâmetro não pode ser alterado</p>
+                </div>
+
+                <!-- Opções (só aparece e é editável quando tipo = select) -->
+                {% if parameter.type.value == 'select' %}
+                <div>
+                    <label for="options" class="block text-sm font-bold text-gray-700 mb-2">
+                        Opções (JSON) *
+                    </label>
+                    <textarea
+                        id="options"
+                        name="options"
+                        rows="4"
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder='["opcao1", "opcao2", "opcao3"]'
+                    >{{ parameter.options }}</textarea>
+                    <p class="text-xs text-gray-500 mt-1">Digite as opções no formato JSON array. Exemplo: ["pt-BR", "en-US", "es-ES"]</p>
+                </div>
+                {% endif %}
+
+                <!-- Descrição -->
+                <div>
+                    <label for="description" class="block text-sm font-bold text-gray-700 mb-2">
+                        Descrição *
+                    </label>
+                    <input
+                        type="text"
+                        id="description"
+                        name="description"
+                        value="{{ parameter.description }}"
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="ex: Token de autenticação no Movidesk"
+                    >
+                </div>
+
+                <!-- Valor -->
+                <div>
+                    <label for="value" class="block text-sm font-bold text-gray-700 mb-2">
+                        Valor *
+                    </label>
+
+                    {% if parameter.type.value == 'text' %}
+                    <input
+                        type="text"
+                        id="value"
+                        name="value"
+                        value="{{ parameter.value or '' }}"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Digite o valor"
+                    >
+
+                    {% elif parameter.type.value == 'checkbox' %}
+                    <select
+                        id="value"
+                        name="value"
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                        <option value="S" {% if parameter.value == 'S' %}selected{% endif %}>Sim</option>
+                        <option value="N" {% if parameter.value == 'N' %}selected{% endif %}>Não</option>
+                    </select>
+
+                    {% elif parameter.type.value == 'select' %}
+                    <select
+                        id="value"
+                        name="value"
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                        {% if parameter.options %}
+                            {% set options_list = parameter.options | from_json %}
+                            {% for option in options_list %}
+                            <option value="{{ option }}" {% if parameter.value == option %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Se não visualizar as opções, salve primeiro o campo de opções acima</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Botões -->
+            <div class="flex items-center justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
+                <a href="{{ url_for('admin.settings_list') }}" class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all">
+                    Cancelar
+                </a>
+                <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
+                    <i class="fas fa-save mr-2"></i>
+                    Salvar Alterações
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}Configurações{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Configurações'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex items-center mb-4">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-gray-600 to-gray-700 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+                <i class="fas fa-cog text-white text-2xl sm:text-3xl"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Configurações do Sistema</h1>
+                <p class="text-sm sm:text-base text-gray-600">Gerencie os parâmetros de configuração</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Parâmetros Agrupados -->
+    {% if groups %}
+        {% for group in groups %}
+            {% if grouped_parameters[group.id] %}
+            <div class="card animate-fade-in overflow-hidden mb-6">
+                <!-- Cabeçalho do Grupo -->
+                <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-gradient-to-br from-gray-600 to-gray-700 rounded-xl flex items-center justify-center text-white mr-4">
+                            <i class="fas {{ group.icon }}"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-900">{{ group.name }}</h2>
+                            <p class="text-sm text-gray-600">{{ group.description }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela de Parâmetros do Grupo -->
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-2/5">Descrição</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-1/5">Parâmetro</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-32">Tipo</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for param in grouped_parameters[group.id] %}
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 w-2/5">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl flex items-center justify-center text-white mr-3 flex-shrink-0">
+                                            <i class="fas fa-sliders-h"></i>
+                                        </div>
+                                        <div class="text-sm font-medium text-gray-900">{{ param.description }}</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap w-1/5">
+                                    <div class="text-sm font-bold text-gray-700">{{ param.parameter }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap w-32">
+                                    {% if param.type.value == 'text' %}
+                                    <span class="badge bg-blue-100 text-blue-700">
+                                        <i class="fas fa-font mr-1"></i>
+                                        Texto
+                                    </span>
+                                    {% elif param.type.value == 'checkbox' %}
+                                    <span class="badge bg-green-100 text-green-700">
+                                        <i class="fas fa-check-square mr-1"></i>
+                                        Checkbox
+                                    </span>
+                                    {% elif param.type.value == 'select' %}
+                                    <span class="badge bg-purple-100 text-purple-700">
+                                        <i class="fas fa-list mr-1"></i>
+                                        Select
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <form action="{{ url_for('admin.settings_update', parameter_id=param.id) }}" method="POST" class="inline-block w-full">
+                                        {% if param.type.value == 'checkbox' %}
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" name="value" value="S" {% if param.value == 'S' %}checked{% endif %} onchange="this.form.submit()" class="sr-only peer">
+                                                <div class="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div>
+                                            </label>
+                                        {% elif param.type.value == 'select' %}
+                                            <select name="value" onchange="this.form.submit()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                {% set options = param.options | from_json %}
+                                                {% for option in options %}
+                                                <option value="{{ option }}" {% if param.value == option %}selected{% endif %}>{{ option }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        {% else %}
+                                            <input type="text" name="value" value="{{ param.value or '' }}" onblur="this.form.submit()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Digite o valor...">
+                                        {% endif %}
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+
+        <!-- Parâmetros sem Grupo -->
+        {% if grouped_parameters[None] %}
+        <div class="card animate-fade-in overflow-hidden mb-6">
+            <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl flex items-center justify-center text-white mr-4">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">Outros Parâmetros</h2>
+                        <p class="text-sm text-gray-600">Parâmetros sem grupo definido</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-2/5">Descrição</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-1/5">Parâmetro</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-32">Tipo</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for param in grouped_parameters[None] %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 w-2/5">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl flex items-center justify-center text-white mr-3 flex-shrink-0">
+                                        <i class="fas fa-sliders-h"></i>
+                                    </div>
+                                    <div class="text-sm font-medium text-gray-900">{{ param.description }}</div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap w-1/5">
+                                <div class="text-sm font-bold text-gray-700">{{ param.parameter }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap w-32">
+                                {% if param.type.value == 'text' %}
+                                <span class="badge bg-blue-100 text-blue-700">
+                                    <i class="fas fa-font mr-1"></i>
+                                    Texto
+                                </span>
+                                {% elif param.type.value == 'checkbox' %}
+                                <span class="badge bg-green-100 text-green-700">
+                                    <i class="fas fa-check-square mr-1"></i>
+                                    Checkbox
+                                </span>
+                                {% elif param.type.value == 'select' %}
+                                <span class="badge bg-purple-100 text-purple-700">
+                                    <i class="fas fa-list mr-1"></i>
+                                    Select
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4">
+                                <form action="{{ url_for('admin.settings_update', parameter_id=param.id) }}" method="POST" class="inline-block w-full">
+                                    {% if param.type.value == 'checkbox' %}
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" name="value" value="S" {% if param.value == 'S' %}checked{% endif %} onchange="this.form.submit()" class="sr-only peer">
+                                            <div class="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div>
+                                        </label>
+                                    {% elif param.type.value == 'select' %}
+                                        <select name="value" onchange="this.form.submit()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            {% set options = param.options | from_json %}
+                                            {% for option in options %}
+                                            <option value="{{ option }}" {% if param.value == option %}selected{% endif %}>{{ option }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    {% else %}
+                                        <input type="text" name="value" value="{{ param.value or '' }}" onblur="this.form.submit()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Digite o valor...">
+                                    {% endif %}
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="card animate-fade-in">
+            <div class="text-center py-16">
+                <div class="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-cog text-4xl text-gray-400"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Nenhum parâmetro configurado</h3>
+                <p class="text-gray-600">Os parâmetros são gerenciados através de seeders</p>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Botão Voltar -->
+    <div class="mt-6 animate-fade-in">
+        <a href="{{ url_for('admin.dashboard') }}" class="text-blue-600 hover:text-blue-700 font-semibold">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Voltar para Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

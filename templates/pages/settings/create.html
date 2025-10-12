@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}Novo Parâmetro{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Configurações', 'url': url_for('admin.settings_list')},
+    {'name': 'Novo Parâmetro'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex items-center">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-gray-600 to-gray-700 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+                <i class="fas fa-plus text-white text-2xl sm:text-3xl"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Novo Parâmetro</h1>
+                <p class="text-sm sm:text-base text-gray-600">Crie um novo parâmetro de configuração</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulário -->
+    <div class="card p-6 animate-fade-in">
+        <form method="POST" action="{{ url_for('admin.settings_create') }}" id="parameterForm">
+            <div class="space-y-6">
+                <!-- Nome do Parâmetro -->
+                <div>
+                    <label for="parameter" class="block text-sm font-bold text-gray-700 mb-2">
+                        Nome do Parâmetro *
+                    </label>
+                    <input
+                        type="text"
+                        id="parameter"
+                        name="parameter"
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="ex: MOVIDESK_TOKEN"
+                    >
+                    <p class="text-xs text-gray-500 mt-1">Use letras maiúsculas e underline. Exemplo: MOVIDESK_TOKEN</p>
+                </div>
+
+                <!-- Tipo do Parâmetro -->
+                <div>
+                    <label for="type" class="block text-sm font-bold text-gray-700 mb-2">
+                        Tipo *
+                    </label>
+                    <select
+                        id="type"
+                        name="type"
+                        required
+                        onchange="toggleOptionsField()"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                        <option value="">Selecione o tipo</option>
+                        <option value="text">Texto</option>
+                        <option value="checkbox">Checkbox (S/N)</option>
+                        <option value="select">Select (Lista de opções)</option>
+                    </select>
+                </div>
+
+                <!-- Opções (só aparece quando tipo = select) -->
+                <div id="optionsField" style="display:none;">
+                    <label for="options" class="block text-sm font-bold text-gray-700 mb-2">
+                        Opções (JSON) *
+                    </label>
+                    <textarea
+                        id="options"
+                        name="options"
+                        rows="4"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder='["opcao1", "opcao2", "opcao3"]'
+                    ></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Digite as opções no formato JSON array. Exemplo: ["pt-BR", "en-US", "es-ES"]</p>
+                </div>
+
+                <!-- Descrição -->
+                <div>
+                    <label for="description" class="block text-sm font-bold text-gray-700 mb-2">
+                        Descrição *
+                    </label>
+                    <input
+                        type="text"
+                        id="description"
+                        name="description"
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="ex: Token de autenticação no Movidesk"
+                    >
+                </div>
+
+                <!-- Valor Inicial -->
+                <div id="valueField">
+                    <label for="value" class="block text-sm font-bold text-gray-700 mb-2">
+                        Valor Inicial
+                    </label>
+                    <input
+                        type="text"
+                        id="value"
+                        name="value"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Valor inicial do parâmetro"
+                    >
+                </div>
+            </div>
+
+            <!-- Botões -->
+            <div class="flex items-center justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
+                <a href="{{ url_for('admin.settings_list') }}" class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all">
+                    Cancelar
+                </a>
+                <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
+                    <i class="fas fa-save mr-2"></i>
+                    Salvar Parâmetro
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleOptionsField() {
+    const typeSelect = document.getElementById('type');
+    const optionsField = document.getElementById('optionsField');
+    const optionsInput = document.getElementById('options');
+    const valueField = document.getElementById('valueField');
+    const valueInput = document.getElementById('value');
+
+    if (typeSelect.value === 'select') {
+        optionsField.style.display = 'block';
+        optionsInput.required = true;
+        valueInput.placeholder = 'Selecione uma das opções acima';
+    } else {
+        optionsField.style.display = 'none';
+        optionsInput.required = false;
+        if (typeSelect.value === 'checkbox') {
+            valueInput.placeholder = 'S ou N';
+        } else {
+            valueInput.placeholder = 'Valor inicial do parâmetro';
+        }
+    }
+}
+</script>
+{% endblock %}

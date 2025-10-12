@@ -8,6 +8,7 @@ from app.controllers.integrations import integrations_controller
 from app.controllers import travels_controller
 from app.controllers import profile_controller
 from app.controllers import notifications_controller
+from app.controllers.settings import settings_controller
 
 
 # Middleware de Autenticação
@@ -100,6 +101,10 @@ def register_routes(app: Flask):
     admin_bp.add_url_rule('/organizations/<string:org_id>/clients/<int:client_id>/link', view_func=integrations_controller.link_client_to_organization, methods=['POST'])
     admin_bp.add_url_rule('/organizations/<string:org_id>/clients/<int:client_id>/unlink', view_func=integrations_controller.unlink_client_from_organization, methods=['POST'])
     admin_bp.add_url_rule('/organizations/<string:org_id>/toggle-status', view_func=integrations_controller.toggle_organization_status, methods=['POST'])
+
+    # Rotas de Configurações
+    admin_bp.add_url_rule('/settings', view_func=settings_controller.settings_list, methods=['GET'])
+    admin_bp.add_url_rule('/settings/<int:parameter_id>/update', view_func=settings_controller.settings_update, methods=['POST'])
 
     # Registrar Blueprints
     app.register_blueprint(auth_bp)

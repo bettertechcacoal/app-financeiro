@@ -10,6 +10,7 @@ from app.controllers import profile_controller
 from app.controllers import notifications_controller
 from app.controllers.settings import settings_controller
 from app.controllers import notes_controller
+from app.controllers.reports import reports_controller
 
 
 # Middleware de Autenticação
@@ -50,6 +51,9 @@ def register_routes(app: Flask):
     # Rotas de Tickets
     admin_bp.add_url_rule('/tickets', view_func=tickets_controller.tickets_list, methods=['GET'])
     admin_bp.add_url_rule('/tickets/client/<int:client_id>', view_func=tickets_controller.tickets_view, methods=['GET'])
+
+    # Rotas de Relatórios
+    admin_bp.add_url_rule('/tickets/client/<int:client_id>/report/pdf', view_func=reports_controller.tickets_report_pdf, methods=['GET'])
 
     # Rotas de Clientes (Organizações)
     admin_bp.add_url_rule('/clients', view_func=clients_controller.clients_list, methods=['GET'])  # Lista de clientes

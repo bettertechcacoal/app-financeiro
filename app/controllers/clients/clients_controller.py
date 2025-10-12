@@ -60,7 +60,22 @@ def client_create():
             'fixed_start_day': request.form.get('fixed_start_day') if billing_cycle_type == 'fixo' else None
         }
 
-        client_service.create_client(client_data)
+        client = client_service.create_client(client_data)
+
+        # Salvar meta dados do contrato
+        meta_data = {}
+        if request.form.get('contract_number'):
+            meta_data['contract_number'] = request.form.get('contract_number')
+        if request.form.get('contract_year'):
+            meta_data['contract_year'] = request.form.get('contract_year')
+        if request.form.get('process_number'):
+            meta_data['process_number'] = request.form.get('process_number')
+        if request.form.get('process_year'):
+            meta_data['process_year'] = request.form.get('process_year')
+
+        if meta_data:
+            client_service.update_client_metas(client['id'], meta_data)
+
         flash('Organização cadastrada com sucesso!', 'success')
         return redirect(url_for('admin.clients_list'))
     except Exception as e:
@@ -125,6 +140,20 @@ def client_update(client_id):
 
         client = client_service.update_client(client_id, client_data)
         if client:
+            # Salvar meta dados do contrato
+            meta_data = {}
+            if request.form.get('contract_number'):
+                meta_data['contract_number'] = request.form.get('contract_number')
+            if request.form.get('contract_year'):
+                meta_data['contract_year'] = request.form.get('contract_year')
+            if request.form.get('process_number'):
+                meta_data['process_number'] = request.form.get('process_number')
+            if request.form.get('process_year'):
+                meta_data['process_year'] = request.form.get('process_year')
+
+            if meta_data:
+                client_service.update_client_metas(client_id, meta_data)
+
             flash('Organização atualizada com sucesso!', 'success')
         else:
             flash('Organização não encontrada', 'error')

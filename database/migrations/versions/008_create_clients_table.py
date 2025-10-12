@@ -29,7 +29,7 @@ def upgrade() -> None:
         sa.Column('document', sa.String(length=50), nullable=False),
         sa.Column('organization_id', sa.String(length=50), nullable=True),
         sa.Column('address', sa.String(length=500), nullable=True),
-        sa.Column('city', sa.String(length=100), nullable=True),
+        sa.Column('city_id', sa.Integer(), nullable=True),
         sa.Column('state', sa.String(length=2), nullable=True),
         sa.Column('zipcode', sa.String(length=20), nullable=True),
         sa.Column('billing_cycle', sa.Integer(), nullable=True),
@@ -39,6 +39,7 @@ def upgrade() -> None:
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.ForeignKeyConstraint(['organization_id'], ['organizations.id']),
+        sa.ForeignKeyConstraint(['city_id'], ['cities.id']),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('document')
     )
@@ -46,6 +47,7 @@ def upgrade() -> None:
     # Criar índices
     op.create_index('idx_clients_document', 'clients', ['document'])
     op.create_index('idx_clients_organization_id', 'clients', ['organization_id'])
+    op.create_index('idx_clients_city_id', 'clients', ['city_id'])
 
 
 def downgrade() -> None:

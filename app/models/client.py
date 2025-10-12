@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.models.database import Base
 
@@ -19,7 +20,8 @@ class Client(Base):
 
     # Endereço
     address = Column(String(500))
-    city = Column(String(100))
+    city_id = Column(Integer, ForeignKey('cities.id'))
+    city = relationship('City', backref='clients')
     state = Column(String(2))
     zipcode = Column(String(20))
 
@@ -46,7 +48,8 @@ class Client(Base):
             'document': self.document,
             'organization_id': self.organization_id,
             'address': self.address,
-            'city': self.city,
+            'city_id': self.city_id,
+            'city': self.city.name if self.city else None,
             'state': self.state,
             'zipcode': self.zipcode,
             'billing_cycle': self.billing_cycle,

@@ -11,6 +11,7 @@ from app.controllers import notifications_controller
 from app.controllers.settings import settings_controller
 from app.controllers import notes_controller
 from app.controllers.reports import reports_controller
+from app.controllers.licenses import licenses_controller
 
 
 # Middleware de Autenticação
@@ -117,6 +118,20 @@ def register_routes(app: Flask):
     admin_bp.add_url_rule('/notes/<int:note_id>/update', view_func=notes_controller.notes_update, methods=['POST', 'PUT'])
     admin_bp.add_url_rule('/notes/<int:note_id>/delete', view_func=notes_controller.notes_delete, methods=['POST', 'DELETE'])
     admin_bp.add_url_rule('/api/notes', view_func=notes_controller.notes_api_list, methods=['GET'])
+
+    # Rotas de Licenças
+    admin_bp.add_url_rule('/licenses', view_func=licenses_controller.licenses_list, methods=['GET'])
+    admin_bp.add_url_rule('/licenses/upload', view_func=licenses_controller.license_upload, methods=['GET'])
+    admin_bp.add_url_rule('/licenses/upload/process', view_func=licenses_controller.license_upload_process, methods=['POST'])
+    admin_bp.add_url_rule('/licenses/generate', view_func=licenses_controller.license_generate, methods=['GET'])
+    admin_bp.add_url_rule('/licenses/generate-bulk', view_func=licenses_controller.license_generate_bulk, methods=['GET'])
+    admin_bp.add_url_rule('/licenses/view', view_func=licenses_controller.license_view, methods=['GET'])
+    admin_bp.add_url_rule('/licenses/view-pdf', view_func=licenses_controller.license_view_pdf, methods=['GET'])
+    admin_bp.add_url_rule('/licenses/delete-date', view_func=licenses_controller.license_delete_date, methods=['POST'])
+    admin_bp.add_url_rule('/licenses/modules', view_func=licenses_controller.license_modules_list, methods=['GET'])
+    admin_bp.add_url_rule('/api/licenses/modules/create', view_func=licenses_controller.license_module_create, methods=['POST'])
+    admin_bp.add_url_rule('/api/licenses/modules/update', view_func=licenses_controller.license_module_update, methods=['POST'])
+    admin_bp.add_url_rule('/api/licenses/dates', view_func=licenses_controller.license_get_dates_api, methods=['GET'])
 
     # Registrar Blueprints
     app.register_blueprint(auth_bp)

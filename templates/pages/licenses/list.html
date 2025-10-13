@@ -1,0 +1,831 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}Licenças{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Licenças'}
+]) }}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Estilo para o datepicker */
+    .ui-datepicker {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .ui-datepicker-header {
+        background: linear-gradient(to bottom right, #ec4899, #db2777);
+        color: white;
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .ui-datepicker-title {
+        color: white;
+        font-weight: 600;
+    }
+
+    .ui-datepicker-prev,
+    .ui-datepicker-next {
+        cursor: pointer;
+        color: white !important;
+    }
+
+    .ui-datepicker td {
+        padding: 2px;
+    }
+
+    .ui-datepicker td a {
+        text-align: center;
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+        text-decoration: none;
+        color: #9ca3af;
+        display: block;
+    }
+
+    .ui-datepicker td.available-date a {
+        background: #fce7f3;
+        color: #db2777;
+        font-weight: 600;
+    }
+
+    .ui-datepicker td.available-date a:hover {
+        background: #ec4899;
+        color: white;
+    }
+
+    .ui-datepicker td a.ui-state-active {
+        background: #db2777;
+        color: white;
+    }
+
+    .ui-datepicker-calendar th {
+        color: #6b7280;
+        font-weight: 600;
+        padding: 0.5rem;
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+                    <i class="fas fa-key text-white text-2xl sm:text-3xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Licenças</h1>
+                    <p class="text-sm sm:text-base text-gray-600">Gerenciamento de senhas e licenças por cliente</p>
+                </div>
+            </div>
+            <a href="{{ url_for('admin.license_modules_list') }}" class="bg-gradient-to-br from-pink-500 to-pink-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
+                <i class="fas fa-puzzle-piece mr-2"></i>
+                Módulos
+            </a>
+        </div>
+    </div>
+
+    <!-- Layout com Sidebar -->
+    <div class="flex flex-col lg:flex-row gap-6">
+        <!-- Conteúdo Principal -->
+        <div class="flex-1 min-w-0">
+            <!-- Upload de Arquivo -->
+            <div class="card p-6 mb-6 animate-fade-in">
+                <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-upload text-pink-600 mr-2"></i>
+                    Upload de Arquivo de Licenças
+                </h2>
+
+                <form method="POST" action="{{ url_for('admin.license_upload_process') }}" enctype="multipart/form-data">
+                    <div class="flex gap-4 items-end">
+                        <div class="flex-1">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Arquivo TXT de Senhas
+                            </label>
+                            <input type="file" name="file" accept=".txt" required
+                                   class="block w-full text-sm text-gray-500
+                                          file:mr-4 file:py-3 file:px-6
+                                          file:rounded-lg file:border-0
+                                          file:text-sm file:font-semibold
+                                          file:bg-pink-50 file:text-pink-700
+                                          hover:file:bg-pink-100
+                                          cursor-pointer border border-gray-300 rounded-lg">
+                        </div>
+                        <button type="submit" class="px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
+                            <i class="fas fa-upload mr-2"></i>
+                            Processar Arquivo
+                        </button>
+                    </div>
+                    <p class="mt-2 text-sm text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Formato: client_code,module_code,DD/MM/YYYY,password,client_name
+                    </p>
+                </form>
+            </div>
+
+            {% if clients %}
+                <!-- Barra de Pesquisa e Ações em Massa -->
+                <div class="card p-6 mb-6 animate-fade-in">
+                    <div class="flex flex-col gap-4">
+                        <!-- Linha 1: Pesquisa -->
+                        <div class="flex items-center gap-4">
+                            <div class="flex-1">
+                                <div class="relative">
+                                    <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                    <input type="text" id="searchInput" placeholder="Pesquisar por cliente ou código..."
+                                           class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all">
+                                </div>
+                            </div>
+                            <button onclick="clearSearch()" class="px-6 py-3 text-gray-600 hover:text-gray-800 font-semibold">
+                                <i class="fas fa-times mr-2"></i>
+                                Limpar
+                            </button>
+                        </div>
+
+                        <!-- Linha 2: Ações em Massa -->
+                        <div class="flex items-center justify-between gap-4 pt-4 border-t border-gray-200">
+                            <div class="flex items-center gap-3">
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="w-5 h-5 text-pink-600 rounded border-gray-300 focus:ring-pink-500">
+                                    <span class="ml-2 text-sm font-semibold text-gray-700">Selecionar Todos</span>
+                                </label>
+                                <span class="text-sm text-gray-600">|</span>
+                                <span class="text-sm text-gray-600">
+                                    <span id="selectedCount" class="font-bold text-pink-600">0</span> selecionado(s)
+                                </span>
+                            </div>
+                            <button onclick="openBulkGenerateModal()" id="bulkGenerateBtn" disabled
+                                    class="px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-download mr-2"></i>
+                                Gerar TXT em Massa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Clientes em Cards -->
+                <div class="space-y-3 animate-fade-in">
+                    {% for client in clients %}
+                    <div class="card client-row"
+                         data-search="{{ client.name|lower }} {{ client.code|lower }}"
+                         data-client-code="{{ client.code }}"
+                         data-client-name="{{ client.name }}">
+
+                        <!-- Header do Card -->
+                        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-3">
+                            <input type="checkbox" class="client-checkbox w-5 h-5 text-pink-600 rounded border-gray-300 focus:ring-pink-500 cursor-pointer"
+                                   data-client-code="{{ client.code }}"
+                                   data-client-name="{{ client.name }}"
+                                   onchange="updateSelectedCount()">
+                            <div class="w-8 h-8 bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg flex items-center justify-center text-white flex-shrink-0">
+                                <i class="fas fa-building text-sm"></i>
+                            </div>
+                            <div class="flex items-center text-xs text-gray-600">
+                                <span class="font-medium">Código: {{ client.code }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Corpo do Card -->
+                        <div class="px-4 py-3">
+                            <div class="mb-3">
+                                <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-sm font-semibold text-gray-900 leading-snug mb-1">
+                                            {{ client.name }}
+                                        </h3>
+                                        <p class="text-xs text-gray-700 font-medium">
+                                            Código: {{ client.code }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Botões de Ação -->
+                                    <div class="flex flex-wrap gap-2 lg:flex-shrink-0">
+                                        <button onclick="openPdfModal('{{ client.code }}', '{{ client.name }}')"
+                                               class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
+                                            <i class="fas fa-file-pdf mr-1.5"></i>
+                                            Visualizar PDF
+                                        </button>
+                                        <button onclick="openGenerateModal('{{ client.code }}', '{{ client.name }}')"
+                                               class="inline-flex items-center px-3 py-2 bg-pink-600 hover:bg-pink-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
+                                            <i class="fas fa-download mr-1.5"></i>
+                                            Gerar TXT
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <!-- Rodapé da Lista -->
+                    <div class="card px-4 py-3 bg-gray-50">
+                        <div class="flex items-center justify-between text-xs sm:text-sm">
+                            <div class="text-gray-600">
+                                Total: <span class="font-bold text-gray-900" id="totalCount">{{ clients|length }}</span> cliente{% if clients|length != 1 %}s{% endif %}
+                            </div>
+                            <div class="text-gray-600">
+                                Mostrando: <span class="font-bold text-gray-900" id="visibleCount">{{ clients|length }}</span> registro{% if clients|length != 1 %}s{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card animate-fade-in">
+                    <div class="text-center py-16">
+                        <div class="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-key text-4xl text-gray-400"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Nenhuma licença cadastrada</h3>
+                        <p class="text-gray-600">Faça upload de um arquivo TXT para começar</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar de Métricas -->
+        <div class="w-full lg:w-80 flex-shrink-0">
+            <div class="sticky top-6 space-y-4 animate-fade-in">
+                <!-- Total de Clientes -->
+                <div class="card p-4">
+                    <div class="text-sm text-gray-600 mb-1">Total de Clientes</div>
+                    <div class="text-2xl font-bold text-pink-600">{{ clients|length }}</div>
+                </div>
+
+                <!-- Última Atualização -->
+                <div class="card p-4">
+                    <div class="text-sm text-gray-600 mb-1">Última Atualização</div>
+                    <div class="text-lg font-bold text-gray-900">
+                        {% if dates %}
+                        {{ dates[0].strftime('%d/%m/%Y') }}
+                        {% else %}
+                        --/--/----
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botão Voltar -->
+    <div class="mt-6 animate-fade-in">
+        <a href="{{ url_for('admin.dashboard') }}" class="text-pink-600 hover:text-pink-700 font-semibold">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Voltar para Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Modal de Geração em Massa -->
+<div id="bulkGenerateModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full animate-fade-in max-h-[90vh] overflow-hidden flex flex-col">
+        <!-- Header do Modal -->
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-900">Gerar TXT em Massa</h3>
+                <button onclick="closeBulkGenerateModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Corpo do Modal (scrollable) -->
+        <div class="px-6 py-4 overflow-y-auto flex-1">
+            <!-- Seleção de Data -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    <i class="fas fa-calendar mr-1"></i>
+                    Selecione a Data (aplicada a todos)
+                </label>
+                <input type="text" id="bulkDatePicker" readonly
+                       class="form-select w-full cursor-pointer"
+                       placeholder="Clique para selecionar a data">
+                <input type="hidden" id="bulkDateValue">
+            </div>
+
+            <!-- Lista de Clientes Selecionados -->
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-3">
+                    <i class="fas fa-building mr-1"></i>
+                    Clientes Selecionados (<span id="bulkSelectedCount">0</span>)
+                </label>
+                <div id="bulkClientsList" class="space-y-2 max-h-64 overflow-y-auto p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <!-- Será preenchido via JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer com Botões -->
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+            <div class="flex gap-3">
+                <button type="button" onclick="closeBulkGenerateModal()" class="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-all">
+                    Cancelar
+                </button>
+                <button type="button" onclick="generateBulkTXT()" class="flex-1 px-4 py-3 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md">
+                    <i class="fas fa-download mr-2"></i>
+                    Baixar TXT Unificado
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Visualização PDF -->
+<div id="pdfModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-fade-in">
+        <!-- Header do Modal -->
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-900">Visualizar PDF</h3>
+                <button onclick="closePdfModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Corpo do Modal -->
+        <div class="px-6 py-4">
+            <form id="pdfForm" method="GET" action="{{ url_for('admin.license_view_pdf') }}" target="_blank">
+                <input type="hidden" name="client_code" id="pdfClientCode">
+
+                <!-- Nome do Cliente -->
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Cliente</label>
+                    <div class="text-base font-medium text-gray-900" id="pdfClientName"></div>
+                </div>
+
+                <!-- Seleção de Data -->
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-calendar mr-1"></i>
+                        Selecione a Data
+                    </label>
+                    <input type="text" id="pdfDatePicker" readonly
+                           class="form-select w-full cursor-pointer"
+                           placeholder="Clique para selecionar a data">
+                    <input type="hidden" id="pdfDateValue" name="license_date" required>
+                </div>
+
+                <!-- Botões -->
+                <div class="flex gap-3">
+                    <button type="button" onclick="closePdfModal()" class="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-all">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md">
+                        <i class="fas fa-file-pdf mr-2"></i>
+                        Abrir PDF
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Geração de TXT -->
+<div id="generateModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-fade-in">
+        <!-- Header do Modal -->
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-900">Gerar Arquivo TXT</h3>
+                <button onclick="closeGenerateModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Corpo do Modal -->
+        <div class="px-6 py-4">
+            <form id="generateForm" method="GET" action="{{ url_for('admin.license_generate') }}" target="_blank">
+                <input type="hidden" name="client_code" id="modalClientCode">
+
+                <!-- Nome do Cliente -->
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Cliente</label>
+                    <div class="text-base font-medium text-gray-900" id="modalClientName"></div>
+                </div>
+
+                <!-- Seleção de Data -->
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-calendar mr-1"></i>
+                        Selecione a Data
+                    </label>
+                    <input type="text" id="modalDatePicker" readonly
+                           class="form-select w-full cursor-pointer"
+                           placeholder="Clique para selecionar a data">
+                    <input type="hidden" id="modalDateValue" name="license_date" required>
+                </div>
+
+                <!-- Botões -->
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeGenerateModal()" class="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-all">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-3 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md">
+                        <i class="fas fa-download mr-2"></i>
+                        Baixar TXT
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Função de pesquisa
+    const searchInput = document.getElementById('searchInput');
+    const clientRows = document.querySelectorAll('.client-row');
+    const visibleCountEl = document.getElementById('visibleCount');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            let visibleCount = 0;
+
+            clientRows.forEach(row => {
+                const searchData = row.getAttribute('data-search');
+
+                if (searchData.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (visibleCountEl) {
+                visibleCountEl.textContent = visibleCount;
+            }
+        });
+    }
+
+    function clearSearch() {
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+            searchInput.focus();
+        }
+    }
+
+    // Funções do Modal
+    let availableDates = [];
+
+    function openGenerateModal(clientCode, clientName) {
+        document.getElementById('modalClientCode').value = clientCode;
+        document.getElementById('modalClientName').textContent = clientName;
+        document.getElementById('generateModal').classList.remove('hidden');
+
+        // Limpar datepicker anterior
+        if ($('#modalDatePicker').hasClass('hasDatepicker')) {
+            $('#modalDatePicker').datepicker('destroy');
+        }
+        $('#modalDatePicker').val('');
+        $('#modalDateValue').val('');
+
+        // Buscar datas disponíveis para o cliente
+        fetch(`{{ url_for('admin.license_get_dates_api') }}?client_code=${clientCode}`)
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                console.log('Result:', result);
+                if (result.success) {
+                    availableDates = result.dates;
+
+                    // Pegar a maior data disponível (primeira do array, pois vem ordenada DESC)
+                    const latestDate = availableDates.length > 0 ? availableDates[0] : null;
+
+                    // Configurar datepicker
+                    $('#modalDatePicker').datepicker({
+                        dateFormat: 'dd/mm/yy',
+                        changeMonth: true,
+                        changeYear: true,
+                        yearRange: '-5:+1',
+                        beforeShowDay: function(date) {
+                            // Formatar data para comparação (YYYY-MM-DD)
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const day = String(date.getDate()).padStart(2, '0');
+                            const dateStr = `${year}-${month}-${day}`;
+
+                            // Verificar se a data está disponível
+                            const isAvailable = availableDates.includes(dateStr);
+                            return [isAvailable, isAvailable ? 'available-date' : '', ''];
+                        },
+                        onSelect: function(dateText, inst) {
+                            // Converter DD/MM/YYYY para YYYY-MM-DD
+                            const parts = dateText.split('/');
+                            const isoDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                            $('#modalDateValue').val(isoDate);
+                        },
+                        dayNamesMin: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'],
+                        monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                                   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+                        monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+                                        'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+                    });
+
+                    // Preencher automaticamente com a maior data disponível
+                    if (latestDate) {
+                        // Converter YYYY-MM-DD para Date object
+                        const dateParts = latestDate.split('-');
+                        const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+
+                        // Setar a data no datepicker
+                        $('#modalDatePicker').datepicker('setDate', dateObj);
+
+                        // Preencher o valor hidden também
+                        $('#modalDateValue').val(latestDate);
+                    }
+                } else {
+                    alert('Erro ao carregar datas disponíveis');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao carregar datas disponíveis');
+            });
+    }
+
+    function closeGenerateModal() {
+        document.getElementById('generateModal').classList.add('hidden');
+    }
+
+    // Fechar modal ao clicar fora
+    document.getElementById('generateModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeGenerateModal();
+        }
+    });
+
+    // ===== FUNÇÕES DE SELEÇÃO MÚLTIPLA =====
+
+    // Atualizar contador de selecionados
+    function updateSelectedCount() {
+        const checkboxes = document.querySelectorAll('.client-checkbox');
+        const checked = document.querySelectorAll('.client-checkbox:checked');
+        const count = checked.length;
+
+        document.getElementById('selectedCount').textContent = count;
+
+        // Habilitar/desabilitar botão de geração em massa
+        const bulkBtn = document.getElementById('bulkGenerateBtn');
+        bulkBtn.disabled = count === 0;
+
+        // Atualizar estado do "Selecionar Todos"
+        const selectAllCheckbox = document.getElementById('selectAll');
+        selectAllCheckbox.checked = count > 0 && count === checkboxes.length;
+        selectAllCheckbox.indeterminate = count > 0 && count < checkboxes.length;
+    }
+
+    // Toggle selecionar todos
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.client-checkbox');
+
+        checkboxes.forEach(checkbox => {
+            // Só selecionar checkboxes visíveis
+            const row = checkbox.closest('.client-row');
+            if (row && row.style.display !== 'none') {
+                checkbox.checked = selectAll.checked;
+            }
+        });
+
+        updateSelectedCount();
+    }
+
+    // Abrir modal de geração em massa
+    function openBulkGenerateModal() {
+        const checked = document.querySelectorAll('.client-checkbox:checked');
+
+        if (checked.length === 0) {
+            alert('Selecione pelo menos um cliente');
+            return;
+        }
+
+        // Mostrar modal
+        document.getElementById('bulkGenerateModal').classList.remove('hidden');
+
+        // Preencher lista de clientes selecionados
+        const clientsList = document.getElementById('bulkClientsList');
+        const bulkCount = document.getElementById('bulkSelectedCount');
+
+        bulkCount.textContent = checked.length;
+
+        let html = '';
+        checked.forEach((checkbox, index) => {
+            const code = checkbox.dataset.clientCode;
+            const name = checkbox.dataset.clientName;
+
+            html += `
+                <div class="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                    <div class="w-8 h-8 bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg flex items-center justify-center text-white flex-shrink-0">
+                        <i class="fas fa-building text-xs"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-semibold text-gray-900 truncate">${name}</div>
+                        <div class="text-xs text-gray-600">Código: ${code}</div>
+                    </div>
+                </div>
+            `;
+        });
+
+        clientsList.innerHTML = html;
+
+        // Limpar datepicker anterior
+        if ($('#bulkDatePicker').hasClass('hasDatepicker')) {
+            $('#bulkDatePicker').datepicker('destroy');
+        }
+        $('#bulkDatePicker').val('');
+        $('#bulkDateValue').val('');
+
+        // Buscar todas as datas disponíveis (de todos os clientes selecionados)
+        const clientCodes = Array.from(checked).map(cb => cb.dataset.clientCode);
+
+        // Usar a API para pegar todas as datas (sem filtro de cliente específico)
+        fetch(`{{ url_for('admin.license_get_dates_api') }}`)
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    const allDates = result.dates;
+                    const latestDate = allDates.length > 0 ? allDates[0] : null;
+
+                    // Configurar datepicker
+                    $('#bulkDatePicker').datepicker({
+                        dateFormat: 'dd/mm/yy',
+                        changeMonth: true,
+                        changeYear: true,
+                        yearRange: '-5:+1',
+                        beforeShowDay: function(date) {
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const day = String(date.getDate()).padStart(2, '0');
+                            const dateStr = `${year}-${month}-${day}`;
+
+                            const isAvailable = allDates.includes(dateStr);
+                            return [isAvailable, isAvailable ? 'available-date' : '', ''];
+                        },
+                        onSelect: function(dateText, inst) {
+                            const parts = dateText.split('/');
+                            const isoDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                            $('#bulkDateValue').val(isoDate);
+                        },
+                        dayNamesMin: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'],
+                        monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                                   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+                        monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+                                        'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+                    });
+
+                    // Preencher com a maior data
+                    if (latestDate) {
+                        const dateParts = latestDate.split('-');
+                        const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                        $('#bulkDatePicker').datepicker('setDate', dateObj);
+                        $('#bulkDateValue').val(latestDate);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar datas:', error);
+                alert('Erro ao carregar datas disponíveis');
+            });
+    }
+
+    // Fechar modal de geração em massa
+    function closeBulkGenerateModal() {
+        document.getElementById('bulkGenerateModal').classList.add('hidden');
+    }
+
+    // Gerar TXT em massa (único arquivo com todos os clientes)
+    function generateBulkTXT() {
+        const selectedDate = document.getElementById('bulkDateValue').value;
+
+        if (!selectedDate) {
+            alert('Por favor, selecione uma data');
+            return;
+        }
+
+        const checked = document.querySelectorAll('.client-checkbox:checked');
+
+        if (checked.length === 0) {
+            alert('Nenhum cliente selecionado');
+            return;
+        }
+
+        // Criar array de códigos de clientes
+        const clientCodes = Array.from(checked).map(cb => cb.dataset.clientCode);
+
+        // Montar URL com todos os códigos separados por vírgula
+        const clientCodesStr = clientCodes.join(',');
+        const url = `{{ url_for('admin.license_generate_bulk') }}?client_codes=${clientCodesStr}&license_date=${selectedDate}`;
+
+        // Abrir em nova aba para download
+        window.open(url, '_blank');
+
+        // Fechar modal
+        closeBulkGenerateModal();
+    }
+
+    // Fechar modal ao clicar fora
+    document.getElementById('bulkGenerateModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeBulkGenerateModal();
+        }
+    });
+
+    // ===== FUNÇÕES DE VISUALIZAÇÃO PDF =====
+
+    // Abrir modal de PDF
+    function openPdfModal(clientCode, clientName) {
+        document.getElementById('pdfClientCode').value = clientCode;
+        document.getElementById('pdfClientName').textContent = clientName;
+        document.getElementById('pdfModal').classList.remove('hidden');
+
+        // Limpar datepicker anterior
+        if ($('#pdfDatePicker').hasClass('hasDatepicker')) {
+            $('#pdfDatePicker').datepicker('destroy');
+        }
+        $('#pdfDatePicker').val('');
+        $('#pdfDateValue').val('');
+
+        // Buscar datas disponíveis para o cliente
+        fetch(`{{ url_for('admin.license_get_dates_api') }}?client_code=${clientCode}`)
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    const dates = result.dates;
+                    const latestDate = dates.length > 0 ? dates[0] : null;
+
+                    // Configurar datepicker
+                    $('#pdfDatePicker').datepicker({
+                        dateFormat: 'dd/mm/yy',
+                        changeMonth: true,
+                        changeYear: true,
+                        yearRange: '-5:+1',
+                        beforeShowDay: function(date) {
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const day = String(date.getDate()).padStart(2, '0');
+                            const dateStr = `${year}-${month}-${day}`;
+
+                            const isAvailable = dates.includes(dateStr);
+                            return [isAvailable, isAvailable ? 'available-date' : '', ''];
+                        },
+                        onSelect: function(dateText, inst) {
+                            const parts = dateText.split('/');
+                            const isoDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                            $('#pdfDateValue').val(isoDate);
+                        },
+                        dayNamesMin: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'],
+                        monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                                   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+                        monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+                                        'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+                    });
+
+                    // Preencher com a maior data
+                    if (latestDate) {
+                        const dateParts = latestDate.split('-');
+                        const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                        $('#pdfDatePicker').datepicker('setDate', dateObj);
+                        $('#pdfDateValue').val(latestDate);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar datas:', error);
+                alert('Erro ao carregar datas disponíveis');
+            });
+    }
+
+    // Fechar modal de PDF
+    function closePdfModal() {
+        document.getElementById('pdfModal').classList.add('hidden');
+    }
+
+    // Fechar modal ao clicar fora
+    document.getElementById('pdfModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closePdfModal();
+        }
+    });
+</script>
+{% endblock %}

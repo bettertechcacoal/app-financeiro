@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Visualizar Senhas{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <div class="max-w-5xl mx-auto">
+        <div class="mb-6">
+            <a href="{{ url_for('admin.licenses_list') }}" class="text-blue-600 hover:text-blue-700">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Voltar para Licenças
+            </a>
+        </div>
+
+        <!-- Informações da Licença -->
+        <div class="card p-6 mb-6">
+            <div class="flex items-center justify-between mb-6">
+                <h1 class="text-2xl font-bold text-gray-900">Senhas do Cliente</h1>
+                <a href="{{ url_for('admin.license_generate') }}?client_code={{ license.client_code }}&license_date={{ license.license_date }}"
+                   class="btn-primary" target="_blank">
+                    <i class="fas fa-download mr-2"></i>
+                    Baixar TXT
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-500 mb-1">Cliente</label>
+                    <div class="text-lg font-semibold text-gray-900">{{ license.client_name }}</div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-500 mb-1">Código do Cliente</label>
+                    <div class="text-lg font-mono text-gray-900">{{ license.client_code }}</div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-500 mb-1">Data</label>
+                    <div class="text-lg text-gray-900">{{ license.license_date }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Módulos e Senhas -->
+        <div class="card">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900">
+                    Módulos e Senhas
+                    <span class="text-sm font-normal text-gray-500 ml-2">({{ license.modules|length }} módulo(s))</span>
+                </h2>
+            </div>
+
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for module in license.modules %}
+                    <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-blue-300 transition-colors">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex-1">
+                                <div class="text-sm font-semibold text-gray-500 mb-1">Módulo</div>
+                                <div class="font-mono text-sm text-gray-700">{{ module.module_code }}</div>
+                            </div>
+                            <button onclick="copyPassword('{{ module.password }}')" class="btn-sm btn-primary" title="Copiar senha">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+
+                        <div>
+                            <div class="text-sm font-semibold text-gray-500 mb-1">Senha</div>
+                            <div class="flex items-center gap-2">
+                                <input type="password" value="{{ module.password }}" id="pwd-{{ loop.index }}" readonly
+                                       class="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2 font-mono text-sm">
+                                <button onclick="togglePassword('pwd-{{ loop.index }}')" class="btn-sm btn-secondary" title="Mostrar/Ocultar">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const button = event.target.closest('button');
+    const icon = button.querySelector('i');
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+function copyPassword(password) {
+    const button = event.target.closest('button');
+    const originalHTML = button.innerHTML;
+
+    navigator.clipboard.writeText(password).then(() => {
+        // Feedback visual
+        button.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(() => {
+            button.innerHTML = originalHTML;
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}

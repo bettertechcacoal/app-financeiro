@@ -1,0 +1,474 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}Módulos de Licenças{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Licenças', 'url': url_for('admin.licenses_list')},
+    {'name': 'Módulos'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+                    <i class="fas fa-puzzle-piece text-white text-2xl sm:text-3xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Módulos de Licenças</h1>
+                    <p class="text-sm sm:text-base text-gray-600">Gerencie os códigos e nomes dos módulos do sistema</p>
+                </div>
+            </div>
+            <button onclick="openCreateModal()" class="bg-gradient-to-br from-pink-500 to-pink-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
+                <i class="fas fa-plus mr-2"></i>
+                Adicionar Módulo
+            </button>
+        </div>
+    </div>
+
+    <!-- Barra de Pesquisa -->
+    <div class="card p-6 mb-6 animate-fade-in">
+        <div class="flex items-center gap-4">
+            <div class="flex-1">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="searchInput" placeholder="Pesquisar por código ou nome do módulo..." class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all">
+                </div>
+            </div>
+            <button onclick="clearSearch()" class="px-6 py-3 text-gray-600 hover:text-gray-800 font-semibold">
+                <i class="fas fa-times mr-2"></i>
+                Limpar
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabela de Módulos -->
+    <div class="card animate-fade-in">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Código
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Nome do Módulo
+                        </th>
+                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+                            Ações
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="modulesTable">
+                    {% for module in modules %}
+                    <tr class="hover:bg-gray-50 transition-colors module-row"
+                        data-module-id="{{ module.id }}"
+                        data-module-code="{{ module.code }}"
+                        data-module-name="{{ module.name }}"
+                        data-search="{{ module.code|lower }} {{ module.name|lower }}">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center text-white mr-3">
+                                    <i class="fas fa-hashtag"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-bold text-gray-900">{{ module.code }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ module.name }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <div class="flex items-center justify-center space-x-3">
+                                <button onclick="openEditModal({{ module.id }})" class="text-pink-600 hover:text-pink-800 transition-colors" title="Editar">
+                                    <i class="fas fa-edit text-lg"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Rodapé da Tabela -->
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-gray-600">
+                    Total: <span class="font-bold text-gray-900" id="totalCount">{{ modules|length }}</span> módulo(s)
+                </div>
+                <div class="text-sm text-gray-600">
+                    Mostrando: <span class="font-bold text-gray-900" id="visibleCount">{{ modules|length }}</span> registro(s)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botão Voltar -->
+    <div class="mt-6 animate-fade-in">
+        <a href="{{ url_for('admin.licenses_list') }}" class="text-pink-600 hover:text-pink-700 font-semibold">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Voltar para Licenças
+        </a>
+    </div>
+</div>
+
+<!-- Modal de Criação -->
+<div id="createModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-fade-in">
+        <!-- Header do Modal -->
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-900">Adicionar Módulo</h3>
+                <button onclick="closeCreateModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Corpo do Modal -->
+        <div class="px-6 py-4">
+            <form id="createForm">
+                <!-- Código do Módulo -->
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-hashtag mr-1"></i>
+                        Código
+                    </label>
+                    <input type="text" id="newModuleCode"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all"
+                           placeholder="Digite o código do módulo" required>
+                </div>
+
+                <!-- Nome do Módulo -->
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-tag mr-1"></i>
+                        Nome do Módulo
+                    </label>
+                    <input type="text" id="newModuleName"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all"
+                           placeholder="Digite o nome do módulo" required>
+                </div>
+
+                <!-- Botões -->
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeCreateModal()" class="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-all">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-3 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md">
+                        <i class="fas fa-plus mr-2"></i>
+                        Adicionar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Edição -->
+<div id="editModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-fade-in">
+        <!-- Header do Modal -->
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-900">Editar Módulo</h3>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Corpo do Modal -->
+        <div class="px-6 py-4">
+            <form id="editForm">
+                <input type="hidden" id="moduleId">
+
+                <!-- Código do Módulo -->
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-hashtag mr-1"></i>
+                        Código
+                    </label>
+                    <input type="text" id="moduleCode"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all"
+                           placeholder="Digite o código do módulo" required>
+                </div>
+
+                <!-- Nome do Módulo -->
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-tag mr-1"></i>
+                        Nome do Módulo
+                    </label>
+                    <input type="text" id="moduleName"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all"
+                           placeholder="Digite o nome do módulo" required>
+                </div>
+
+                <!-- Botões -->
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeEditModal()" class="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition-all">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-3 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md">
+                        <i class="fas fa-save mr-2"></i>
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Toast de notificação -->
+<div id="toast" class="hidden fixed top-6 right-6 z-50 px-6 py-4 rounded-lg shadow-2xl animate-fade-in">
+    <div class="flex items-center gap-3">
+        <i id="toastIcon" class="text-xl"></i>
+        <span id="toastMessage" class="font-semibold"></span>
+    </div>
+</div>
+
+<script>
+    // Função de pesquisa
+    const searchInput = document.getElementById('searchInput');
+    const moduleRows = document.querySelectorAll('.module-row');
+    const visibleCountEl = document.getElementById('visibleCount');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            let visibleCount = 0;
+
+            moduleRows.forEach(row => {
+                const searchData = row.getAttribute('data-search');
+
+                if (searchData.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (visibleCountEl) {
+                visibleCountEl.textContent = visibleCount;
+            }
+        });
+    }
+
+    function clearSearch() {
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+            searchInput.focus();
+        }
+    }
+
+    // Abrir modal de criação
+    function openCreateModal() {
+        document.getElementById('createModal').classList.remove('hidden');
+        document.getElementById('newModuleCode').focus();
+    }
+
+    // Fechar modal de criação
+    function closeCreateModal() {
+        document.getElementById('createModal').classList.add('hidden');
+        document.getElementById('createForm').reset();
+    }
+
+    // Fechar modal de criação ao clicar fora
+    document.getElementById('createModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeCreateModal();
+        }
+    });
+
+    // Abrir modal de edição
+    function openEditModal(moduleId) {
+        const row = document.querySelector(`.module-row[data-module-id="${moduleId}"]`);
+        const code = row.getAttribute('data-module-code');
+        const name = row.getAttribute('data-module-name');
+
+        document.getElementById('moduleId').value = moduleId;
+        document.getElementById('moduleCode').value = code;
+        document.getElementById('moduleName').value = name;
+
+        document.getElementById('editModal').classList.remove('hidden');
+        document.getElementById('moduleCode').focus();
+    }
+
+    // Fechar modal de edição
+    function closeEditModal() {
+        document.getElementById('editModal').classList.add('hidden');
+        document.getElementById('editForm').reset();
+    }
+
+    // Fechar modal de edição ao clicar fora
+    document.getElementById('editModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeEditModal();
+        }
+    });
+
+    // Criar novo módulo
+    document.getElementById('createForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const newCode = document.getElementById('newModuleCode').value.trim();
+        const newName = document.getElementById('newModuleName').value.trim();
+
+        // Validação
+        if (!newCode || !newName) {
+            showToast('Código e nome são obrigatórios', 'error');
+            return;
+        }
+
+        // Desabilitar botão durante salvamento
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Criando...';
+
+        // Enviar via AJAX
+        fetch('{{ url_for("admin.license_module_create") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                code: newCode,
+                name: newName
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                // Recarregar a página para mostrar o novo módulo
+                showToast('Módulo criado com sucesso!', 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                showToast(`Erro: ${result.error}`, 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showToast('Erro ao criar módulo', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        });
+    });
+
+    // Salvar alterações
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const moduleId = document.getElementById('moduleId').value;
+        const newCode = document.getElementById('moduleCode').value.trim();
+        const newName = document.getElementById('moduleName').value.trim();
+
+        // Validação
+        if (!newCode || !newName) {
+            showToast('Código e nome são obrigatórios', 'error');
+            return;
+        }
+
+        // Desabilitar botão durante salvamento
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Salvando...';
+
+        // Enviar via AJAX
+        fetch('{{ url_for("admin.license_module_update") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                id: parseInt(moduleId),
+                code: newCode,
+                name: newName
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                // Atualizar a linha na tabela
+                const row = document.querySelector(`.module-row[data-module-id="${moduleId}"]`);
+                row.setAttribute('data-module-code', newCode);
+                row.setAttribute('data-module-name', newName);
+                row.setAttribute('data-search', `${newCode.toLowerCase()} ${newName.toLowerCase()}`);
+
+                // Atualizar o conteúdo visual
+                row.querySelector('.text-sm.font-bold').textContent = newCode;
+                row.querySelector('.text-sm.text-gray-900').textContent = newName;
+
+                // Fechar modal
+                closeEditModal();
+
+                // Mostrar sucesso
+                showToast('Módulo atualizado com sucesso!', 'success');
+            } else {
+                showToast(`Erro: ${result.error}`, 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showToast('Erro ao salvar alterações', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        });
+    });
+
+    // Função para mostrar toast de notificação
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const icon = document.getElementById('toastIcon');
+        const messageEl = document.getElementById('toastMessage');
+
+        // Configurar estilo baseado no tipo
+        if (type === 'success') {
+            toast.className = 'fixed top-6 right-6 z-50 px-6 py-4 rounded-lg shadow-2xl animate-fade-in bg-green-600 text-white';
+            icon.className = 'fas fa-check-circle text-xl';
+        } else if (type === 'error') {
+            toast.className = 'fixed top-6 right-6 z-50 px-6 py-4 rounded-lg shadow-2xl animate-fade-in bg-red-600 text-white';
+            icon.className = 'fas fa-exclamation-circle text-xl';
+        }
+
+        messageEl.textContent = message;
+        toast.classList.remove('hidden');
+
+        // Ocultar após 3 segundos
+        setTimeout(() => {
+            toast.classList.add('hidden');
+        }, 3000);
+    }
+
+    // Permitir fechar modais com Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const createModal = document.getElementById('createModal');
+            const editModal = document.getElementById('editModal');
+
+            if (!createModal.classList.contains('hidden')) {
+                closeCreateModal();
+            } else if (!editModal.classList.contains('hidden')) {
+                closeEditModal();
+            }
+        }
+    });
+</script>
+{% endblock %}

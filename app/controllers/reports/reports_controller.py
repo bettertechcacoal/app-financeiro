@@ -238,7 +238,9 @@ def tickets_report_pdf(client_id):
     story = []
 
     # LOGO DA EMPRESA CENTRALIZADA
-    logo_path = 'static/images/letterhead_logo.png'
+    # Usar caminho absoluto baseado no diretório da aplicação
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    logo_path = os.path.join(base_dir, 'static', 'images', 'letterhead_logo.png')
     if os.path.exists(logo_path):
         logo = Image(logo_path, width=6*cm, height=3*cm, kind='proportional')
         logo.hAlign = 'CENTER'
@@ -395,7 +397,7 @@ def tickets_report_pdf(client_id):
     story.append(Spacer(1, 0.5*cm))
 
     # ASSINATURA - IMAGEM
-    signature_path = 'static/images/signature_ronildo_pauli.png'
+    signature_path = os.path.join(base_dir, 'static', 'images', 'signature_ronildo_pauli.png')
     if os.path.exists(signature_path):
         signature = Image(signature_path, width=6*cm, height=3*cm, kind='proportional')
         signature.hAlign = 'CENTER'

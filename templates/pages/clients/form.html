@@ -124,7 +124,7 @@
 
     <!-- Formulário -->
     <div class="card animate-fade-in">
-        <form id="client-form" action="{% if client %}{{ url_for('admin.client_update', client_id=client.id) }}{% else %}{{ url_for('admin.client_create') }}{% endif %}" method="POST">
+        <form id="client-form" action="{% if client %}{{ url_for('admin.client_update', client_id=client.id) }}{% else %}{{ url_for('admin.client_create') }}{% endif %}" method="POST" data-client-id="{% if client %}{{ client.id }}{% else %}{% endif %}">
 
         <!-- Tabs Navigation -->
         <div class="flex gap-6 md:gap-8 border-b-2 border-gray-200 px-4 md:px-6 py-2 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300">
@@ -494,21 +494,152 @@
             <div class="tab-content" id="tab-modulos">
                 <!-- Header Section -->
                 <div class="mb-8">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-th-large text-white text-lg"></i>
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-th-large text-white text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800">Módulos do Sistema</h3>
+                                <p class="text-sm text-gray-500">Configure os módulos e permissões de acesso</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-800">Módulos do Sistema</h3>
-                            <p class="text-sm text-gray-500">Configure os módulos e permissões de acesso</p>
-                        </div>
+                        <button type="button" id="btn-add-module" class="inline-flex items-center px-8 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                            <i class="fas fa-plus mr-2"></i>
+                            Adicionar
+                        </button>
                     </div>
                 </div>
 
-                <div class="bg-gray-50 border border-gray-200 rounded-xl p-8 text-center">
-                    <i class="fas fa-th-large text-gray-300 text-5xl mb-4"></i>
-                    <p class="text-gray-500">Módulos e permissões serão exibidos aqui.</p>
-                </div>
+                {% if client_applications and client_applications|length > 0 %}
+                    <!-- Barra de Pesquisa -->
+                    <div class="mb-6">
+                        <div class="relative">
+                            <input type="text" id="search-modules" placeholder="Pesquisar módulos por nome ou categoria..."
+                                   class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                            <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <button type="button" id="clear-search" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden">
+                                <i class="fas fa-times-circle"></i>
+                            </button>
+                        </div>
+                        <div class="mt-2 flex items-center justify-between">
+                            <p class="text-sm text-gray-600">
+                                <span id="modules-count">{{ client_applications|length }}</span> módulo(s) cadastrado(s)
+                            </p>
+                            <div class="flex gap-2">
+                                <button type="button" class="filter-category px-3 py-1 text-xs rounded-full border border-gray-300 hover:bg-gray-100 transition-all" data-category="all">
+                                    Todos
+                                </button>
+                                <button type="button" class="filter-category px-3 py-1 text-xs rounded-full border border-purple-300 text-purple-700 hover:bg-purple-50 transition-all" data-category="APICE">
+                                    APICE
+                                </button>
+                                <button type="button" class="filter-category px-3 py-1 text-xs rounded-full border border-green-300 text-green-700 hover:bg-green-50 transition-all" data-category="WEB">
+                                    WEB
+                                </button>
+                                <button type="button" class="filter-category px-3 py-1 text-xs rounded-full border border-blue-300 text-blue-700 hover:bg-blue-50 transition-all" data-category="AISE">
+                                    AISE
+                                </button>
+                                <button type="button" class="filter-category px-3 py-1 text-xs rounded-full border border-orange-300 text-orange-700 hover:bg-orange-50 transition-all" data-category="OXY">
+                                    OXY
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Aplicações por Categoria -->
+                    {% set categories = client_applications|map(attribute='category')|unique|list %}
+                    {% for category in categories|sort %}
+                        {% set apps_in_category = client_applications|selectattr('category', 'equalto', category)|list %}
+
+                        <div class="mb-6 category-section" data-category="{{ category }}">
+                            <div class="flex items-center gap-2 mb-3">
+                                {% if category == 'APICE' %}
+                                    <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-cubes text-white text-sm"></i>
+                                    </div>
+                                {% elif category == 'WEB' %}
+                                    <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-globe text-white text-sm"></i>
+                                    </div>
+                                {% elif category == 'AISE' %}
+                                    <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-cogs text-white text-sm"></i>
+                                    </div>
+                                {% elif category == 'OXY' %}
+                                    <div class="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-rocket text-white text-sm"></i>
+                                    </div>
+                                {% else %}
+                                    <div class="w-8 h-8 bg-gray-500 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-folder text-white text-sm"></i>
+                                    </div>
+                                {% endif %}
+                                <h4 class="text-lg font-bold text-gray-800">{{ category }}</h4>
+                                <span class="text-sm text-gray-500 category-count">({{ apps_in_category|length }} módulos)</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {% for app in apps_in_category %}
+                                    <div class="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all module-card"
+                                         data-app-id="{{ app.application_id }}"
+                                         data-name="{{ app.name|lower }}"
+                                         data-category="{{ app.category }}"
+                                         data-description="{{ app.description|lower if app.description else '' }}">
+                                        <div class="flex items-start justify-between mb-3">
+                                            <div class="flex-1">
+                                                <h5 class="font-bold text-gray-800 text-sm mb-1">{{ app.name }}</h5>
+                                                {% if app.description %}
+                                                    <p class="text-xs text-gray-600">{{ app.description }}</p>
+                                                {% endif %}
+                                            </div>
+                                            {% if app.is_active %}
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 flex-shrink-0 ml-2">
+                                                    <i class="fas fa-check-circle mr-1"></i>
+                                                    Ativo
+                                                </span>
+                                            {% else %}
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 flex-shrink-0 ml-2">
+                                                    <i class="fas fa-times-circle mr-1"></i>
+                                                    Inativo
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+                                            <div class="flex flex-col gap-1">
+                                                <span class="text-xs text-gray-500">
+                                                    <i class="fas fa-hashtag mr-1"></i>
+                                                    ID: {{ app.id }}
+                                                </span>
+                                                {% if app.cod_elotech %}
+                                                    <span class="text-xs text-blue-600 font-semibold">
+                                                        <i class="fas fa-code mr-1"></i>
+                                                        Código: {{ app.cod_elotech }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-xs text-gray-400 italic">
+                                                        <i class="fas fa-code mr-1"></i>
+                                                        Código: não informado
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                            <button type="button" class="text-red-600 hover:text-red-700 text-sm">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                {% else %}
+                    <div class="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-12 text-center">
+                        <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-th-large text-gray-400 text-4xl"></i>
+                        </div>
+                        <p class="text-gray-500 mb-4">Adicione módulos do sistema para este cliente utilizando o botão acima</p>
+                    </div>
+                {% endif %}
 
             </div>
 
@@ -668,6 +799,65 @@
             </div>
         </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal para Adicionar Módulos -->
+<div id="add-module-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-500 to-blue-600">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-plus text-white text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white">Adicionar Módulos</h3>
+                    <p class="text-sm text-blue-100">Selecione os módulos que deseja associar ao cliente</p>
+                </div>
+            </div>
+            <button type="button" id="close-modal" class="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-all">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+            <!-- Barra de Pesquisa -->
+            <div class="mb-6">
+                <div class="relative">
+                    <input type="text" id="modal-search" placeholder="Pesquisar módulos disponíveis..."
+                           class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                    <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+            </div>
+
+            <!-- Lista de Módulos Disponíveis -->
+            <div id="available-modules-list">
+                <!-- Módulos serão carregados aqui via JavaScript -->
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading-modules" class="text-center py-12">
+                <i class="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
+                <p class="text-gray-600">Carregando módulos disponíveis...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-modules" class="hidden text-center py-12">
+                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check-circle text-gray-400 text-4xl"></i>
+                </div>
+                <p class="text-gray-600">Todos os módulos já foram adicionados a este cliente!</p>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+            <button type="button" id="cancel-modal" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-100 transition-all">
+                Cancelar
+            </button>
+        </div>
     </div>
 </div>
 
@@ -895,6 +1085,442 @@ $(document).ready(function() {
             dayPicker.removeClass('show');
         }
     });
+
+    // ===== PESQUISA E FILTRO DE MÓDULOS =====
+    const searchInput = $('#search-modules');
+    const clearSearchBtn = $('#clear-search');
+    const modulesCount = $('#modules-count');
+    const totalModules = $('.module-card').length;
+
+    // Função para filtrar módulos
+    function filterModules() {
+        const searchTerm = searchInput.val().toLowerCase();
+        let visibleCount = 0;
+
+        // Sempre resetar primeiro - mostrar todos os cards
+        $('.module-card').show();
+        $('.category-section').show();
+
+        // Se não há termo de pesquisa, apenas atualizar contadores e sair
+        if (searchTerm.length === 0) {
+            visibleCount = totalModules;
+
+            // Restaurar contadores originais das categorias
+            $('.category-section').each(function() {
+                const $section = $(this);
+                const totalCardsInSection = $section.find('.module-card').length;
+                $section.find('.category-count').text('(' + totalCardsInSection + ' módulos)');
+            });
+        } else {
+            // Filtrar com base no termo de pesquisa
+            $('.module-card').each(function() {
+                const $card = $(this);
+                const name = $card.data('name');
+                const category = $card.data('category');
+                const description = $card.data('description');
+
+                const matchesSearch = name.includes(searchTerm) ||
+                                     category.toLowerCase().includes(searchTerm) ||
+                                     description.includes(searchTerm);
+
+                if (matchesSearch) {
+                    visibleCount++;
+                } else {
+                    $card.hide();
+                }
+            });
+
+            // Atualizar visibilidade das seções de categoria
+            updateCategorySections();
+        }
+
+        // Atualizar contador
+        modulesCount.text(visibleCount);
+
+        // Mostrar/ocultar botão de limpar
+        if (searchTerm.length > 0) {
+            clearSearchBtn.removeClass('hidden');
+        } else {
+            clearSearchBtn.addClass('hidden');
+        }
+    }
+
+    // Função para atualizar seções de categoria
+    function updateCategorySections() {
+        $('.category-section').each(function() {
+            const $section = $(this);
+            const visibleCards = $section.find('.module-card:visible').length;
+
+            if (visibleCards > 0) {
+                $section.show();
+                // Atualizar contador da categoria
+                $section.find('.category-count').text('(' + visibleCards + ' módulos)');
+            } else {
+                $section.hide();
+            }
+        });
+    }
+
+    // Evento de digitação na pesquisa
+    searchInput.on('input', filterModules);
+
+    // Limpar pesquisa
+    clearSearchBtn.on('click', function() {
+        searchInput.val('');
+        filterModules();
+        searchInput.focus();
+    });
+
+    // Filtro por categoria
+    $('.filter-category').on('click', function() {
+        const $btn = $(this);
+        const category = $btn.data('category');
+
+        // Remover classe active de todos os botões
+        $('.filter-category').removeClass('bg-gray-200 bg-purple-100 bg-green-100 bg-blue-100 bg-orange-100 font-bold');
+
+        // Adicionar classe active ao botão clicado
+        if (category === 'all') {
+            $btn.addClass('bg-gray-200 font-bold');
+        } else if (category === 'APICE') {
+            $btn.addClass('bg-purple-100 font-bold');
+        } else if (category === 'WEB') {
+            $btn.addClass('bg-green-100 font-bold');
+        } else if (category === 'AISE') {
+            $btn.addClass('bg-blue-100 font-bold');
+        } else if (category === 'OXY') {
+            $btn.addClass('bg-orange-100 font-bold');
+        }
+
+        // Filtrar por categoria
+        if (category === 'all') {
+            $('.category-section').show();
+            $('.module-card').show();
+            modulesCount.text(totalModules);
+        } else {
+            let visibleCount = 0;
+            $('.category-section').each(function() {
+                const $section = $(this);
+                if ($section.data('category') === category) {
+                    $section.show();
+                    visibleCount += $section.find('.module-card').length;
+                } else {
+                    $section.hide();
+                }
+            });
+            modulesCount.text(visibleCount);
+        }
+
+        // Limpar pesquisa ao filtrar por categoria
+        searchInput.val('');
+        clearSearchBtn.addClass('hidden');
+    });
+
+    // ===== FIM PESQUISA E FILTRO =====
+
+    // ===== MODAL DE ADICIONAR MÓDULOS =====
+    const addModuleModal = $('#add-module-modal');
+    const addModuleBtn = $('#btn-add-module');
+    const closeModalBtn = $('#close-modal');
+    const cancelModalBtn = $('#cancel-modal');
+    const modalSearch = $('#modal-search');
+    const availableModulesList = $('#available-modules-list');
+    const loadingModules = $('#loading-modules');
+    const emptyModules = $('#empty-modules');
+    const availableCount = $('#available-count');
+
+    let allApplications = [];
+
+    // Abrir modal
+    addModuleBtn.on('click', function() {
+        addModuleModal.removeClass('hidden');
+        loadAvailableModules();
+    });
+
+    // Fechar modal
+    function closeModal() {
+        addModuleModal.addClass('hidden');
+        modalSearch.val('');
+        availableModulesList.empty();
+    }
+
+    closeModalBtn.on('click', closeModal);
+    cancelModalBtn.on('click', closeModal);
+
+    // Fechar ao clicar fora do modal
+    addModuleModal.on('click', function(e) {
+        if ($(e.target).is('#add-module-modal')) {
+            closeModal();
+        }
+    });
+
+    // Carregar módulos disponíveis
+    function loadAvailableModules() {
+        loadingModules.show();
+        emptyModules.addClass('hidden');
+        availableModulesList.empty();
+
+        // Pegar o ID do cliente do formulário
+        const clientId = $('#client-form').data('client-id');
+
+        // Se não houver cliente (modo de criação), não carregar módulos
+        if (!clientId) {
+            loadingModules.hide();
+            emptyModules.find('p').text('Salve o cliente primeiro para adicionar módulos');
+            emptyModules.removeClass('hidden');
+            return;
+        }
+
+        // Buscar aplicações com flag is_added já calculada no backend
+        $.ajax({
+            url: '/admin/api/clients/' + clientId + '/applications',
+            method: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    allApplications = response.applications;
+
+                    loadingModules.hide();
+
+                    if (allApplications.length === 0) {
+                        emptyModules.removeClass('hidden');
+                    } else {
+                        renderAvailableModules(allApplications);
+                    }
+                } else {
+                    loadingModules.hide();
+                    alert('Erro ao carregar módulos: ' + response.error);
+                }
+            },
+            error: function() {
+                loadingModules.hide();
+                alert('Erro ao carregar módulos disponíveis');
+            }
+        });
+    }
+
+    // Renderizar módulos disponíveis por categoria
+    function renderAvailableModules(apps) {
+        availableModulesList.empty();
+
+        // Separar em dois grupos: disponíveis e adicionados
+        const availableApps = apps.filter(function(app) {
+            return !app.is_added;
+        });
+        const addedApps = apps.filter(function(app) {
+            return app.is_added;
+        });
+
+        availableCount.text(availableApps.length);
+
+        if (apps.length === 0) {
+            emptyModules.removeClass('hidden');
+            return;
+        }
+
+        emptyModules.addClass('hidden');
+
+        // Container principal
+        const mainContainer = $('<div>').addClass('space-y-6');
+
+        // GRUPO 1: DISPONÍVEIS (não adicionados)
+        if (availableApps.length > 0) {
+            const availableSection = $('<div>');
+
+            // Lista de disponíveis
+            const availableList = $('<div>').addClass('space-y-2');
+            availableApps.forEach(function(app) {
+                availableList.append(createModuleItem(app, false));
+            });
+            availableSection.append(availableList);
+            mainContainer.append(availableSection);
+        }
+
+        // GRUPO 2: ADICIONADOS
+        if (addedApps.length > 0) {
+            const addedSection = $('<div>');
+
+            // Lista de adicionados
+            const addedList = $('<div>').addClass('space-y-2');
+            addedApps.forEach(function(app) {
+                addedList.append(createModuleItem(app, true));
+            });
+            addedSection.append(addedList);
+            mainContainer.append(addedSection);
+        }
+
+        availableModulesList.append(mainContainer);
+    }
+
+    // Função auxiliar para criar item de módulo
+    function createModuleItem(app, isAdded) {
+        const listItem = $('<div>')
+            .addClass('flex items-center justify-between p-3 border border-gray-200 rounded-lg transition-all modal-app-card')
+            .addClass(isAdded ? 'bg-gray-50' : 'bg-white hover:border-blue-500 hover:shadow-sm')
+            .data('app-id', app.id)
+            .data('app', app);
+
+        const leftContent = $('<div>').addClass('flex items-center gap-3 flex-1');
+
+        // Nome e descrição
+        const textContent = $('<div>').addClass('flex-1');
+        const nameSpan = $('<span>').addClass('font-semibold text-gray-800 text-sm').text(app.name);
+        textContent.append(nameSpan);
+
+        if (app.description) {
+            textContent.append('<br>');
+            textContent.append(
+                $('<span>').addClass('text-xs text-gray-500').text(app.description)
+            );
+        }
+        leftContent.append(textContent);
+        listItem.append(leftContent);
+
+        // Botão de ação
+        const actionButton = $('<button>')
+            .attr('type', 'button')
+            .addClass('px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1');
+
+        if (isAdded) {
+            // Botão Remover
+            actionButton.addClass('bg-red-50 text-red-700 hover:bg-red-100 border border-red-200');
+            actionButton.html('<i class="fas fa-times-circle"></i> Remover');
+            actionButton.on('click', function(e) {
+                e.stopPropagation();
+                removeApplicationFromClient(app);
+            });
+        } else {
+            // Botão Adicionar
+            actionButton.addClass('bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200');
+            actionButton.html('<i class="fas fa-plus-circle"></i> Adicionar');
+            actionButton.on('click', function(e) {
+                e.stopPropagation();
+                addApplicationToClient(app);
+            });
+        }
+
+        listItem.append(actionButton);
+        return listItem;
+    }
+
+    // Adicionar aplicação ao cliente
+    function addApplicationToClient(app) {
+        const clientId = $('#client-form').data('client-id');
+
+        if (!clientId) {
+            alert('Erro: Cliente não identificado');
+            return;
+        }
+
+        // Desabilitar botão temporariamente
+        const $button = $('.modal-app-card[data-app-id="' + app.id + '"] button');
+        const originalHtml = $button.html();
+        $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Adicionando...');
+
+        $.ajax({
+            url: '/admin/api/clients/' + clientId + '/applications/add',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                application_id: app.id,
+                cod_elotech: null
+            }),
+            success: function(response) {
+                if (response.success) {
+                    // Recarregar módulos disponíveis no modal
+                    loadAvailableModules();
+
+                    // Mostrar mensagem de sucesso
+                    alert('Módulo "' + app.name + '" adicionado com sucesso!');
+
+                    // Recarregar a página para atualizar a aba de módulos
+                    location.reload();
+                } else {
+                    alert('Erro ao adicionar módulo: ' + response.error);
+                    $button.prop('disabled', false).html(originalHtml);
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                alert('Erro ao adicionar módulo: ' + (response && response.error ? response.error : 'Erro desconhecido'));
+                $button.prop('disabled', false).html(originalHtml);
+            }
+        });
+    }
+
+    // Remover aplicação do cliente
+    function removeApplicationFromClient(app) {
+        const clientId = $('#client-form').data('client-id');
+
+        if (!clientId) {
+            alert('Erro: Cliente não identificado');
+            return;
+        }
+
+        if (!confirm('Deseja realmente remover o módulo "' + app.name + '"?')) {
+            return;
+        }
+
+        // Desabilitar botão temporariamente
+        const $button = $('.modal-app-card[data-app-id="' + app.id + '"] button');
+        const originalHtml = $button.html();
+        $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Removendo...');
+
+        $.ajax({
+            url: '/admin/api/clients/' + clientId + '/applications/remove',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                application_id: app.id
+            }),
+            success: function(response) {
+                if (response.success) {
+                    // Recarregar módulos disponíveis no modal
+                    loadAvailableModules();
+
+                    // Mostrar mensagem de sucesso
+                    alert('Módulo "' + app.name + '" removido com sucesso!');
+
+                    // Recarregar a página para atualizar a aba de módulos
+                    location.reload();
+                } else {
+                    alert('Erro ao remover módulo: ' + response.error);
+                    $button.prop('disabled', false).html(originalHtml);
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                alert('Erro ao remover módulo: ' + (response && response.error ? response.error : 'Erro desconhecido'));
+                $button.prop('disabled', false).html(originalHtml);
+            }
+        });
+    }
+
+    // Pesquisa no modal
+    modalSearch.on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+
+        // Sempre resetar primeiro - mostrar todos os cards antes de filtrar
+        $('.modal-app-card').show();
+
+        // Se não há termo de pesquisa, mostrar tudo e sair
+        if (searchTerm.length === 0) {
+            return;
+        }
+
+        // Aplicar filtro apenas nos cards visíveis
+        $('.modal-app-card').each(function() {
+            const app = $(this).data('app');
+            const matchesSearch = app.name.toLowerCase().includes(searchTerm) ||
+                                 (app.description && app.description.toLowerCase().includes(searchTerm)) ||
+                                 app.category.toLowerCase().includes(searchTerm);
+
+            if (!matchesSearch) {
+                $(this).hide();
+            }
+        });
+    });
+
+    // ===== FIM MODAL ADICIONAR MÓDULOS =====
 });
 </script>
 {% endblock %}

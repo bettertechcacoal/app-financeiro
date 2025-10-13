@@ -453,9 +453,11 @@ def seed_clients():
         existing_count = 0
         updated_count = 0
 
-        for client_data in clients_data:
-            # Verifica se o cliente ja existe pelo CNPJ
-            existing_client = db.query(Client).filter_by(document=client_data['document']).first()
+        for idx, client_data in enumerate(clients_data, start=1):
+            # Verifica se o cliente ja existe pelo ID ou CNPJ
+            existing_client = db.query(Client).filter_by(id=idx).first()
+            if not existing_client:
+                existing_client = db.query(Client).filter_by(document=client_data['document']).first()
 
             # Buscar o ID da cidade
             city_id = cities_dict.get(client_data['city'])
@@ -464,8 +466,9 @@ def seed_clients():
                 continue
 
             if not existing_client:
-                # Criar novo cliente
+                # Criar novo cliente com ID fixo
                 client = Client(
+                    id=idx,
                     name=client_data['name'],
                     email=client_data['email'],
                     phone=client_data['phone'],
@@ -481,7 +484,7 @@ def seed_clients():
                 )
                 db.add(client)
                 created_count += 1
-                print(f"  [OK] Cliente criado: {client_data['name']}")
+                print(f"  [OK] Cliente criado (ID={idx}): {client_data['name']}")
             else:
                 # Atualizar cliente existente
                 existing_client.name = client_data['name']
@@ -496,7 +499,7 @@ def seed_clients():
                 existing_client.billing_cycle = client_data.get('billing_cycle')
                 existing_client.fixed_start_day = client_data.get('fixed_start_day')
                 updated_count += 1
-                print(f"  [OK] Cliente atualizado: {client_data['name']}")
+                print(f"  [OK] Cliente atualizado (ID={existing_client.id}): {client_data['name']}")
 
         db.commit()
 

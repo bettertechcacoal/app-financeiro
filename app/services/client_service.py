@@ -3,6 +3,8 @@ from app.models.database import SessionLocal
 from app.models.client import Client
 from app.models.client_meta import ClientMeta
 from app.models.organization import Organization
+from app.models.client_application import ClientApplication
+from app.models.application import Application
 
 
 class ClientService:
@@ -261,6 +263,153 @@ class ClientService:
                     )
                     db.add(meta)
 
+            db.commit()
+            return True
+        except Exception as e:
+            db.rollback()
+            raise e
+        finally:
+            db.close()
+
+    def get_client_applications(self, client_id):
+        """Retorna todas as aplicações associadas ao cliente
+
+        Args:
+            client_id: ID do cliente
+
+        Returns:
+            list: Lista de dicionários com dados das aplicações
+        """
+        db = SessionLocal()
+        try:
+            client_apps = db.query(ClientApplication).filter_by(
+                client_id=client_id
+            ).join(Application).order_by(Application.category, Application.name).all()
+
+            result = []
+            for client_app in client_apps:
+                app_dict = client_app.application.to_dict()
+                app_dict['client_app_id'] = client_app.id
+                app_dict['cod_elotech'] = client_app.cod_elotech
+                app_dict['is_active'] = client_app.is_active
+                app_dict['associated_at'] = client_app.created_at.isoformat() if client_app.created_at else None
+                result.append(app_dict)
+
+            return result
+        finally:
+            db.close()
+
+    def get_all_applications(self):
+        """Retorna todas as aplicações disponíveis
+
+        Returns:
+            list: Lista de dicionários com dados das aplicações
+        """
+        db = SessionLocal()
+        try:
+            applications = db.query(Application).filter_by(
+                is_active=True
+            ).order_by(Application.category, Application.name).all()
+
+            return [app.to_dict() for app in applications]
+        finally:
+            db.close()
+
+    def get_applications_for_client(self, client_id):
+        """Retorna todas as aplicações com flag indicando se já estão vinculadas ao cliente
+
+        Args:
+            client_id: ID do cliente
+
+        Returns:
+            list: Lista de dicionários com dados das aplicações e flag 'is_added'
+        """
+        db = SessionLocal()
+        try:
+            # Buscar todas as aplicações ativas
+            all_applications = db.query(Application).filter_by(
+                is_active=True
+            ).order_by(Application.category, Application.name).all()
+
+            # Buscar IDs das aplicações já vinculadas ao cliente
+            client_app_ids = db.query(ClientApplication.application_id).filter_by(
+                client_id=client_id
+            ).all()
+            client_app_ids_set = {app_id[0] for app_id in client_app_ids}
+
+            # Montar resultado com flag is_added
+            result = []
+            for app in all_applications:
+                app_dict = app.to_dict()
+                app_dict['is_added'] = app.id in client_app_ids_set
+                result.append(app_dict)
+
+            return result
+        finally:
+            db.close()
+
+    def add_application_to_client(self, client_id, application_id, cod_elotech=None):
+        """Adiciona uma aplicação ao cliente
+
+        Args:
+            client_id: ID do cliente
+            application_id: ID da aplicação
+            cod_elotech: Código Elotech opcional
+
+        Returns:
+            dict: Dicionário com dados da associação criada
+        """
+        db = SessionLocal()
+        try:
+            # Verificar se a associação já existe
+            existing = db.query(ClientApplication).filter_by(
+                client_id=client_id,
+                application_id=application_id
+            ).first()
+
+            if existing:
+                raise ValueError('Esta aplicação já está vinculada ao cliente')
+
+            # Criar nova associação
+            client_app = ClientApplication(
+                client_id=client_id,
+                application_id=application_id,
+                cod_elotech=cod_elotech,
+                is_active=True
+            )
+            db.add(client_app)
+            db.commit()
+            db.refresh(client_app)
+
+            return client_app.to_dict()
+        except Exception as e:
+            db.rollback()
+            raise e
+        finally:
+            db.close()
+
+    def remove_application_from_client(self, client_id, application_id):
+        """Remove uma aplicação do cliente
+
+        Args:
+            client_id: ID do cliente
+            application_id: ID da aplicação
+
+        Returns:
+            bool: True se removido com sucesso
+        """
+        db = SessionLocal()
+        try:
+            # Buscar associação
+            client_app = db.query(ClientApplication).filter_by(
+                client_id=client_id,
+                application_id=application_id
+            ).first()
+
+            if not client_app:
+                raise ValueError('Esta aplicação não está vinculada ao cliente')
+
+            db.delete(client_app)
             db.commit()
             return True
         except Exception as e:

@@ -67,6 +67,10 @@ def register_routes(app: Flask):
     # APIs de Clientes
     admin_bp.add_url_rule('/api/organizations', view_func=clients_controller.get_organizations_api, methods=['GET'])
     admin_bp.add_url_rule('/api/clients', view_func=clients_controller.get_clients_api, methods=['GET'])
+    admin_bp.add_url_rule('/api/applications', view_func=clients_controller.get_all_applications_api, methods=['GET'])
+    admin_bp.add_url_rule('/api/clients/<int:client_id>/applications', view_func=clients_controller.get_applications_for_client_api, methods=['GET'])
+    admin_bp.add_url_rule('/api/clients/<int:client_id>/applications/add', view_func=clients_controller.add_application_to_client_api, methods=['POST'])
+    admin_bp.add_url_rule('/api/clients/<int:client_id>/applications/remove', view_func=clients_controller.remove_application_from_client_api, methods=['POST'])
 
     # Rotas de Integrações
     admin_bp.add_url_rule('/integrations', view_func=integrations_controller.integrations_list, methods=['GET'])

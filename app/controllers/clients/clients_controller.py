@@ -89,7 +89,11 @@ def client_edit(client_id):
     if not client:
         flash('Organização não encontrada', 'error')
         return redirect(url_for('admin.clients_list'))
-    return render_template('pages/clients/form.html', client=client)
+
+    # Carregar aplicações do cliente
+    client_applications = client_service.get_client_applications(client_id)
+
+    return render_template('pages/clients/form.html', client=client, client_applications=client_applications)
 
 
 def client_update(client_id):
@@ -193,5 +197,58 @@ def get_clients_api():
         clients = client_service.get_all_clients()
         # client_service.get_all_clients() já retorna uma lista de dicionários
         return jsonify({'success': True, 'clients': clients})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+def get_all_applications_api():
+    """API para buscar todas as aplicações disponíveis"""
+    try:
+        applications = client_service.get_all_applications()
+        return jsonify({'success': True, 'applications': applications})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+def get_applications_for_client_api(client_id):
+    """API para buscar todas as aplicações com flag indicando se estão vinculadas ao cliente"""
+    try:
+        applications = client_service.get_applications_for_client(client_id)
+        return jsonify({'success': True, 'applications': applications})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+def add_application_to_client_api(client_id):
+    """API para adicionar uma aplicação ao cliente"""
+    try:
+        data = request.get_json()
+        application_id = data.get('application_id')
+        cod_elotech = data.get('cod_elotech')
+
+        if not application_id:
+            return jsonify({'success': False, 'error': 'ID da aplicação é obrigatório'}), 400
+
+        result = client_service.add_application_to_client(client_id, application_id, cod_elotech)
+        return jsonify({'success': True, 'data': result})
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+def remove_application_from_client_api(client_id):
+    """API para remover uma aplicação do cliente"""
+    try:
+        data = request.get_json()
+        application_id = data.get('application_id')
+
+        if not application_id:
+            return jsonify({'success': False, 'error': 'ID da aplicação é obrigatório'}), 400
+
+        client_service.remove_application_from_client(client_id, application_id)
+        return jsonify({'success': True})
+    except ValueError as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500

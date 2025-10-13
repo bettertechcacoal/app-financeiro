@@ -14,6 +14,8 @@ from app.models.notification import Notification
 from app.models.parameter_group import ParameterGroup
 from app.models.parameter import Parameter
 from app.models.note import Note
+from app.models.application import Application
+from app.models.client_application import ClientApplication
 
 __all__ = [
     'Base',
@@ -28,5 +30,7 @@ __all__ = [
     'Notification',
     'ParameterGroup',
     'Parameter',
-    'Note'
+    'Note',
+    'Application',
+    'ClientApplication'
 ]

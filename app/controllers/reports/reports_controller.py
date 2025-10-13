@@ -234,6 +234,16 @@ def tickets_report_pdf(client_id):
         leftIndent=0.5*cm
     )
 
+    # Estilo para texto pequeno (total de tickets)
+    style_small = ParagraphStyle(
+        'Small',
+        parent=styles['Normal'],
+        fontSize=9,
+        textColor=colors.black,
+        alignment=TA_LEFT,
+        spaceAfter=0.4*cm
+    )
+
     # Conteúdo
     story = []
 
@@ -293,6 +303,42 @@ def tickets_report_pdf(client_id):
     if invoice_number:
         story.append(Paragraph(f"<b>Nota Fiscal:</b> {invoice_number}", style_body))
 
+    # Buscar e listar módulos do cliente
+    client_applications = client_service.get_client_applications(client_id)
+    if client_applications:
+        story.append(Spacer(1, 0.3*cm))
+        story.append(Paragraph("<b>Sistemas Contratados:</b>", style_body))
+
+        # Dividir módulos em duas colunas
+        modules_data = []
+        mid_point = (len(client_applications) + 1) // 2  # Dividir ao meio, arredondando para cima
+
+        for i in range(mid_point):
+            left_module = client_applications[i]
+            left_text = f"• {left_module.get('name', 'Não especificado')}"
+
+            # Verificar se existe módulo para a coluna direita
+            right_text = ""
+            if i + mid_point < len(client_applications):
+                right_module = client_applications[i + mid_point]
+                right_text = f"• {right_module.get('name', 'Não especificado')}"
+
+            modules_data.append([
+                Paragraph(left_text, style_ticket),
+                Paragraph(right_text, style_ticket) if right_text else Paragraph("", style_ticket)
+            ])
+
+        # Criar tabela com duas colunas
+        modules_table = Table(modules_data, colWidths=[8*cm, 8*cm])
+        modules_table.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 0),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+            ('TOPPADDING', (0, 0), (-1, -1), 0),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+        ]))
+        story.append(modules_table)
+
     story.append(Spacer(1, 0.5*cm))
 
     # SEÇÃO SERVIÇOS REALIZADOS
@@ -314,7 +360,7 @@ def tickets_report_pdf(client_id):
     if tickets_by_org:
         texto_tickets_intro = """<b>1.3.</b> Atendimentos técnicos especializados realizados através de múltiplos canais
         de comunicação (telefone, e-mail, acesso remoto e sistema de chamados MoviDesk), conforme discriminação
-        a seguir, agrupados por organização:"""
+        a seguir:"""
         story.append(Paragraph(texto_tickets_intro, style_body))
         story.append(Spacer(1, 0.3*cm))
 
@@ -365,7 +411,7 @@ def tickets_report_pdf(client_id):
             story.append(Spacer(1, 0.3*cm))
 
         story.append(Spacer(1, 0.5*cm))
-        story.append(Paragraph(f"<i>Total de atendimentos registrados no período: <b>{total_tickets}</b> ticket(s).</i>", style_body))
+        story.append(Paragraph(f"Total de atendimentos registrados no período: <b>{total_tickets}</b> ticket(s).", style_small))
         story.append(Spacer(1, 0.5*cm))
     else:
         story.append(Paragraph("""<b>1.3.</b> Não foram registrados atendimentos técnicos através do sistema de chamados

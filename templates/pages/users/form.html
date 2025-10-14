@@ -1,0 +1,662 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}{% if user %}Editar Usuário{% else %}Novo Usuário{% endif %}{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Usuários', 'url': url_for('admin.users_list')},
+    {'name': 'Gestão de Usuários', 'url': url_for('admin.users_list')},
+    {'name': 'Editar Usuário' if user else 'Novo Usuário'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="mb-6 p-4 rounded-xl {% if category == 'success' %}bg-green-100 text-green-700{% elif category == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %} animate-fade-in">
+                    <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} mr-2"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Header com Botões de Ação -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            <div class="flex items-center">
+                <!-- Ícone -->
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+                    <i class="fas fa-user-circle text-white text-2xl sm:text-3xl"></i>
+                </div>
+
+                <!-- Título -->
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
+                        {% if user %}{{ user.name }}{% else %}Novo Usuário{% endif %}
+                    </h1>
+                    <p class="text-sm sm:text-base text-gray-600">
+                        {% if user %}Editando cadastro - {{ user.email }}{% else %}Preencha os dados para cadastrar{% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ url_for('admin.users_list') }}"
+                   class="inline-flex items-center px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-all">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Voltar
+                </a>
+
+                <button type="submit" form="profile-form"
+                        class="inline-flex items-center px-8 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg">
+                    <i class="fas fa-save mr-2"></i>
+                    Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulário Principal -->
+    <form id="profile-form" action="{% if user %}{{ url_for('admin.user_update', user_id=user.id) }}{% else %}{{ url_for('admin.user_create') }}{% endif %}" method="POST">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Coluna Esquerda: Dados Pessoais -->
+            <div class="lg:col-span-2 space-y-6">
+
+                <!-- Card: Informações Pessoais -->
+                <div class="card animate-fade-in">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-bold text-gray-900">Informações Pessoais</h2>
+                                <p class="text-sm text-gray-500">Atualize seus dados cadastrais</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {% if user %}
+                            <!-- Toggle Ativo/Inativo -->
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Situação</label>
+                                <div class="flex items-center gap-3">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" name="is_active" class="sr-only peer" {% if user.is_active %}checked{% endif %}>
+                                        <div class="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                    <span class="text-sm font-medium text-gray-600">{% if user.is_active %}Ativo{% else %}Inativo{% endif %}</span>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Nome Completo -->
+                            <div>
+                                <label class="block text-xs font-bold text-red-600 uppercase mb-2">
+                                    Nome Completo *
+                                </label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value="{% if user %}{{ user.name }}{% endif %}"
+                                    placeholder="Digite seu nome completo"
+                                    required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                >
+                            </div>
+
+                            <!-- Email -->
+                            <div>
+                                <label class="block text-xs font-bold text-red-600 uppercase mb-2">
+                                    E-mail *
+                                </label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value="{% if user %}{{ user.email }}{% endif %}"
+                                    placeholder="seu@email.com"
+                                    required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                >
+                            </div>
+
+                            <!-- Telefone -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-2">
+                                    Telefone
+                                </label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <i class="fas fa-phone text-gray-400"></i>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        id="phone"
+                                        name="phone"
+                                        value="{% if user %}{{ user.phone or '' }}{% endif %}"
+                                        placeholder="(00) 00000-0000"
+                                        class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                    >
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card: Grupos -->
+                <div class="card animate-fade-in" style="position: relative; z-index: 100; overflow: visible;">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-users-cog text-white"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-bold text-gray-900">Grupos</h2>
+                                <p class="text-sm text-gray-500">Gerencie os grupos que o usuário pertence</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6" style="position: relative; z-index: 101;">
+                        <!-- Adicionar Grupos -->
+                        <div class="mb-6">
+                            <label class="block text-xs font-bold text-gray-700 uppercase mb-3">
+                                Adicionar a Grupos
+                            </label>
+                            <div class="relative">
+                                <input
+                                    type="text"
+                                    id="group-search"
+                                    placeholder="Digite para pesquisar grupos..."
+                                    autocomplete="off"
+                                    class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                <div class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+
+                                <!-- Dropdown customizado -->
+                                <div id="group-dropdown" class="hidden absolute w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg overflow-y-auto" style="z-index: 9999; max-height: 160px;">
+                                    <div class="p-2">
+                                        {% if groups %}
+                                            {% for group in groups %}
+                                            <div class="group-option flex items-center gap-3 px-3 py-2 hover:bg-blue-50 rounded-lg cursor-pointer transition-all"
+                                                 data-group-id="{{ group.id }}"
+                                                 data-group-name="{{ group.name }}"
+                                                 data-group-icon="{{ group.icon }}">
+                                                <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: {{ group.color }};">
+                                                    <i class="fas {{ group.icon }} text-white text-sm"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-semibold text-gray-900">{{ group.name }}</p>
+                                                    {% if group.description %}
+                                                    <p class="text-xs text-gray-500">{{ group.description }}</p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="px-3 py-4 text-center text-sm text-gray-500">
+                                                <i class="fas fa-info-circle mr-2"></i>
+                                                Nenhum grupo cadastrado
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grupos Selecionados -->
+                        <div id="selected-groups-section" class="{% if not user or not user.groups %}hidden{% endif %} mb-6">
+                            <label class="block text-xs font-bold text-gray-700 uppercase mb-3">Grupos Selecionados</label>
+                            <div id="selected-groups-container" class="flex flex-wrap gap-2">
+                                {% if user and user.groups %}
+                                    {% for group in user.groups %}
+                                    <span class="group-badge inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-blue-100 text-blue-700 border border-blue-200" data-group-id="{{ group.id }}">
+                                        <i class="fas {{ group.icon }} mr-2"></i>
+                                        {{ group.name }}
+                                        <button type="button" class="ml-2 text-blue-600 hover:text-blue-800 remove-group-btn" title="Remover grupo">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </span>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Info Box -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-info-circle text-white text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-blue-900 font-semibold mb-1">Sobre Grupos</p>
+                                    <p class="text-xs text-blue-800">
+                                        Os grupos definem as permissões e acessos que o usuário terá no sistema. Um usuário pode pertencer a múltiplos grupos.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card: Segurança -->
+                <div class="card animate-fade-in" style="position: relative; z-index: 10;">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-shield-alt text-white"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-bold text-gray-900">Segurança</h2>
+                                <p class="text-sm text-gray-500">Gerencie sua senha e autenticação</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6">
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                            <div class="flex items-center">
+                                <i class="fas fa-key text-gray-400 mr-3"></i>
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-900">Senha</p>
+                                    <p class="text-xs text-gray-500">Última alteração há 30 dias</p>
+                                </div>
+                            </div>
+                            <button type="button" id="open-password-modal" class="px-4 py-2 text-sm font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all">
+                                Alterar Senha
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Coluna Direita: Resumo do Perfil -->
+            <aside class="lg:col-span-1 space-y-6">
+
+                {% if user %}
+                <!-- Card: Informações do Usuário -->
+                <div class="card animate-fade-in rounded-xl">
+                    <!-- Header -->
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center">
+                            <div class="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+                                <span class="text-3xl font-bold text-white">{{ user.name[:2].upper() }}</span>
+                            </div>
+                            <div class="ml-4">
+                                <h2 class="text-lg font-bold text-gray-900 mb-1">{{ user.name }}</h2>
+                                <p class="text-sm text-gray-600">{{ user.email }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Corpo -->
+                    <div class="p-6">
+                        <!-- Informações -->
+                        <div class="space-y-1">
+                            <!-- Status da Conta -->
+                            <div class="flex items-center justify-between py-4 border-b border-gray-100">
+                                <span class="text-sm font-medium text-gray-600">Status</span>
+                                {% if user.is_active %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-green-100 text-green-700">
+                                    <i class="fas fa-circle text-green-500 text-xs mr-2"></i>
+                                    Ativo
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700">
+                                    <i class="fas fa-circle text-gray-500 text-xs mr-2"></i>
+                                    Inativo
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Telefone -->
+                            {% if user.phone %}
+                            <div class="flex items-center justify-between py-4 border-b border-gray-100">
+                                <span class="text-sm font-medium text-gray-600">Telefone</span>
+                                <span class="text-sm font-semibold text-gray-900">{{ user.phone }}</span>
+                            </div>
+                            {% endif %}
+
+                            <!-- Último Acesso -->
+                            {% if user.last_login_at %}
+                            <div class="flex items-center justify-between py-4 border-b border-gray-100">
+                                <span class="text-sm font-medium text-gray-600">Último Acesso</span>
+                                <span class="text-sm font-semibold text-gray-900">
+                                    {{ user.last_login_at[8:10] }}/{{ user.last_login_at[5:7] }}/{{ user.last_login_at[:4] }}
+                                </span>
+                            </div>
+                            {% endif %}
+
+                            <!-- Cadastrado em -->
+                            <div class="flex items-center justify-between py-4 border-b border-gray-100">
+                                <span class="text-sm font-medium text-gray-600">Criado em</span>
+                                <span class="text-sm font-semibold text-gray-900">
+                                    {% if user.created_at %}
+                                        {{ user.created_at[8:10] }}/{{ user.created_at[5:7] }}/{{ user.created_at[:4] }}
+                                    {% endif %}
+                                </span>
+                            </div>
+
+                            <!-- Grupos -->
+                            {% if user.groups %}
+                            <div class="py-4">
+                                <span class="text-sm font-medium text-gray-600 block mb-3">Grupos</span>
+                                <div class="flex flex-wrap gap-2">
+                                    {% for group in user.groups %}
+                                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200">
+                                        <i class="fas {{ group.icon }} mr-2"></i>
+                                        {{ group.name }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Card: Informações para Novo Usuário -->
+                <div class="card animate-fade-in rounded-xl">
+                    <div class="p-6 text-center">
+                        <div class="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-user-plus text-white text-4xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Novo Usuário</h3>
+                        <p class="text-sm text-gray-600">Preencha os campos ao lado para criar um novo usuário no sistema</p>
+                    </div>
+                </div>
+                {% endif %}
+
+            </aside>
+
+        </div>
+    </form>
+
+    <!-- Modal: Alterar Senha -->
+    <div id="password-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-fade-in" style="max-height: 90vh; overflow-y: auto;">
+            <!-- Header -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-key text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">Alterar Senha</h3>
+                            <p class="text-sm text-gray-500">Defina uma nova senha segura</p>
+                        </div>
+                    </div>
+                    <button type="button" id="close-password-modal" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <form id="password-form" class="px-6 py-6 space-y-5">
+                <!-- Nova Senha -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-2">
+                        Nova Senha *
+                    </label>
+                    <div class="relative">
+                        <input
+                            type="password"
+                            id="new-password"
+                            name="new_password"
+                            required
+                            class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <button type="button" class="toggle-password absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600" data-target="new-password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Confirmar Nova Senha -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-2">
+                        Confirmar Nova Senha *
+                    </label>
+                    <div class="relative">
+                        <input
+                            type="password"
+                            id="confirm-password"
+                            name="confirm_password"
+                            required
+                            class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <button type="button" class="toggle-password absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600" data-target="confirm-password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mensagem de erro -->
+                <div id="password-error" class="hidden p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    <span id="password-error-text"></span>
+                </div>
+            </form>
+
+            <!-- Footer -->
+            <div class="p-6 border-t border-gray-200 flex justify-end gap-3">
+                <button type="button" id="cancel-password-modal" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-all">
+                    Cancelar
+                </button>
+                <button type="submit" form="password-form" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg">
+                    <i class="fas fa-check mr-2"></i>
+                    Alterar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function(){
+        // Máscara de telefone
+        $('#phone').mask('(00) 00000-0000');
+
+        // ===== GRUPOS - Dropdown Customizado =====
+        const groupSearch = $('#group-search');
+        const groupDropdown = $('#group-dropdown');
+        const groupOptions = $('.group-option');
+        const selectedGroupsContainer = $('#selected-groups-container');
+        const selectedGroupsSection = $('#selected-groups-section');
+
+        // Grupos já selecionados
+        const selectedGroupIds = new Set();
+
+        // Inicializar grupos já existentes
+        $('.group-badge').each(function() {
+            const groupId = parseInt($(this).data('group-id'));
+            selectedGroupIds.add(groupId);
+
+            // Marcar opção como disabled no dropdown
+            groupOptions.filter(`[data-group-id="${groupId}"]`).addClass('opacity-50 cursor-not-allowed pointer-events-none');
+        });
+
+        // Abrir dropdown ao focar ou clicar
+        groupSearch.on('focus click', function() {
+            groupDropdown.removeClass('hidden');
+        });
+
+        // Fechar dropdown ao clicar fora
+        $(document).on('click', function(e) {
+            if (!groupSearch.is(e.target) && !groupDropdown.is(e.target) && groupDropdown.has(e.target).length === 0) {
+                groupDropdown.addClass('hidden');
+            }
+        });
+
+        // Pesquisar grupos em tempo real
+        groupSearch.on('input', function() {
+            const searchTerm = $(this).val().toLowerCase();
+
+            groupOptions.each(function() {
+                const groupName = $(this).data('group-name').toLowerCase();
+
+                // Mostrar apenas grupos que correspondem à pesquisa
+                if (groupName.includes(searchTerm)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+
+            // Mostrar dropdown se tiver texto
+            if (searchTerm || groupDropdown.hasClass('hidden')) {
+                groupDropdown.removeClass('hidden');
+            }
+        });
+
+        // Adicionar grupo ao clicar
+        groupOptions.on('click', function() {
+            const groupId = parseInt($(this).data('group-id'));
+            const groupName = $(this).data('group-name');
+            const groupIcon = $(this).data('group-icon');
+
+            // Verificar se já foi adicionado
+            if (selectedGroupIds.has(groupId)) {
+                return;
+            }
+
+            // Adicionar à lista
+            selectedGroupIds.add(groupId);
+
+            // Criar badge
+            const badge = $(`
+                <span class="group-badge inline-flex items-center px-4 py-2 rounded-lg text-sm font-semibold bg-blue-100 text-blue-700 border border-blue-200" data-group-id="${groupId}">
+                    <i class="fas ${groupIcon} mr-2"></i>
+                    ${groupName}
+                    <button type="button" class="ml-2 text-blue-600 hover:text-blue-800 remove-group-btn" title="Remover grupo">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </span>
+            `);
+
+            // Adicionar ao container
+            selectedGroupsContainer.append(badge);
+
+            // Mostrar seção
+            selectedGroupsSection.removeClass('hidden');
+
+            // Marcar opção como disabled
+            $(this).addClass('opacity-50 cursor-not-allowed pointer-events-none');
+
+            // Limpar campo e fechar dropdown
+            groupSearch.val('');
+            groupDropdown.addClass('hidden');
+        });
+
+        // Remover grupo ao clicar no X
+        $(document).on('click', '.remove-group-btn', function() {
+            const badge = $(this).closest('.group-badge');
+            const groupId = parseInt(badge.data('group-id'));
+
+            // Remover do Set
+            selectedGroupIds.delete(groupId);
+
+            // Remover badge
+            badge.remove();
+
+            // Ocultar seção se não houver mais grupos
+            if ($('.group-badge').length === 0) {
+                selectedGroupsSection.addClass('hidden');
+            }
+
+            // Reativar opção no dropdown
+            groupOptions.filter(`[data-group-id="${groupId}"]`).removeClass('opacity-50 cursor-not-allowed pointer-events-none');
+        });
+
+        // ===== MODAL DE SENHA =====
+        const passwordModal = $('#password-modal');
+        const passwordForm = $('#password-form');
+        const passwordError = $('#password-error');
+        const passwordErrorText = $('#password-error-text');
+
+        // Abrir modal
+        $('#open-password-modal').on('click', function() {
+            passwordModal.removeClass('hidden');
+            passwordForm[0].reset();
+            passwordError.addClass('hidden');
+        });
+
+        // Fechar modal
+        function closePasswordModal() {
+            passwordModal.addClass('hidden');
+            passwordForm[0].reset();
+            passwordError.addClass('hidden');
+        }
+
+        $('#close-password-modal, #cancel-password-modal').on('click', closePasswordModal);
+
+        // Fechar ao clicar fora do modal
+        passwordModal.on('click', function(e) {
+            if (e.target === this) {
+                closePasswordModal();
+            }
+        });
+
+        // Toggle mostrar/ocultar senha
+        $('.toggle-password').on('click', function() {
+            const targetId = $(this).data('target');
+            const input = $('#' + targetId);
+            const icon = $(this).find('i');
+
+            if (input.attr('type') === 'password') {
+                input.attr('type', 'text');
+                icon.removeClass('fa-eye').addClass('fa-eye-slash');
+            } else {
+                input.attr('type', 'password');
+                icon.removeClass('fa-eye-slash').addClass('fa-eye');
+            }
+        });
+
+        // Validar e submeter formulário
+        passwordForm.on('submit', function(e) {
+            e.preventDefault();
+
+            const newPassword = $('#new-password').val();
+            const confirmPassword = $('#confirm-password').val();
+
+            // Validações
+            if (!newPassword || !confirmPassword) {
+                showPasswordError('Todos os campos são obrigatórios');
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                showPasswordError('A nova senha deve ter no mínimo 8 caracteres');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showPasswordError('As senhas não coincidem');
+                return;
+            }
+
+            // Aqui você pode fazer a chamada AJAX para o backend
+            // Por enquanto, apenas simular sucesso
+            alert('Senha alterada com sucesso!');
+            closePasswordModal();
+        });
+
+        function showPasswordError(message) {
+            passwordErrorText.text(message);
+            passwordError.removeClass('hidden');
+        }
+    });
+</script>
+{% endblock %}

@@ -12,6 +12,7 @@ from app.controllers.settings import settings_controller
 from app.controllers import notes_controller
 from app.controllers.reports import reports_controller
 from app.controllers.licenses import licenses_controller
+from app.controllers.users import users_controller
 
 
 # Middleware de Autenticação
@@ -136,6 +137,14 @@ def register_routes(app: Flask):
     admin_bp.add_url_rule('/api/licenses/modules/create', view_func=licenses_controller.license_module_create, methods=['POST'])
     admin_bp.add_url_rule('/api/licenses/modules/update', view_func=licenses_controller.license_module_update, methods=['POST'])
     admin_bp.add_url_rule('/api/licenses/dates', view_func=licenses_controller.license_get_dates_api, methods=['GET'])
+
+    # Rotas de Usuários
+    admin_bp.add_url_rule('/users', view_func=users_controller.users_list, methods=['GET'])
+    admin_bp.add_url_rule('/users/new', view_func=users_controller.user_new, methods=['GET'])
+    admin_bp.add_url_rule('/users/create', view_func=users_controller.user_create, methods=['POST'])
+    admin_bp.add_url_rule('/users/<int:user_id>/edit', view_func=users_controller.user_edit, methods=['GET'])
+    admin_bp.add_url_rule('/users/<int:user_id>/update', view_func=users_controller.user_update, methods=['POST'])
+    admin_bp.add_url_rule('/users/<int:user_id>/delete', view_func=users_controller.user_delete, methods=['POST'])
 
     # Registrar Blueprints
     app.register_blueprint(auth_bp)

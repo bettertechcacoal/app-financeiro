@@ -227,7 +227,8 @@ body {
 #city_search,
 #departure_date_picker,
 #return_date_picker,
-#passenger-search {
+#passenger-search,
+#group-search {
     outline: none !important;
 }
 
@@ -235,8 +236,75 @@ body {
 #city_search:focus,
 #departure_date_picker:focus,
 #return_date_picker:focus,
-#passenger-search:focus {
+#passenger-search:focus,
+#group-search:focus {
     outline: none !important;
     border-color: #3b82f6 !important;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* jQuery UI Autocomplete - Estilização Moderna */
+.ui-autocomplete {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    max-height: 320px;
+    overflow-y: auto;
+    padding: 8px;
+    z-index: 1000 !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    margin-top: 8px !important;
+}
+
+.ui-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ui-menu-item {
+    border-radius: 8px;
+    margin-bottom: 4px;
+}
+
+.ui-menu-item:last-child {
+    margin-bottom: 0;
+}
+
+.ui-menu-item-wrapper {
+    display: block;
+    padding: 8px !important;
+    cursor: pointer;
+    border: none !important;
+}
+
+.ui-state-active {
+    background: #eff6ff !important;
+    border: none !important;
+    margin: 0 !important;
+}
+
+/* Scrollbar personalizada */
+.ui-autocomplete::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ui-autocomplete::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.ui-autocomplete::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.ui-autocomplete::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Remover helper do jQuery UI */
+.ui-helper-hidden-accessible {
+    display: none;
 }

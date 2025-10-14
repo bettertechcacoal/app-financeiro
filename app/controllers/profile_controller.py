@@ -38,7 +38,7 @@ def profile_view():
         user_data = user.to_dict()
         user_data['groups'] = [group.to_dict() for group in user_groups]
 
-        return render_template('pages/profile/profile.html', user=user_data)
+        return render_template('pages/profile/profile.html', user=user_data, is_admin_edit=False, is_new=False)
 
     except Exception as e:
         print(f"Erro ao carregar perfil: {str(e)}")

@@ -25,6 +25,9 @@ class User(Base):
     # Relacionamento com viagens
     travels = relationship('Travel', foreign_keys='Travel.user_id', back_populates='user')
 
+    # Relacionamento many-to-many com Group através de user_groups
+    groups = relationship('Group', secondary='user_groups', backref='users')
+
     def to_dict(self):
         """Converte o modelo para dicionario"""
         return {
@@ -39,3 +42,29 @@ class User(Base):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
+
+    def has_permission(self, permission_slug):
+        """Verifica se o usuário possui uma permissão específica através de seus grupos"""
+        for group in self.groups:
+            if group.has_permission(permission_slug):
+                return True
+        return False
+
+    def has_any_permission(self, permission_slugs):
+        """Verifica se o usuário possui pelo menos uma das permissões especificadas"""
+        return any(self.has_permission(slug) for slug in permission_slugs)
+
+    def has_all_permissions(self, permission_slugs):
+        """Verifica se o usuário possui todas as permissões especificadas"""
+        return all(self.has_permission(slug) for slug in permission_slugs)
+
+    def get_all_permissions(self):
+        """Retorna todas as permissões do usuário (de todos os grupos)"""
+        permissions = set()
+        for group in self.groups:
+            permissions.update(group.get_permissions_slugs())
+        return list(permissions)
+
+    def is_in_group(self, group_slug):
+        """Verifica se o usuário pertence a um grupo específico"""
+        return any(group.slug == group_slug for group in self.groups)

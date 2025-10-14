@@ -1,9 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Edit",
+      "Write",
+      "Read",
+      "Browser"
     ],
-    "deny": [],
+    "deny": [
+      "Bash(command:git*)"
+    ],
     "ask": []
   }
 }

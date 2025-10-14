@@ -13,6 +13,9 @@ from app.controllers import notes_controller
 from app.controllers.reports import reports_controller
 from app.controllers.licenses import licenses_controller
 from app.controllers.users import users_controller
+from app.controllers.permissions import permissions_controller
+from app.controllers.groups import groups_controller
+from app.utils.permissions_helper import inject_user_permissions
 
 
 # Middleware de Autenticação
@@ -146,6 +149,19 @@ def register_routes(app: Flask):
     admin_bp.add_url_rule('/users/<int:user_id>/update', view_func=users_controller.user_update, methods=['POST'])
     admin_bp.add_url_rule('/users/<int:user_id>/delete', view_func=users_controller.user_delete, methods=['POST'])
 
+    # Rotas de Permissões
+    admin_bp.add_url_rule('/permissions', view_func=permissions_controller.permissions_list, methods=['GET'])
+    admin_bp.add_url_rule('/permissions/groups', view_func=permissions_controller.groups_permissions, methods=['GET'])
+    admin_bp.add_url_rule('/permissions/groups/<int:group_id>/update', view_func=permissions_controller.group_permissions_update, methods=['POST'])
+    admin_bp.add_url_rule('/api/permissions/groups/<int:group_id>', view_func=permissions_controller.api_group_permissions, methods=['GET'])
+    admin_bp.add_url_rule('/api/permissions/by-module', view_func=permissions_controller.api_permissions_by_module, methods=['GET'])
+
+    # Rotas de Grupos
+    admin_bp.add_url_rule('/groups', view_func=groups_controller.groups_list, methods=['GET'])
+    admin_bp.add_url_rule('/groups/new', view_func=groups_controller.groups_create, methods=['GET', 'POST'])
+    admin_bp.add_url_rule('/groups/<int:group_id>/edit', view_func=groups_controller.groups_edit, methods=['GET', 'POST'])
+    admin_bp.add_url_rule('/groups/<int:group_id>/delete', view_func=groups_controller.groups_delete, methods=['POST'])
+
     # Registrar Blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
@@ -159,3 +175,6 @@ def register_routes(app: Flask):
             'admin': '/admin'
         }
         return {'base_prefix': prefixes.get(request.blueprint, '/')}
+
+    # Context Processor para injetar permissões do usuário nos templates
+    app.context_processor(inject_user_permissions)

@@ -28,8 +28,6 @@ def upgrade() -> None:
         sa.Column('description', sa.Text(), nullable=True),
         sa.Column('color', sa.String(length=20), nullable=True, server_default='#3b82f6'),
         sa.Column('icon', sa.String(length=50), nullable=True, server_default='fa-users'),
-        sa.Column('permissions', sa.Text(), nullable=True),
-        sa.Column('hierarchy_level', sa.Integer(), nullable=True, server_default='99'),
         sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.text('true')),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),

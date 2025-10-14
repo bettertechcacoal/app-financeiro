@@ -55,12 +55,15 @@
             </div>
 
             <!-- Minhas Notas (Sticky Notes) -->
+            {% if 'notes_view' in user_permissions %}
             <div class="card p-6 animate-fade-in">
                 <div class="flex items-center justify-between mb-5">
                     <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide">Minhas Notas</h3>
+                    {% if 'notes_create' in user_permissions %}
                     <button onclick="openNoteModal()" class="text-blue-600 hover:text-blue-700">
                         <i class="fas fa-plus-circle"></i>
                     </button>
+                    {% endif %}
                 </div>
 
                 <div class="space-y-3" id="notes-container">
@@ -104,10 +107,12 @@
                     {% endif %}
                 </div>
 
+                {% if 'notes_create' in user_permissions %}
                 <button onclick="openNoteModal()" class="w-full mt-4 text-blue-600 text-sm font-semibold py-3 hover:bg-blue-50 rounded-xl flex items-center justify-center transition-all">
                     <i class="fas fa-sticky-note mr-2"></i>
                     Nova Nota
                 </button>
+                {% endif %}
 
                 {% if total_notes > 5 %}
                 <a href="{{ url_for('admin.notes_list') }}" class="block w-full mt-2 text-gray-600 text-sm font-semibold py-3 hover:bg-gray-50 rounded-xl text-center transition-all border border-gray-300">
@@ -116,6 +121,7 @@
                 </a>
                 {% endif %}
             </div>
+            {% endif %}
         </div>
     </aside>
 
@@ -145,8 +151,9 @@
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    
+
                     <!-- Tickets -->
+                    {% if 'tickets_view' in user_permissions %}
                     <a href="{{ url_for('admin.tickets_list') }}" class="block">
                         <div class="module-card">
                             <div class="module-icon bg-gradient-to-br from-green-500 to-green-600">
@@ -156,8 +163,10 @@
                             <p class="text-sm text-gray-600">Gestão de tickets de atendimento</p>
                         </div>
                     </a>
+                    {% endif %}
 
                     <!-- Viagens -->
+                    {% if 'viagens_view' in user_permissions or 'viagens_view_all' in user_permissions %}
                     <a href="{{ url_for('admin.travels_list') }}" class="block">
                         <div class="module-card">
                             <div class="module-icon bg-gradient-to-br from-blue-500 to-blue-600">
@@ -165,22 +174,28 @@
                             </div>
                             <h3 class="text-lg font-bold text-gray-900 mb-2">Viagens</h3>
                             <p class="text-sm text-gray-600">Agendamento e histórico de viagens</p>
-                            {% if pending_travels_count > 0 %}
+                            {% if pending_travels_count > 0 and 'viagens_approve' in user_permissions %}
                             <div class="module-badge">{{ pending_travels_count }}</div>
                             {% endif %}
                         </div>
                     </a>
+                    {% endif %}
 
                     <!-- Financeiro -->
-                    <div class="module-card">
-                        <div class="module-icon bg-gradient-to-br from-purple-500 to-purple-600">
-                            <i class="fas fa-dollar-sign"></i>
+                    {% if 'financeiro_view' in user_permissions %}
+                    <a href="#" class="block">
+                        <div class="module-card">
+                            <div class="module-icon bg-gradient-to-br from-purple-500 to-purple-600">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2">Financeiro</h3>
+                            <p class="text-sm text-gray-600">Prestação de Contas</p>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">Financeiro</h3>
-                        <p class="text-sm text-gray-600">Prestação de Contas</p>
-                    </div>
+                    </a>
+                    {% endif %}
 
                     <!-- Clientes -->
+                    {% if 'clients_view' in user_permissions %}
                     <a href="{{ url_for('admin.clients_list') }}" class="block">
                         <div class="module-card">
                             <div class="module-icon bg-gradient-to-br from-orange-500 to-orange-600">
@@ -190,8 +205,10 @@
                             <p class="text-sm text-gray-600">Cadastro e gestão de organizações</p>
                         </div>
                     </a>
+                    {% endif %}
 
                     <!-- Licenças -->
+                    {% if 'licenses_view' in user_permissions %}
                     <a href="{{ url_for('admin.licenses_list') }}" class="block">
                         <div class="module-card">
                             <div class="module-icon bg-gradient-to-br from-pink-500 to-pink-600">
@@ -201,45 +218,23 @@
                             <p class="text-sm text-gray-600">Gerenciamento de licenças e senhas</p>
                         </div>
                     </a>
+                    {% endif %}
 
                     <!-- Veículos -->
-                    <div class="module-card">
-                        <div class="module-icon bg-gradient-to-br from-cyan-500 to-cyan-600">
-                            <i class="fas fa-car"></i>
+                    {% if 'veiculos_view' in user_permissions %}
+                    <a href="#" class="block">
+                        <div class="module-card">
+                            <div class="module-icon bg-gradient-to-br from-cyan-500 to-cyan-600">
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2">Veículos</h3>
+                            <p class="text-sm text-gray-600">Gestão de frota e manutenções</p>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">Veículos</h3>
-                        <p class="text-sm text-gray-600">Gestão de frota e manutenções</p>
-                    </div>
-
-                    <!-- Notas Fiscais -->
-                    <div class="module-card">
-                        <div class="module-icon bg-gradient-to-br from-indigo-500 to-indigo-600">
-                            <i class="fas fa-file-invoice"></i>
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">Notas Fiscais</h3>
-                        <p class="text-sm text-gray-600">Emissão e gestão de NF-e e NFC-e</p>
-                    </div>
-
-                    <!-- Relatórios -->
-                    <div class="module-card">
-                        <div class="module-icon bg-gradient-to-br from-red-500 to-red-600">
-                            <i class="fas fa-chart-bar"></i>
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">Relatórios</h3>
-                        <p class="text-sm text-gray-600">Análises e dashboards personalizados</p>
-                    </div>
-
-                    <!-- Cobranças -->
-                    <div class="module-card">
-                        <div class="module-icon bg-gradient-to-br from-yellow-500 to-yellow-600">
-                            <i class="fas fa-receipt"></i>
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">Cobranças</h3>
-                        <p class="text-sm text-gray-600">Boletos, carnês e recorrências</p>
-                        <div class="module-badge">3</div>
-                    </div>
+                    </a>
+                    {% endif %}
 
                     <!-- Configurações -->
+                    {% if 'settings_view' in user_permissions %}
                     <a href="{{ url_for('admin.settings_list') }}" class="block">
                         <div class="module-card">
                             <div class="module-icon bg-gradient-to-br from-gray-600 to-gray-700">
@@ -249,8 +244,23 @@
                             <p class="text-sm text-gray-600">Preferências e ajustes do sistema</p>
                         </div>
                     </a>
+                    {% endif %}
+
+                    <!-- Permissões -->
+                    {% if 'permissions_manage' in user_permissions %}
+                    <a href="{{ url_for('admin.groups_permissions') }}" class="block">
+                        <div class="module-card">
+                            <div class="module-icon bg-gradient-to-br from-amber-500 to-amber-600">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2">Permissões</h3>
+                            <p class="text-sm text-gray-600">Gerenciar acessos e permissões</p>
+                        </div>
+                    </a>
+                    {% endif %}
 
                     <!-- Usuários -->
+                    {% if 'users_view' in user_permissions %}
                     <a href="{{ url_for('admin.users_list') }}" class="block">
                         <div class="module-card">
                             <div class="module-icon bg-gradient-to-br from-teal-500 to-teal-600">
@@ -260,8 +270,10 @@
                             <p class="text-sm text-gray-600">Gestão de permissões e acessos</p>
                         </div>
                     </a>
+                    {% endif %}
 
                     <!-- Integrations -->
+                    {% if 'integrations_view' in user_permissions %}
                     <a href="{{ url_for('admin.integrations_list') }}" class="block">
                         <div class="module-card">
                             <div class="module-icon bg-gradient-to-br from-violet-500 to-violet-600">
@@ -271,6 +283,7 @@
                             <p class="text-sm text-gray-600">Conecte com outras plataformas</p>
                         </div>
                     </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

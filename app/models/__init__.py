@@ -2,6 +2,8 @@
 
 # Importar todos os modelos para que o SQLAlchemy os registre corretamente
 from app.models.database import Base
+from app.models.group import Group
+from app.models.user_group import user_groups
 from app.models.user import User
 from app.models.organization import Organization
 from app.models.client import Client
@@ -16,9 +18,13 @@ from app.models.parameter import Parameter
 from app.models.note import Note
 from app.models.application import Application
 from app.models.client_application import ClientApplication
+from app.models.permission import Permission
+from app.models.group_permission import group_permissions
 
 __all__ = [
     'Base',
+    'Group',
+    'user_groups',
     'User',
     'Organization',
     'Client',
@@ -32,5 +38,7 @@ __all__ = [
     'Parameter',
     'Note',
     'Application',
-    'ClientApplication'
+    'ClientApplication',
+    'Permission',
+    'group_permissions'
 ]

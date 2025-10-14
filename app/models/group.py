@@ -15,12 +15,12 @@ class Group(Base):
     description = Column(Text)
     color = Column(String(20), default='#3b82f6')  # Azul padrao
     icon = Column(String(50), default='fa-users')
-    permissions = Column(Text)  # JSON serializado
-    hierarchy_level = Column(Integer, default=99)  # 1 = mais alto, 99 = mais baixo
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
+    # Relacionamento many-to-many com Permission
+    permissions_rel = relationship('Permission', secondary='group_permissions', back_populates='groups')
 
     def to_dict(self):
         """Converte o modelo para dicionario"""
@@ -31,9 +31,15 @@ class Group(Base):
             'description': self.description,
             'color': self.color,
             'icon': self.icon,
-            'permissions': self.permissions,
-            'hierarchy_level': self.hierarchy_level,
             'is_active': self.is_active,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
+
+    def has_permission(self, permission_slug):
+        """Verifica se o grupo possui uma permissão específica"""
+        return any(perm.slug == permission_slug for perm in self.permissions_rel)
+
+    def get_permissions_slugs(self):
+        """Retorna lista de slugs das permissões do grupo"""
+        return [perm.slug for perm in self.permissions_rel]

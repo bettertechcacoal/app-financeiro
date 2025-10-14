@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}Editar Grupo{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Permissões', 'url': url_for('admin.groups_permissions')},
+    {'name': 'Editar Grupo: ' ~ group.name}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div class="flex items-center">
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0" style="background: linear-gradient(135deg, {{ group.color }}, {{ group.color }}dd);">
+                <i class="fas {{ group.icon }} text-white text-2xl sm:text-3xl"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Editar Grupo</h1>
+                <p class="text-sm sm:text-base text-gray-600">Atualize as informações do grupo {{ group.name }}</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{{ url_for('admin.groups_permissions') }}" class="btn-secondary px-6 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all inline-flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Voltar
+            </a>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <form method="POST" action="{{ url_for('admin.groups_edit', group_id=group.id) }}" class="space-y-6">
+        <!-- Basic Info Card -->
+        <div class="card p-6 shadow-md">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-info-circle text-blue-600"></i>
+                Informações Básicas
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Nome -->
+                <div>
+                    <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Nome do Grupo <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        value="{{ group.name }}"
+                        required
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                    >
+                </div>
+
+                <!-- Slug (read-only) -->
+                <div>
+                    <label for="slug" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Slug (não editável)
+                    </label>
+                    <input
+                        type="text"
+                        id="slug"
+                        value="{{ group.slug }}"
+                        readonly
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-100 text-gray-600 cursor-not-allowed"
+                    >
+                    <p class="text-xs text-gray-500 mt-1">O slug não pode ser alterado após a criação</p>
+                </div>
+
+                <!-- Descrição -->
+                <div class="md:col-span-2">
+                    <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Descrição
+                    </label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        rows="3"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                    >{{ group.description }}</textarea>
+                </div>
+
+                <!-- Cor -->
+                <div class="md:col-span-2">
+                    <label for="color" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Cor do Grupo
+                    </label>
+                    <div class="flex gap-2">
+                        <input
+                            type="color"
+                            id="color"
+                            name="color"
+                            value="{{ group.color }}"
+                            class="h-12 w-20 border-2 border-gray-300 rounded-xl cursor-pointer"
+                        >
+                        <input
+                            type="text"
+                            id="color_text"
+                            value="{{ group.color }}"
+                            readonly
+                            class="flex-1 px-4 py-3 border-2 border-gray-300 rounded-xl bg-gray-50"
+                        >
+                    </div>
+                </div>
+
+                <!-- Ícone -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Ícone (FontAwesome)
+                    </label>
+                    <div class="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                        <label class="flex items-center justify-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all">
+                            <input type="radio" name="icon" value="fa-users" {% if group.icon == 'fa-users' %}checked{% endif %} class="hidden peer">
+                            <i class="fas fa-users text-2xl text-gray-600 peer-checked:text-blue-600"></i>
+                        </label>
+                        <label class="flex items-center justify-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all">
+                            <input type="radio" name="icon" value="fa-user-tie" {% if group.icon == 'fa-user-tie' %}checked{% endif %} class="hidden peer">
+                            <i class="fas fa-user-tie text-2xl text-gray-600 peer-checked:text-blue-600"></i>
+                        </label>
+                        <label class="flex items-center justify-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all">
+                            <input type="radio" name="icon" value="fa-user-shield" {% if group.icon == 'fa-user-shield' %}checked{% endif %} class="hidden peer">
+                            <i class="fas fa-user-shield text-2xl text-gray-600 peer-checked:text-blue-600"></i>
+                        </label>
+                        <label class="flex items-center justify-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all">
+                            <input type="radio" name="icon" value="fa-crown" {% if group.icon == 'fa-crown' %}checked{% endif %} class="hidden peer">
+                            <i class="fas fa-crown text-2xl text-gray-600 peer-checked:text-blue-600"></i>
+                        </label>
+                        <label class="flex items-center justify-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all">
+                            <input type="radio" name="icon" value="fa-star" {% if group.icon == 'fa-star' %}checked{% endif %} class="hidden peer">
+                            <i class="fas fa-star text-2xl text-gray-600 peer-checked:text-blue-600"></i>
+                        </label>
+                        <label class="flex items-center justify-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all">
+                            <input type="radio" name="icon" value="fa-briefcase" {% if group.icon == 'fa-briefcase' %}checked{% endif %} class="hidden peer">
+                            <i class="fas fa-briefcase text-2xl text-gray-600 peer-checked:text-blue-600"></i>
+                        </label>
+                        <label class="flex items-center justify-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all">
+                            <input type="radio" name="icon" value="fa-user-cog" {% if group.icon == 'fa-user-cog' %}checked{% endif %} class="hidden peer">
+                            <i class="fas fa-user-cog text-2xl text-gray-600 peer-checked:text-blue-600"></i>
+                        </label>
+                        <label class="flex items-center justify-center p-3 border-2 border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all">
+                            <input type="radio" name="icon" value="fa-graduation-cap" {% if group.icon == 'fa-graduation-cap' %}checked{% endif %} class="hidden peer">
+                            <i class="fas fa-graduation-cap text-2xl text-gray-600 peer-checked:text-blue-600"></i>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+            <p class="text-sm text-blue-800">
+                <i class="fas fa-info-circle mr-2"></i>
+                <strong>Nota:</strong> Para alterar as permissões deste grupo, volte para a tela de Gerenciamento de Permissões e clique no grupo desejado.
+            </p>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-3">
+            <a href="{{ url_for('admin.groups_permissions') }}" class="btn-secondary px-8 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all">
+                <i class="fas fa-times mr-2"></i>
+                Cancelar
+            </a>
+            <button type="submit" class="btn-primary px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
+                <i class="fas fa-save mr-2"></i>
+                Salvar Alterações
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Update color text input
+document.getElementById('color').addEventListener('input', function(e) {
+    document.getElementById('color_text').value = e.target.value;
+});
+</script>
+
+<style>
+input[type="radio"]:checked + i {
+    transform: scale(1.1);
+}
+
+label:has(input[type="radio"]:checked) {
+    border-color: #3b82f6 !important;
+    background-color: #eff6ff;
+}
+</style>
+{% endblock %}

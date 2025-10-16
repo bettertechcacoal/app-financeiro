@@ -8,6 +8,7 @@ from app.controllers.integrations import integrations_controller
 from app.controllers import travels_controller
 from app.controllers import profile_controller
 from app.controllers import notifications_controller
+from app.controllers import financial_controller
 from app.controllers.settings import settings_controller
 from app.controllers import notes_controller
 from app.controllers.reports import reports_controller
@@ -15,6 +16,7 @@ from app.controllers.licenses import licenses_controller
 from app.controllers.users import users_controller
 from app.controllers.permissions import permissions_controller
 from app.controllers.groups import groups_controller
+from app.controllers.vehicles import vehicles_controller
 from app.utils.permissions_helper import inject_user_permissions
 
 
@@ -88,11 +90,20 @@ def register_routes(app: Flask):
     admin_bp.add_url_rule('/travels', view_func=travels_controller.travels_list, methods=['GET'])
     admin_bp.add_url_rule('/travels/new', view_func=travels_controller.travels_create, methods=['GET'])
     admin_bp.add_url_rule('/travels/create', view_func=travels_controller.travels_store, methods=['POST'])
+    admin_bp.add_url_rule('/travels/<int:travel_id>/view', view_func=travels_controller.travels_view, methods=['GET'])
     admin_bp.add_url_rule('/travels/<int:travel_id>/edit', view_func=travels_controller.travels_edit, methods=['GET'])
     admin_bp.add_url_rule('/travels/<int:travel_id>/update', view_func=travels_controller.travels_update, methods=['POST'])
     admin_bp.add_url_rule('/travels/<int:travel_id>/delete', view_func=travels_controller.travels_delete, methods=['GET'])
-    admin_bp.add_url_rule('/travels/<int:travel_id>/approve', view_func=travels_controller.travels_approve, methods=['GET'])
     admin_bp.add_url_rule('/travels/<int:travel_id>/cancel', view_func=travels_controller.travels_cancel, methods=['GET'])
+    admin_bp.add_url_rule('/travels/<int:travel_id>/analyze', view_func=travels_controller.travels_analyze, methods=['GET'])
+    admin_bp.add_url_rule('/travels/<int:travel_id>/analyze/process', view_func=travels_controller.travels_analyze_process, methods=['POST'])
+
+    # APIs de Viagens
+    admin_bp.add_url_rule('/api/travels/vehicles', view_func=travels_controller.get_available_vehicles_api, methods=['GET'])
+
+    # Rotas de Financeiro
+    admin_bp.add_url_rule('/financial', view_func=financial_controller.financial_payouts_list, methods=['GET'])
+    admin_bp.add_url_rule('/financial/<int:payout_id>/accountability', view_func=financial_controller.financial_accountability, methods=['GET'])
 
     # Rotas de Perfil
     admin_bp.add_url_rule('/profile', view_func=profile_controller.profile_view, methods=['GET'])
@@ -149,6 +160,9 @@ def register_routes(app: Flask):
     admin_bp.add_url_rule('/users/<int:user_id>/update', view_func=users_controller.user_update, methods=['POST'])
     admin_bp.add_url_rule('/users/<int:user_id>/delete', view_func=users_controller.user_delete, methods=['POST'])
 
+    # APIs de Usuários
+    admin_bp.add_url_rule('/api/users', view_func=users_controller.get_users_api, methods=['GET'])
+
     # Rotas de Permissões
     admin_bp.add_url_rule('/permissions', view_func=permissions_controller.permissions_list, methods=['GET'])
     admin_bp.add_url_rule('/permissions/groups', view_func=permissions_controller.groups_permissions, methods=['GET'])
@@ -161,6 +175,17 @@ def register_routes(app: Flask):
     admin_bp.add_url_rule('/groups/new', view_func=groups_controller.groups_create, methods=['GET', 'POST'])
     admin_bp.add_url_rule('/groups/<int:group_id>/edit', view_func=groups_controller.groups_edit, methods=['GET', 'POST'])
     admin_bp.add_url_rule('/groups/<int:group_id>/delete', view_func=groups_controller.groups_delete, methods=['POST'])
+
+    # Rotas de Veículos
+    admin_bp.add_url_rule('/vehicles', view_func=vehicles_controller.vehicles_list, methods=['GET'])
+    admin_bp.add_url_rule('/vehicles/new', view_func=vehicles_controller.vehicles_create, methods=['GET', 'POST'])
+    admin_bp.add_url_rule('/vehicles/<int:vehicle_id>', view_func=vehicles_controller.vehicles_details, methods=['GET'])
+    admin_bp.add_url_rule('/vehicles/<int:vehicle_id>/edit', view_func=vehicles_controller.vehicles_edit, methods=['GET', 'POST'])
+    admin_bp.add_url_rule('/vehicles/<int:vehicle_id>/toggle-status', view_func=vehicles_controller.vehicles_toggle_status, methods=['POST'])
+
+    # APIs de Configurações de Manutenção
+    admin_bp.add_url_rule('/vehicles/<int:vehicle_id>/maintenance-configs', view_func=vehicles_controller.vehicles_add_maintenance_config, methods=['POST'])
+    admin_bp.add_url_rule('/vehicles/<int:vehicle_id>/maintenance-configs/<int:config_id>', view_func=vehicles_controller.vehicles_remove_maintenance_config, methods=['DELETE'])
 
     # Registrar Blueprints
     app.register_blueprint(auth_bp)

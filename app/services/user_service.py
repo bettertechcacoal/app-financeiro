@@ -64,6 +64,15 @@ class UserService:
                 is_active=user_data.get('is_active', True)
             )
             db.add(user)
+            db.flush()  # Obter o ID do usuário antes de vincular grupos
+
+            # Vincular grupos se fornecidos
+            group_ids = user_data.get('groups', [])
+            if group_ids:
+                from app.models.group import Group
+                groups = db.query(Group).filter(Group.id.in_(group_ids)).all()
+                user.groups = groups
+
             db.commit()
             db.refresh(user)
             return user.to_dict()
@@ -86,6 +95,13 @@ class UserService:
             user.phone = user_data.get('phone', user.phone)
             user.avatar = user_data.get('avatar', user.avatar)
             user.is_active = user_data.get('is_active', user.is_active)
+
+            # Atualizar grupos se fornecidos
+            if 'groups' in user_data:
+                group_ids = user_data.get('groups', [])
+                from app.models.group import Group
+                groups = db.query(Group).filter(Group.id.in_(group_ids)).all()
+                user.groups = groups
 
             db.commit()
             db.refresh(user)

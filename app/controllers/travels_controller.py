@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
-from flask import render_template, request, redirect, url_for, flash, session
+from flask import render_template, request, redirect, url_for, flash, session, jsonify
 from app.models.database import SessionLocal
 from app.models.travel import Travel, TravelStatus
+from app.models.travel_passenger import TravelPassenger
+from app.models.travel_payout import TravelPayout, PayoutStatus
 from app.models.user import User
 from app.models.city import City
 from app.models.state import State
+from app.models.vehicle import Vehicle
+from app.models.vehicle_travel_history import VehicleTravelHistory
 from datetime import datetime
+from decimal import Decimal
 
 
 def travels_list():
@@ -101,6 +106,19 @@ def travels_store():
         )
 
         db.add(new_travel)
+        db.flush()  # Para obter o ID da viagem
+
+        # Processar passageiros
+        passenger_ids = request.form.getlist('passengers[]')
+        if passenger_ids:
+            for passenger_id in passenger_ids:
+                if passenger_id:  # Verificar se não está vazio
+                    new_passenger = TravelPassenger(
+                        travel_id=new_travel.id,
+                        user_id=int(passenger_id)
+                    )
+                    db.add(new_passenger)
+
         db.commit()
         db.close()
 
@@ -198,6 +216,22 @@ def travels_update(travel_id):
         if status:
             travel.status = TravelStatus(status)
 
+        # Processar passageiros
+        passenger_ids = request.form.getlist('passengers[]')
+
+        # Remover passageiros antigos
+        db.query(TravelPassenger).filter_by(travel_id=travel_id).delete()
+
+        # Adicionar novos passageiros
+        if passenger_ids:
+            for passenger_id in passenger_ids:
+                if passenger_id:  # Verificar se não está vazio
+                    new_passenger = TravelPassenger(
+                        travel_id=travel_id,
+                        user_id=int(passenger_id)
+                    )
+                    db.add(new_passenger)
+
         db.commit()
         db.close()
 
@@ -239,38 +273,6 @@ def travels_delete(travel_id):
         return redirect(url_for('admin.travels_list'))
 
 
-def travels_approve(travel_id):
-    """Aprova uma viagem"""
-    try:
-        db = SessionLocal()
-
-        # Buscar viagem
-        travel = db.query(Travel).filter_by(id=travel_id).first()
-
-        if not travel:
-            flash('Viagem não encontrada', 'error')
-            return redirect(url_for('admin.travels_list'))
-
-        # Atualizar status
-        travel.status = TravelStatus.APPROVED
-        travel.approved_at = datetime.now()
-        # TODO: Implementar approved_by quando houver autenticação completa
-        # travel.approved_by = session.get('user_id')
-
-        db.commit()
-        db.close()
-
-        flash('Viagem aprovada com sucesso!', 'success')
-        return redirect(url_for('admin.travels_list'))
-
-    except Exception as e:
-        db.rollback()
-        db.close()
-        print(f"Erro ao aprovar viagem: {e}")
-        flash('Erro ao aprovar viagem', 'error')
-        return redirect(url_for('admin.travels_list'))
-
-
 def travels_cancel(travel_id):
     """Cancela uma viagem"""
     try:
@@ -303,3 +305,190 @@ def travels_cancel(travel_id):
         print(f"Erro ao cancelar viagem: {e}")
         flash('Erro ao cancelar viagem', 'error')
         return redirect(url_for('admin.travels_list'))
+
+
+def travels_analyze(travel_id):
+    """Exibe tela de análise de viagem (wizard)"""
+    db = SessionLocal()
+
+    # Buscar viagem
+    travel = db.query(Travel).filter_by(id=travel_id).first()
+
+    if not travel:
+        flash('Viagem não encontrada', 'error')
+        return redirect(url_for('admin.travels_list'))
+
+    # Verificar se já foi aprovada/rejeitada
+    if travel.status != TravelStatus.PENDING:
+        flash('Esta viagem já foi analisada', 'warning')
+        return redirect(url_for('admin.travels_list'))
+
+    travel_data = travel.to_dict()
+
+    # Calcular dias de viagem
+    if travel.departure_date and travel.return_date:
+        delta = travel.return_date.date() - travel.departure_date.date()
+        travel_data['days'] = delta.days + 1
+    else:
+        travel_data['days'] = 0
+
+    db.close()
+
+    return render_template(
+        'pages/travels/analyze.html',
+        travel=travel_data
+    )
+
+
+def travels_analyze_process(travel_id):
+    """Processa a análise da viagem"""
+    try:
+        db = SessionLocal()
+
+        # Buscar viagem
+        travel = db.query(Travel).filter_by(id=travel_id).first()
+
+        if not travel:
+            flash('Viagem não encontrada', 'error')
+            return redirect(url_for('admin.travels_list'))
+
+        # Verificar se já foi aprovada/rejeitada
+        if travel.status != TravelStatus.PENDING:
+            flash('Esta viagem já foi analisada', 'warning')
+            return redirect(url_for('admin.travels_list'))
+
+        # Obter dados do formulário
+        action = request.form.get('action')  # 'approve' ou 'reject'
+        vehicle_id = request.form.get('vehicle_id')
+        admin_notes = request.form.get('admin_notes', '').strip()
+
+        if action == 'approve':
+            # Aprovar viagem
+            travel.status = TravelStatus.APPROVED
+            travel.approved_by = session.get('user_id')
+            travel.approved_at = datetime.now()
+
+            # Se solicitou veículo e foi selecionado um, criar registro no histórico
+            if travel.needs_vehicle and vehicle_id:
+                # Buscar a quilometragem atual do veículo
+                vehicle = db.query(Vehicle).filter_by(id=int(vehicle_id)).first()
+                if vehicle:
+                    current_km = vehicle.get_current_km(db)
+
+                    # Criar registro de alocação de veículo
+                    vehicle_history = VehicleTravelHistory(
+                        vehicle_id=int(vehicle_id),
+                        travel_id=travel.id,
+                        user_id=session.get('user_id'),
+                        previous_km=current_km,
+                        current_km=current_km,  # Será atualizado após a viagem
+                        km_traveled=0  # Será calculado após a viagem
+                    )
+                    db.add(vehicle_history)
+
+            # Processar repasses financeiros
+            # Buscar todos os campos que começam com 'financial_amount_user_'
+            for key in request.form.keys():
+                if key.startswith('financial_amount_user_'):
+                    member_id = int(key.replace('financial_amount_user_', ''))
+                    amount_str = request.form.get(key, '0').strip()
+
+                    if amount_str and amount_str != '0' and amount_str != '':
+                        try:
+                            amount = Decimal(amount_str)
+
+                            if amount > 0:
+                                # Criar registro de payout
+                                payout = TravelPayout(
+                                    travel_id=travel.id,
+                                    member_id=member_id,
+                                    amount=amount,
+                                    status=PayoutStatus.PENDING
+                                )
+                                db.add(payout)
+                        except (ValueError, TypeError):
+                            # Ignorar valores inválidos
+                            pass
+
+            if admin_notes:
+                travel.admin_notes = admin_notes
+
+            db.commit()
+            flash('Viagem aprovada com sucesso!', 'success')
+
+        elif action == 'reject':
+            # Rejeitar viagem
+            travel.status = TravelStatus.CANCELLED
+
+            if admin_notes:
+                travel.admin_notes = f"[REJEITADA] {admin_notes}"
+            else:
+                travel.admin_notes = "[REJEITADA] Viagem não aprovada"
+
+            db.commit()
+            flash('Viagem rejeitada', 'info')
+
+        else:
+            flash('Ação inválida', 'error')
+
+        db.close()
+        return redirect(url_for('admin.travels_list'))
+
+    except Exception as e:
+        db.rollback()
+        db.close()
+        print(f"Erro ao processar análise: {e}")
+        flash('Erro ao processar análise da viagem', 'error')
+        return redirect(url_for('admin.travels_list'))
+
+
+def travels_view(travel_id):
+    """Exibe resumo completo da viagem"""
+    try:
+        db = SessionLocal()
+
+        # Buscar viagem
+        travel = db.query(Travel).filter_by(id=travel_id).first()
+
+        if not travel:
+            flash('Viagem não encontrada', 'error')
+            return redirect(url_for('admin.travels_list'))
+
+        travel_data = travel.to_dict()
+
+        # Calcular dias de viagem
+        if travel.departure_date and travel.return_date:
+            delta = travel.return_date.date() - travel.departure_date.date()
+            travel_data['days'] = delta.days + 1
+        else:
+            travel_data['days'] = 0
+
+        db.close()
+
+        return render_template(
+            'pages/travels/view.html',
+            travel=travel_data
+        )
+
+    except Exception as e:
+        print(f"Erro ao carregar resumo da viagem: {e}")
+        flash('Erro ao carregar dados da viagem', 'error')
+        return redirect(url_for('admin.travels_list'))
+
+
+def get_available_vehicles_api():
+    """API para buscar veículos disponíveis"""
+    try:
+        db = SessionLocal()
+
+        # Buscar veículos ativos
+        vehicles = db.query(Vehicle).filter_by(is_active=True).order_by(Vehicle.brand, Vehicle.model).all()
+
+        vehicles_data = [vehicle.to_dict() for vehicle in vehicles]
+        db.close()
+
+        return jsonify({'success': True, 'vehicles': vehicles_data})
+
+    except Exception as e:
+        print(f"Erro ao buscar veículos: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500

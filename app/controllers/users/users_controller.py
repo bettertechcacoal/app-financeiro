@@ -42,7 +42,8 @@ def user_create():
             'email': email,
             'phone': request.form.get('phone'),
             'avatar': request.form.get('avatar'),
-            'is_active': request.form.get('is_active', 'on') == 'on'
+            'is_active': request.form.get('is_active', 'on') == 'on',
+            'groups': request.form.getlist('groups[]')  # Capturar grupos selecionados
         }
 
         user = user_service.create_user(user_data)
@@ -90,7 +91,8 @@ def user_update(user_id):
             'email': email,
             'phone': request.form.get('phone'),
             'avatar': request.form.get('avatar'),
-            'is_active': request.form.get('is_active', 'off') == 'on'
+            'is_active': request.form.get('is_active', 'off') == 'on',
+            'groups': request.form.getlist('groups[]')  # Capturar grupos selecionados
         }
 
         user = user_service.update_user(user_id, user_data)
@@ -117,3 +119,19 @@ def user_delete(user_id):
     except Exception as e:
         flash(f'Erro ao remover usuário: {str(e)}', 'error')
         return redirect(url_for('admin.users_list'))
+
+
+def get_users_api():
+    """API para buscar todos os usuários"""
+    try:
+        from flask import session
+        users = user_service.get_all_users()
+
+        # Remover o usuário logado da lista
+        current_user_id = session.get('user_id')
+        if current_user_id:
+            users = [u for u in users if u.get('id') != current_user_id]
+
+        return jsonify({'success': True, 'clients': users})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500

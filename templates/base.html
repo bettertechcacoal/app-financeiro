@@ -22,17 +22,7 @@
     <!-- Top Navigation -->
     <nav class="bg-gradient-to-r from-blue-600 via-blue-600 to-blue-700 text-white navbar-shadow sticky top-0 z-50">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between py-4">
-                <!-- Logo & Menu -->
-                <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                        <i class="fas fa-chart-line text-3xl"></i>
-                    </div>
-                    <div class="hidden lg:flex space-x-1">
-                        <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %} px-4 py-2 rounded-lg font-medium text-sm hover:bg-white/10">Visão Geral</a>
-                    </div>
-                </div>
-
+            <div class="flex items-center justify-end py-4 w-full">
                 <!-- Right Actions -->
                 <div class="flex items-center space-x-3">
                     <!-- Notifications Dropdown -->
@@ -75,24 +65,31 @@
 
                     <!-- User Dropdown -->
                     <div class="relative" id="userDropdown">
-                        <button onclick="toggleUserDropdown()" class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center cursor-pointer hover:scale-110 transition-transform">
-                            <span class="font-bold text-sm">{{ session.get('user_name', 'US')[:2].upper() }}</span>
+                        <button onclick="toggleUserDropdown()" class="flex items-center gap-3 px-3 py-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all">
+                            <!-- Avatar -->
+                            <div class="w-9 h-9 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+
+                            <!-- Nome (oculto em mobile) -->
+                            <div class="hidden md:block text-left">
+                                <p class="text-sm font-semibold text-white leading-tight">{{ session.get('user_name', 'Usuario') }}</p>
+                            </div>
+
+                            <!-- Seta -->
+                            <i class="fas fa-chevron-down text-xs text-white/80"></i>
                         </button>
 
                         <!-- Dropdown Menu -->
                         <div id="userDropdownMenu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50">
-                            <div class="px-4 py-3 border-b border-gray-200">
-                                <p class="text-sm font-semibold text-gray-900">{{ session.get('user_name', 'Usuario') }}</p>
-                                <p class="text-xs text-gray-500">{{ session.get('user_email', '') }}</p>
-                            </div>
                             <div class="py-2">
                                 <a href="{{ url_for('admin.profile_view') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                                     <i class="fas fa-user-circle mr-3 text-gray-400"></i>
                                     Meu Perfil
                                 </a>
                                 <a href="#" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                    <i class="fas fa-cog mr-3 text-gray-400"></i>
-                                    Configuracoes
+                                    <i class="fas fa-shield-alt mr-3 text-gray-400"></i>
+                                    Segurança
                                 </a>
                             </div>
                             <div class="border-t border-gray-200">

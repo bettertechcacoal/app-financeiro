@@ -16,7 +16,7 @@ def groups_list():
     """
     db = SessionLocal()
     try:
-        groups = db.query(Group).order_by(Group.hierarchy_level, Group.name).all()
+        groups = db.query(Group).order_by(Group.name).all()
         return render_template('pages/groups/list.html', groups=groups)
     finally:
         db.close()

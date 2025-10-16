@@ -231,6 +231,14 @@
                                     {% endfor %}
                                 {% endif %}
                             </div>
+                            <!-- Hidden inputs para enviar os grupos -->
+                            <div id="groups-hidden-inputs">
+                                {% if user and user.groups %}
+                                    {% for group in user.groups %}
+                                    <input type="hidden" name="groups[]" value="{{ group.id }}">
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
                         </div>
 
                         <!-- Info Box -->
@@ -549,6 +557,9 @@
             // Adicionar ao container
             selectedGroupsContainer.append(badge);
 
+            // Adicionar input hidden para enviar no formulário
+            $('#groups-hidden-inputs').append(`<input type="hidden" name="groups[]" value="${groupId}">`);
+
             // Mostrar seção
             selectedGroupsSection.removeClass('hidden');
 
@@ -570,6 +581,9 @@
 
             // Remover badge
             badge.remove();
+
+            // Remover input hidden correspondente
+            $(`#groups-hidden-inputs input[value="${groupId}"]`).remove();
 
             // Ocultar seção se não houver mais grupos
             if ($('.group-badge').length === 0) {

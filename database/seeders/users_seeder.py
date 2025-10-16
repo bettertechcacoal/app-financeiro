@@ -31,13 +31,92 @@ def seed_users():
             print("Execute primeiro: python database/seeders/groups_seeder.py")
             return
 
-        # Definir usuario de teste (do login.html)
+        # Definir usuarios de teste
         users_data = [
+            # Usuario original
             {
                 'name': 'Usuario Demo',
                 'email': 'demo@demo.com',
                 'phone': '(69) 99999-0000',
                 'group_id': admin_group.id,
+                'email_verified_at': datetime.now()
+            },
+            # 10 novos usuarios ficticios
+            {
+                'name': 'Maria Silva',
+                'email': 'maria.silva@empresa.com',
+                'phone': '(69) 98765-4321',
+                'group_id': admin_group.id,
+                'email_verified_at': datetime.now()
+            },
+            {
+                'name': 'João Santos',
+                'email': 'joao.santos@empresa.com',
+                'phone': '(69) 98765-4322',
+                'group_id': gestor_group.id,
+                'email_verified_at': datetime.now()
+            },
+            {
+                'name': 'Ana Costa',
+                'email': 'ana.costa@empresa.com',
+                'phone': '(69) 98765-4323',
+                'group_id': gestor_group.id,
+                'email_verified_at': datetime.now()
+            },
+            {
+                'name': 'Pedro Oliveira',
+                'email': 'pedro.oliveira@empresa.com',
+                'phone': '(69) 98765-4324',
+                'group_id': colaborador_group.id,
+                'email_verified_at': datetime.now()
+            },
+            {
+                'name': 'Carla Souza',
+                'email': 'carla.souza@empresa.com',
+                'phone': '(69) 98765-4325',
+                'group_id': colaborador_group.id,
+                'email_verified_at': datetime.now()
+            },
+            {
+                'name': 'Ricardo Ferreira',
+                'email': 'ricardo.ferreira@empresa.com',
+                'phone': '(69) 98765-4326',
+                'group_id': colaborador_group.id,
+                'email_verified_at': datetime.now()
+            },
+            {
+                'name': 'Juliana Alves',
+                'email': 'juliana.alves@empresa.com',
+                'phone': '(69) 98765-4327',
+                'group_id': gestor_group.id,
+                'email_verified_at': datetime.now()
+            },
+            {
+                'name': 'Marcos Lima',
+                'email': 'marcos.lima@empresa.com',
+                'phone': '(69) 98765-4328',
+                'group_id': colaborador_group.id,
+                'email_verified_at': datetime.now()
+            },
+            {
+                'name': 'Fernanda Rocha',
+                'email': 'fernanda.rocha@empresa.com',
+                'phone': '(69) 98765-4329',
+                'group_id': colaborador_group.id,
+                'email_verified_at': datetime.now()
+            },
+            {
+                'name': 'Bruno Martins',
+                'email': 'bruno.martins@empresa.com',
+                'phone': '(69) 98765-4330',
+                'group_id': gestor_group.id,
+                'email_verified_at': datetime.now()
+            },
+            {
+                'name': 'Patricia Mendes',
+                'email': 'patricia.mendes@empresa.com',
+                'phone': '(69) 98765-4331',
+                'group_id': colaborador_group.id,
                 'email_verified_at': datetime.now()
             }
         ]
@@ -83,9 +162,22 @@ def seed_users():
         print(f"{'='*60}\n")
 
         # Mostrar resumo
-        print("Resumo:")
-        print(f"  - Usuario Demo: demo@demo.com")
-        print(f"  - Grupo: Administradores")
+        print("Resumo dos usuarios:")
+        print(f"  Administradores (2):")
+        print(f"    - Usuario Demo (demo@demo.com)")
+        print(f"    - Maria Silva (maria.silva@empresa.com)")
+        print(f"  Gestores (4):")
+        print(f"    - João Santos (joao.santos@empresa.com)")
+        print(f"    - Ana Costa (ana.costa@empresa.com)")
+        print(f"    - Juliana Alves (juliana.alves@empresa.com)")
+        print(f"    - Bruno Martins (bruno.martins@empresa.com)")
+        print(f"  Colaboradores (5):")
+        print(f"    - Pedro Oliveira (pedro.oliveira@empresa.com)")
+        print(f"    - Carla Souza (carla.souza@empresa.com)")
+        print(f"    - Ricardo Ferreira (ricardo.ferreira@empresa.com)")
+        print(f"    - Marcos Lima (marcos.lima@empresa.com)")
+        print(f"    - Fernanda Rocha (fernanda.rocha@empresa.com)")
+        print(f"    - Patricia Mendes (patricia.mendes@empresa.com)")
         print()
 
     except Exception as e:

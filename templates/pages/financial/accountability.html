@@ -1,0 +1,2152 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}Prestação de Contas{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Financeiro', 'url': url_for('admin.financial_payouts_list')},
+    {'name': 'Prestação de Contas'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            <div class="flex items-center">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-900 to-purple-900 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+                    <i class="fas fa-file-invoice-dollar text-white text-2xl sm:text-3xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Prestação de Contas</h1>
+                    <p class="text-sm sm:text-base text-gray-600">Repasse #{{ payout.id }} - R$ {{ "%.2f"|format(payout.amount)|replace('.', ',') }}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="{{ url_for('admin.financial_payouts_list') }}" class="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 transition-all inline-flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Voltar
+                </a>
+                <button type="button" onclick="alert('Os dados foram salvos automaticamente')" class="px-6 py-3 border border-purple-900 text-purple-900 rounded-xl font-semibold hover:bg-purple-100 transition-all inline-flex items-center">
+                    <i class="fas fa-save mr-2"></i>
+                    Terminar depois
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wizard Content -->
+    <div class="animate-fade-in">
+        <!-- Passo 1: Alimentação -->
+        <div id="wizard-step-1" class="wizard-step-content">
+            <div class="card">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-purple-900 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-utensils text-white"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">Alimentação</h2>
+                            <p class="text-sm text-gray-500">Informe as despesas com alimentação</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wizard Steps Indicator -->
+                <div class="px-6 py-5 bg-gray-50 border-b border-gray-200">
+                    <div class="flex items-center justify-center overflow-x-auto">
+                        <div class="flex items-center space-x-2">
+                            <!-- Step 1: Alimentação -->
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(1)">
+                                <div id="step-indicator-1" class="wizard-step-active flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-utensils"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-sm font-semibold text-gray-900">Alimentação</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-gray-300"></div>
+
+                            <!-- Step 2: Veículo -->
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(2)">
+                                <div id="step-indicator-2" class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
+                                    <i class="fas fa-car"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-sm font-semibold text-gray-500">Veículo</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-gray-300"></div>
+
+                            <!-- Step 3: Hospedagem -->
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(3)">
+                                <div id="step-indicator-3" class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
+                                    <i class="fas fa-bed"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-sm font-semibold text-gray-500">Hospedagem</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-gray-300"></div>
+
+                            <!-- Step 4: Outras Despesas -->
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(4)">
+                                <div id="step-indicator-4" class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-sm font-semibold text-gray-500">Outras</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-gray-300"></div>
+
+                            <!-- Step 5: Finalizar -->
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(5)">
+                                <div id="step-indicator-5" class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-sm font-semibold text-gray-500">Finalizar</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Valores de Referência -->
+                <div class="bg-purple-50 px-6 py-3">
+                    <div class="flex gap-4 items-center">
+                        <h4 class="text-sm font-bold text-gray-700 flex items-center">
+                            <i class="fas fa-info-circle text-purple-900 mr-1"></i>
+                            Valores de Referência:
+                        </h4>
+                        <div class="flex gap-4">
+                            <div class="flex items-center gap-2 text-sm">
+                                <i class="fas fa-coffee text-purple-900"></i>
+                                <span class="text-gray-600">Café:</span>
+                                <span class="font-bold text-purple-900">R$ 15,00</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm">
+                                <i class="fas fa-utensils text-purple-900"></i>
+                                <span class="text-gray-600">Almoço:</span>
+                                <span class="font-bold text-purple-900">R$ 50,00</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm">
+                                <i class="fas fa-moon text-purple-900"></i>
+                                <span class="text-gray-600">Janta:</span>
+                                <span class="font-bold text-purple-900">R$ 45,00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <div class="space-y-3">
+                        <!-- Botão Adicionar -->
+                        <div class="flex justify-end">
+                            <button type="button" id="add-food-day-btn" onclick="addFoodDay()" class="px-3 py-1.5 bg-purple-900 hover:bg-purple-800 text-white text-sm font-semibold rounded transition-all inline-flex items-center">
+                                <i class="fas fa-plus mr-1.5 text-xs"></i>
+                                Adicionar
+                            </button>
+                        </div>
+
+                        <!-- Container de Dias (linhas) -->
+                        <div id="food-days-list" class="space-y-2">
+                            <!-- Linhas serão adicionadas aqui -->
+                        </div>
+
+                        <!-- Total calculado -->
+                        <div class="flex justify-between items-center bg-gray-50 border border-gray-300 rounded px-3 py-2">
+                            <span class="text-sm font-bold text-gray-700">Total de Alimentação:</span>
+                            <span id="food-total" class="text-base font-bold text-purple-900">R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+                    <button type="button" onclick="nextStep()" class="px-8 py-3 bg-purple-900 hover:bg-purple-800 text-white rounded-lg font-semibold transition-all inline-flex items-center">
+                        Próximo
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Passo 2: Veículo -->
+        <div id="wizard-step-2" class="wizard-step-content hidden">
+            <div class="card">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-purple-900 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-car text-white"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">Veículo</h2>
+                            <p class="text-sm text-gray-500">Informe as despesas com veículo</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wizard Steps Indicator -->
+                <div class="px-6 py-5 bg-gray-50 border-b border-gray-200">
+                    <div class="flex items-center justify-center overflow-x-auto">
+                        <div class="flex items-center space-x-2">
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(1)">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-sm font-semibold text-gray-900">Alimentação</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-purple-900"></div>
+
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(2)">
+                                <div class="wizard-step-active flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-car"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-xs font-semibold text-gray-900">Veículo</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-gray-300"></div>
+
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(3)">
+                                <div class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
+                                    <i class="fas fa-bed"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-sm font-semibold text-gray-500">Hospedagem</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-gray-300"></div>
+
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(4)">
+                                <div class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-sm font-semibold text-gray-500">Outras</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-gray-300"></div>
+
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(5)">
+                                <div class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-sm font-semibold text-gray-500">Finalizar</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instruções para o Usuário -->
+                <div class="bg-purple-50 px-6 py-3">
+                    <div class="flex gap-4 items-center">
+                        <h4 class="text-sm font-bold text-gray-700 flex items-center">
+                            <i class="fas fa-info-circle text-purple-900 mr-1"></i>
+                            Instruções:
+                        </h4>
+                        <div class="text-sm text-gray-600">
+                            <span>Clique em <strong>Adicionar</strong> para registrar cada despesa de veículo da viagem (combustível, pedágio, estacionamento, lavagem ou outras). Informe a data, tipo e valor de cada despesa.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <div class="space-y-3">
+                        <!-- Km e Botão Adicionar -->
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-2">
+                                    <label class="text-sm font-semibold text-gray-700 whitespace-nowrap">Km (Saída):</label>
+                                    <input type="text" id="km-departure" class="w-32 px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-purple-500" placeholder="0">
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <label class="text-sm font-semibold text-gray-700 whitespace-nowrap">Km (Chegada):</label>
+                                    <input type="text" id="km-arrival" class="w-32 px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-purple-500" placeholder="0">
+                                </div>
+                            </div>
+                            <button type="button" onclick="openVehicleModal()" class="px-3 py-1.5 bg-purple-900 hover:bg-purple-800 text-white text-sm font-semibold rounded transition-all inline-flex items-center">
+                                <i class="fas fa-plus mr-1.5 text-xs"></i>
+                                Adicionar
+                            </button>
+                        </div>
+
+                        <!-- Container de Despesas (linhas) -->
+                        <div id="vehicle-expenses-list" class="space-y-2">
+                            <!-- Linhas serão adicionadas aqui -->
+                        </div>
+
+                        <!-- Total calculado -->
+                        <div class="flex justify-between items-center bg-gray-50 border border-gray-300 rounded px-3 py-2">
+                            <span class="text-sm font-bold text-gray-700">Total de Veículo:</span>
+                            <span id="vehicle-total" class="text-base font-bold text-purple-900">R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between">
+                    <button type="button" onclick="previousStep()" class="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-all inline-flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Voltar
+                    </button>
+                    <button type="button" onclick="nextStep()" class="px-8 py-3 bg-purple-900 hover:bg-purple-800 text-white rounded-lg font-semibold transition-all inline-flex items-center">
+                        Próximo
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Passo 3: Hospedagem -->
+        <div id="wizard-step-3" class="wizard-step-content hidden">
+            <div class="card">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-purple-900 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-bed text-white"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">Hospedagem</h2>
+                            <p class="text-sm text-gray-500">Informe as despesas com hospedagem</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wizard Steps Indicator -->
+                <div class="px-6 py-5 bg-gray-50 border-b border-gray-200">
+                    <div class="flex items-center justify-center overflow-x-auto">
+                        <div class="flex items-center space-x-2">
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(1)">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-sm font-semibold text-gray-900">Alimentação</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-purple-900"></div>
+
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(2)">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-xs font-semibold text-gray-900">Veículo</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-purple-900"></div>
+
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(3)">
+                                <div class="wizard-step-active flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-bed"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-xs font-semibold text-gray-900">Hospedagem</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-gray-300"></div>
+
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(4)">
+                                <div class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-sm font-semibold text-gray-500">Outras</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-gray-300"></div>
+
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(5)">
+                                <div class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-sm font-semibold text-gray-500">Finalizar</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instruções para o Usuário -->
+                <div class="bg-purple-50 px-6 py-3">
+                    <div class="flex gap-4 items-center">
+                        <h4 class="text-sm font-bold text-gray-700 flex items-center">
+                            <i class="fas fa-info-circle text-purple-900 mr-1"></i>
+                            Instruções:
+                        </h4>
+                        <div class="text-sm text-gray-600">
+                            <span>Clique em <strong>Adicionar</strong> para registrar cada despesa de hospedagem da viagem. Informe a data e o valor de cada estadia.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <div class="space-y-3">
+                        <!-- Botão Adicionar -->
+                        <div class="flex justify-end">
+                            <button type="button" onclick="openLodgingModal()" class="px-3 py-1.5 bg-purple-900 hover:bg-purple-800 text-white text-sm font-semibold rounded transition-all inline-flex items-center">
+                                <i class="fas fa-plus mr-1.5 text-xs"></i>
+                                Adicionar
+                            </button>
+                        </div>
+
+                        <!-- Container de Despesas (linhas) -->
+                        <div id="lodging-expenses-list" class="space-y-2">
+                            <!-- Linhas serão adicionadas aqui -->
+                        </div>
+
+                        <!-- Total calculado -->
+                        <div class="flex justify-between items-center bg-gray-50 border border-gray-300 rounded px-3 py-2">
+                            <span class="text-sm font-bold text-gray-700">Total de Hospedagem:</span>
+                            <span id="lodging-total" class="text-base font-bold text-purple-900">R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between">
+                    <button type="button" onclick="previousStep()" class="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-all inline-flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Voltar
+                    </button>
+                    <button type="button" onclick="nextStep()" class="px-8 py-3 bg-purple-900 hover:bg-purple-800 text-white rounded-lg font-semibold transition-all inline-flex items-center">
+                        Próximo
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Passo 4: Outras Despesas -->
+        <div id="wizard-step-4" class="wizard-step-content hidden">
+            <div class="card">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-purple-900 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-receipt text-white"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">Outras Despesas</h2>
+                            <p class="text-sm text-gray-500">Informe outras despesas da viagem</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wizard Steps Indicator -->
+                <div class="px-6 py-5 bg-gray-50 border-b border-gray-200">
+                    <div class="flex items-center justify-center overflow-x-auto">
+                        <div class="flex items-center space-x-2">
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(1)">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-sm font-semibold text-gray-900">Alimentação</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-purple-900"></div>
+
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(2)">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-xs font-semibold text-gray-900">Veículo</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-purple-900"></div>
+
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(3)">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-xs font-semibold text-gray-900">Hospedagem</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-purple-900"></div>
+
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(4)">
+                                <div class="wizard-step-active flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-xs font-semibold text-gray-900">Outras</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-gray-300"></div>
+
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(5)">
+                                <div class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-sm font-semibold text-gray-500">Finalizar</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instruções para o Usuário -->
+                <div class="bg-purple-50 px-6 py-3">
+                    <div class="flex gap-4 items-center">
+                        <h4 class="text-sm font-bold text-gray-700 flex items-center">
+                            <i class="fas fa-info-circle text-purple-900 mr-1"></i>
+                            Instruções:
+                        </h4>
+                        <div class="text-sm text-gray-600">
+                            <span>Clique em <strong>Adicionar</strong> para registrar outras despesas da viagem que não se enquadram nas categorias anteriores. Informe a descrição, data e valor.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <div class="space-y-3">
+                        <!-- Botão Adicionar -->
+                        <div class="flex justify-end">
+                            <button type="button" onclick="openOtherModal()" class="px-3 py-1.5 bg-purple-900 hover:bg-purple-800 text-white text-sm font-semibold rounded transition-all inline-flex items-center">
+                                <i class="fas fa-plus mr-1.5 text-xs"></i>
+                                Adicionar
+                            </button>
+                        </div>
+
+                        <!-- Container de Despesas (linhas) -->
+                        <div id="other-expenses-list" class="space-y-2">
+                            <!-- Linhas serão adicionadas aqui -->
+                        </div>
+
+                        <!-- Total calculado -->
+                        <div class="flex justify-between items-center bg-gray-50 border border-gray-300 rounded px-3 py-2">
+                            <span class="text-sm font-bold text-gray-700">Total de Outras Despesas:</span>
+                            <span id="other-total" class="text-base font-bold text-purple-900">R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between">
+                    <button type="button" onclick="previousStep()" class="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-all inline-flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Voltar
+                    </button>
+                    <button type="button" onclick="nextStep()" class="px-8 py-3 bg-purple-900 hover:bg-purple-800 text-white rounded-lg font-semibold transition-all inline-flex items-center">
+                        Próximo
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Passo 5: Finalizar -->
+        <div id="wizard-step-5" class="wizard-step-content hidden">
+            <div class="card">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-purple-900 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-check-circle text-white"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">Finalizar Prestação de Contas</h2>
+                            <p class="text-sm text-gray-500">Revise as informações e finalize</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wizard Steps Indicator -->
+                <div class="px-6 py-5 bg-gray-50 border-b border-gray-200">
+                    <div class="flex items-center justify-center overflow-x-auto">
+                        <div class="flex items-center space-x-2">
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(1)">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-sm font-semibold text-gray-900">Alimentação</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-purple-900"></div>
+
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(2)">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-xs font-semibold text-gray-900">Veículo</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-purple-900"></div>
+
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(3)">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-xs font-semibold text-gray-900">Hospedagem</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-purple-900"></div>
+
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(4)">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-xs font-semibold text-gray-900">Outras</p>
+                                </div>
+                            </div>
+                            <div class="w-6 h-0.5 bg-purple-900"></div>
+
+                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(5)">
+                                <div class="wizard-step-active flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="ml-2 hidden sm:block">
+                                    <p class="text-xs font-semibold text-gray-900">Finalizar</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Header do Resumo -->
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-purple-900 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-file-alt text-white"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">Resumo</h2>
+                            <p class="text-sm text-gray-500">Confira todas as informações antes de enviar</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <div id="summary-content" class="space-y-3 text-sm">
+                        <!-- Será preenchido via JavaScript -->
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between">
+                    <button type="button" onclick="previousStep()" class="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-all inline-flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Voltar
+                    </button>
+                    <button type="button" onclick="alert('Funcionalidade de envio será implementada em breve')" class="px-8 py-3 bg-purple-900 hover:bg-purple-800 text-white rounded-lg font-semibold transition-all inline-flex items-center">
+                        Enviar
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Adicionar Despesa de Hospedagem -->
+    <div id="lodging-expense-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 animate-fade-in">
+            <!-- Header do Modal -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-purple-900 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-bed text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900">Adicionar Despesa de Hospedagem</h3>
+                    </div>
+                    <button type="button" onclick="closeLodgingModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Corpo do Modal -->
+            <div class="p-6 space-y-4">
+                <!-- Data -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Data</label>
+                    <input type="date" id="modal-lodging-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                    <p id="lodging-date-error" class="hidden mt-2 text-sm text-red-600 flex items-center">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        Por favor, informe a data
+                    </p>
+                </div>
+
+                <!-- Valor -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Valor (R$)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
+                        <input type="text" id="modal-lodging-amount" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" value="0,00">
+                    </div>
+                    <p id="lodging-amount-error" class="hidden mt-2 text-sm text-red-600 flex items-center">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        Por favor, informe um valor maior que zero
+                    </p>
+                </div>
+            </div>
+
+            <!-- Footer do Modal -->
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 rounded-b-xl">
+                <button type="button" onclick="closeLodgingModal()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-all">
+                    Cancelar
+                </button>
+                <button type="button" onclick="confirmAddLodgingExpense()" class="px-4 py-2 bg-purple-900 hover:bg-purple-800 text-white rounded-lg font-semibold transition-all">
+                    Adicionar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Adicionar Outras Despesas -->
+    <div id="other-expense-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 animate-fade-in">
+            <!-- Header do Modal -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-purple-900 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-receipt text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900">Outras Despesas</h3>
+                    </div>
+                    <button type="button" onclick="closeOtherModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Corpo do Modal -->
+            <div class="p-6 space-y-4">
+                <!-- Data -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Data</label>
+                    <input type="date" id="modal-other-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                    <p id="other-date-error" class="hidden mt-2 text-sm text-red-600 flex items-center">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        Por favor, informe a data
+                    </p>
+                </div>
+
+                <!-- Descrição -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Descrição</label>
+                    <textarea id="modal-other-description" maxlength="50" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none" placeholder="Ex: Táxi, Uber, Material de escritório, etc."></textarea>
+                    <div class="flex justify-between items-center mt-1">
+                        <p id="other-description-error" class="hidden text-sm text-red-600 flex items-center">
+                            <i class="fas fa-exclamation-circle mr-1"></i>
+                            Por favor, informe a descrição
+                        </p>
+                        <span id="char-counter" class="text-xs text-gray-500">0/50</span>
+                    </div>
+                </div>
+
+                <!-- Valor -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Valor (R$)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
+                        <input type="text" id="modal-other-amount" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" value="0,00">
+                    </div>
+                    <p id="other-amount-error" class="hidden mt-2 text-sm text-red-600 flex items-center">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        Por favor, informe um valor maior que zero
+                    </p>
+                </div>
+            </div>
+
+            <!-- Footer do Modal -->
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 rounded-b-xl">
+                <button type="button" onclick="closeOtherModal()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-all">
+                    Cancelar
+                </button>
+                <button type="button" onclick="confirmAddOtherExpense()" class="px-4 py-2 bg-purple-900 hover:bg-purple-800 text-white rounded-lg font-semibold transition-all">
+                    Adicionar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Adicionar Despesa de Veículo -->
+    <div id="vehicle-expense-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 animate-fade-in">
+            <!-- Header do Modal -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-purple-900 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-car text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900">Adicionar Despesa de Veículo</h3>
+                    </div>
+                    <button type="button" onclick="closeVehicleModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Corpo do Modal -->
+            <div class="p-6 space-y-4">
+                <!-- Tipo de Despesa -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Despesa</label>
+                    <div class="grid grid-cols-5 gap-2">
+                        <!-- Combustível -->
+                        <button type="button" onclick="selectVehicleType('fuel')" id="type-btn-fuel" class="vehicle-type-btn flex flex-col items-center justify-center p-2 border-2 border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all">
+                            <i class="fas fa-gas-pump text-lg text-gray-600 mb-1"></i>
+                            <span class="text-xs font-semibold text-gray-700">Combustível</span>
+                        </button>
+
+                        <!-- Pedágio -->
+                        <button type="button" onclick="selectVehicleType('toll')" id="type-btn-toll" class="vehicle-type-btn flex flex-col items-center justify-center p-2 border-2 border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all">
+                            <i class="fas fa-road text-lg text-gray-600 mb-1"></i>
+                            <span class="text-xs font-semibold text-gray-700">Pedágio</span>
+                        </button>
+
+                        <!-- Estacionamento -->
+                        <button type="button" onclick="selectVehicleType('parking')" id="type-btn-parking" class="vehicle-type-btn flex flex-col items-center justify-center p-2 border-2 border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all">
+                            <i class="fas fa-parking text-lg text-gray-600 mb-1"></i>
+                            <span class="text-xs font-semibold text-gray-700">Estacionar</span>
+                        </button>
+
+                        <!-- Lavagem -->
+                        <button type="button" onclick="selectVehicleType('wash')" id="type-btn-wash" class="vehicle-type-btn flex flex-col items-center justify-center p-2 border-2 border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all">
+                            <i class="fas fa-shower text-lg text-gray-600 mb-1"></i>
+                            <span class="text-xs font-semibold text-gray-700">Lavagem</span>
+                        </button>
+
+                        <!-- Outro -->
+                        <button type="button" onclick="selectVehicleType('other')" id="type-btn-other" class="vehicle-type-btn flex flex-col items-center justify-center p-2 border-2 border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all">
+                            <i class="fas fa-receipt text-lg text-gray-600 mb-1"></i>
+                            <span class="text-xs font-semibold text-gray-700">Outro</span>
+                        </button>
+                    </div>
+                    <input type="hidden" id="modal-vehicle-type" value="">
+                    <p id="type-error" class="hidden mt-2 text-sm text-red-600 flex items-center">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        Por favor, selecione o tipo de despesa
+                    </p>
+                </div>
+
+                <!-- Descrição (apenas quando "Outro" for selecionado) -->
+                <div id="other-description-container" class="hidden">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Descrição da Despesa</label>
+                    <input type="text" id="modal-vehicle-other-description" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="Ex: Manutenção, Seguro, etc.">
+                    <p id="description-error" class="hidden mt-2 text-sm text-red-600 flex items-center">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        Por favor, informe a descrição da despesa
+                    </p>
+                </div>
+
+                <!-- Data -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Data</label>
+                    <input type="date" id="modal-vehicle-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                    <p id="date-error" class="hidden mt-2 text-sm text-red-600 flex items-center">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        Por favor, informe a data
+                    </p>
+                </div>
+
+                <!-- Valor -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Valor (R$)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
+                        <input type="text" id="modal-vehicle-amount" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" value="0,00">
+                    </div>
+                    <p id="amount-error" class="hidden mt-2 text-sm text-red-600 flex items-center">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        Por favor, informe um valor maior que zero
+                    </p>
+                </div>
+            </div>
+
+            <!-- Footer do Modal -->
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3 rounded-b-xl">
+                <button type="button" onclick="closeVehicleModal()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-all">
+                    Cancelar
+                </button>
+                <button type="button" onclick="confirmAddVehicleExpense()" class="px-4 py-2 bg-purple-900 hover:bg-purple-800 text-white rounded-lg font-semibold transition-all">
+                    Adicionar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card com JSON (visível em todas as etapas) -->
+    <div class="mt-6 animate-fade-in">
+        <div class="card">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-gray-600 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-code text-white"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900">Dados em JSON (Debug)</h3>
+                        <p class="text-sm text-gray-500">Visualização dos dados preenchidos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 bg-gray-900">
+                <pre id="json-output" class="text-green-400 text-xs overflow-x-auto"><code>{
+  "payout_id": {{ payout.id }},
+  "amount": {{ payout.amount }},
+  "food": {
+    "amount": 0.00,
+    "notes": ""
+  },
+  "fuel": {
+    "amount": 0.00,
+    "notes": ""
+  },
+  "lodging": {
+    "amount": 0.00,
+    "notes": ""
+  },
+  "other": {
+    "amount": 0.00,
+    "notes": ""
+  }
+}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Customizar cor dos checkboxes para roxo */
+    input[type="checkbox"].food-meal-checkbox {
+        accent-color: #581c87; /* purple-900 */
+    }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<script>
+$(document).ready(function() {
+    let currentStep = 1;
+    const totalSteps = 5;
+
+    // Datas da viagem (vêm do backend via travel_info)
+    {% if payout.travel_info and payout.travel_info.departure_date and payout.travel_info.return_date %}
+        const TRIP_START_DATE = '{{ payout.travel_info.departure_date[:10] }}'; // Formato: YYYY-MM-DD
+        const TRIP_END_DATE = '{{ payout.travel_info.return_date[:10] }}'; // Formato: YYYY-MM-DD
+    {% else %}
+        // Fallback para data atual se não houver informações da viagem
+        const TRIP_START_DATE = new Date().toISOString().split('T')[0];
+        const TRIP_END_DATE = new Date().toISOString().split('T')[0];
+    {% endif %}
+
+    // Debug: Verificar datas recebidas do backend
+    console.log('Data de Saída da Viagem:', TRIP_START_DATE);
+    console.log('Data de Retorno da Viagem:', TRIP_END_DATE);
+
+    // Calcular número de dias da viagem
+    let TRIP_DAYS = 999; // Valor padrão alto caso as datas não estejam disponíveis
+    if (TRIP_START_DATE && TRIP_END_DATE && TRIP_START_DATE !== '' && TRIP_END_DATE !== '') {
+        const tripStartDate = new Date(TRIP_START_DATE + 'T00:00:00');
+        const tripEndDate = new Date(TRIP_END_DATE + 'T00:00:00');
+        TRIP_DAYS = Math.ceil((tripEndDate - tripStartDate) / (1000 * 60 * 60 * 24)) + 1;
+        console.log('Número de dias da viagem:', TRIP_DAYS);
+    }
+
+    // Valores parametrizados das refeições (futuramente virá do backend)
+    const MEAL_PRICES = {
+        breakfast: 15.00,
+        lunch: 50.00,
+        dinner: 45.00
+    };
+
+    // Dados da prestação de contas
+    let accountabilityData = {
+        payout_id: {{ payout.id }},
+        amount: {{ payout.amount }},
+        food: {
+            amount: 0.00,
+            days_count: 0,
+            days: [],
+            reference_values: {
+                breakfast: MEAL_PRICES.breakfast,
+                lunch: MEAL_PRICES.lunch,
+                dinner: MEAL_PRICES.dinner
+            }
+        },
+        vehicle: {
+            amount: 0.00,
+            expenses_count: 0,
+            expenses: []
+        },
+        lodging: {
+            amount: 0.00,
+            expenses_count: 0,
+            expenses: []
+        },
+        other: {
+            amount: 0.00,
+            expenses_count: 0,
+            expenses: []
+        }
+    };
+
+    let foodDayCounter = 0;
+    let vehicleExpenseCounter = 0;
+    let lodgingExpenseCounter = 0;
+    let otherExpenseCounter = 0;
+
+    // Inicializar máscara monetária
+    $('.money-input').mask('#.##0,00', {
+        reverse: true,
+        placeholder: '0,00'
+    });
+
+    // Função para converter valor monetário para número
+    function parseMoneyValue(value) {
+        return parseFloat(value.replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
+    }
+
+    // Função para atualizar JSON
+    function updateJSON() {
+        $('#json-output code').text(JSON.stringify(accountabilityData, null, 2));
+    }
+
+    // Função para verificar e atualizar estado do botão Adicionar
+    function updateAddFoodDayButton() {
+        const currentDaysCount = $('.food-day-item').length;
+        if (currentDaysCount >= TRIP_DAYS) {
+            $('#add-food-day-btn').prop('disabled', true).addClass('opacity-50 cursor-not-allowed').removeClass('hover:bg-purple-800');
+        } else {
+            $('#add-food-day-btn').prop('disabled', false).removeClass('opacity-50 cursor-not-allowed').addClass('hover:bg-purple-800');
+        }
+    }
+
+    // Função para adicionar dia de alimentação
+    window.addFoodDay = function() {
+        // Verificar se já atingiu o número máximo de dias
+        const currentDaysCount = $('.food-day-item').length;
+        if (currentDaysCount >= TRIP_DAYS) {
+            return; // Não adicionar mais dias
+        }
+
+        foodDayCounter++;
+
+        // Pegar a próxima data sequencial da viagem
+        let nextDate;
+        if (foodDayCounter === 1) {
+            // Primeira vez, usar data de saída da viagem
+            nextDate = TRIP_START_DATE;
+        } else {
+            // Pegar a data do último dia adicionado e incrementar
+            const lastDayId = foodDayCounter - 1;
+            const lastDate = $(`#food-day-date-${lastDayId}`).val();
+
+            if (lastDate) {
+                // Adicionar 1 dia à última data
+                const date = new Date(lastDate + 'T00:00:00');
+                date.setDate(date.getDate() + 1);
+                nextDate = date.toISOString().split('T')[0];
+            } else {
+                // Fallback para data de início da viagem
+                nextDate = TRIP_START_DATE;
+            }
+        }
+
+        const rowHtml = `
+            <div class="food-day-item flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors" data-day-id="${foodDayCounter}">
+                <!-- Data -->
+                <div class="w-36">
+                    <input type="date" id="food-day-date-${foodDayCounter}" class="food-day-date w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-purple-500" value="${nextDate}">
+                </div>
+
+                <!-- Café -->
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" class="food-meal-checkbox w-4 h-4 text-purple-900 border-gray-300 rounded focus:ring-purple-500 cursor-pointer" data-day-id="${foodDayCounter}" data-meal="breakfast" onchange="calculateFoodTotal()" checked>
+                    <span class="text-sm text-gray-700">
+                        <i class="fas fa-coffee text-purple-900 text-xs"></i> Café
+                    </span>
+                </label>
+
+                <!-- Almoço -->
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" class="food-meal-checkbox w-4 h-4 text-purple-900 border-gray-300 rounded focus:ring-purple-500 cursor-pointer" data-day-id="${foodDayCounter}" data-meal="lunch" onchange="calculateFoodTotal()" checked>
+                    <span class="text-sm text-gray-700">
+                        <i class="fas fa-utensils text-purple-900 text-xs"></i> Almoço
+                    </span>
+                </label>
+
+                <!-- Janta -->
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" class="food-meal-checkbox w-4 h-4 text-purple-900 border-gray-300 rounded focus:ring-purple-500 cursor-pointer" data-day-id="${foodDayCounter}" data-meal="dinner" onchange="calculateFoodTotal()" checked>
+                    <span class="text-sm text-gray-700">
+                        <i class="fas fa-moon text-purple-900 text-xs"></i> Janta
+                    </span>
+                </label>
+
+                <!-- Total do Dia -->
+                <div class="flex-1 text-right">
+                    <span class="text-xs text-gray-600">Total:</span>
+                    <span id="day-total-${foodDayCounter}" class="ml-2 text-sm font-bold text-purple-900">R$ 0,00</span>
+                </div>
+
+                <!-- Botão Excluir -->
+                <button type="button" onclick="removeFoodDay(${foodDayCounter})" class="text-red-600 hover:text-red-800 transition-colors">
+                    <i class="fas fa-trash text-xs"></i>
+                </button>
+            </div>
+        `;
+
+        $('#food-days-list').append(rowHtml);
+
+        // Adicionar listener para a mudança de data
+        $(`#food-day-date-${foodDayCounter}`).on('change', function() {
+            calculateFoodTotal();
+        });
+
+        calculateFoodTotal();
+        updateAddFoodDayButton();
+    };
+
+    // Função para remover dia de alimentação
+    window.removeFoodDay = function(dayId) {
+        $(`.food-day-item[data-day-id="${dayId}"]`).remove();
+        calculateFoodTotal();
+        updateAddFoodDayButton();
+    };
+
+    // Função para calcular total de alimentação
+    window.calculateFoodTotal = function() {
+        let total = 0;
+        accountabilityData.food.days = [];
+
+        $('.food-day-item').each(function() {
+            const dayId = $(this).data('day-id');
+            const date = $(`#food-day-date-${dayId}`).val();
+
+            const mealsDetail = [];
+            let dayTotal = 0;
+
+            $(this).find('.food-meal-checkbox').each(function() {
+                if ($(this).is(':checked')) {
+                    const meal = $(this).data('meal');
+                    const mealValue = MEAL_PRICES[meal];
+                    dayTotal += mealValue;
+
+                    // Adicionar detalhes da refeição
+                    let mealName = '';
+                    if (meal === 'breakfast') mealName = 'Café da Manhã';
+                    else if (meal === 'lunch') mealName = 'Almoço';
+                    else if (meal === 'dinner') mealName = 'Janta';
+
+                    mealsDetail.push({
+                        type: meal,
+                        name: mealName,
+                        value: mealValue
+                    });
+                }
+            });
+
+            // Atualizar total do dia no card
+            $(`#day-total-${dayId}`).text('R$ ' + dayTotal.toFixed(2).replace('.', ','));
+
+            if (date && dayTotal > 0) {
+                // Formatar data para exibição
+                const dateObj = new Date(date + 'T00:00:00');
+                const formattedDate = dateObj.toLocaleDateString('pt-BR');
+
+                accountabilityData.food.days.push({
+                    day_number: accountabilityData.food.days.length + 1,
+                    date: date,
+                    date_formatted: formattedDate,
+                    meals: mealsDetail,
+                    meals_count: mealsDetail.length,
+                    amount: dayTotal
+                });
+                total += dayTotal;
+            }
+        });
+
+        accountabilityData.food.amount = total;
+        accountabilityData.food.days_count = accountabilityData.food.days.length;
+
+        $('#food-total').text('R$ ' + total.toFixed(2).replace('.', ','));
+
+        updateJSON();
+    };
+
+    // Função para obter ícone e nome da despesa
+    function getExpenseIconAndName(type, customDescription) {
+        const types = {
+            fuel: { icon: 'fa-gas-pump', name: 'Combustível' },
+            toll: { icon: 'fa-road', name: 'Pedágio' },
+            parking: { icon: 'fa-parking', name: 'Estacionamento' },
+            wash: { icon: 'fa-shower', name: 'Lavagem' },
+            other: { icon: 'fa-receipt', name: customDescription || 'Outro' }
+        };
+        return types[type] || types.other;
+    }
+
+    // Função para selecionar tipo de despesa de veículo
+    window.selectVehicleType = function(type) {
+        // Remover seleção de todos os botões
+        $('.vehicle-type-btn').removeClass('border-purple-900 bg-purple-100').addClass('border-gray-300');
+        $('.vehicle-type-btn i').removeClass('text-purple-900').addClass('text-gray-600');
+        $('.vehicle-type-btn span').removeClass('text-purple-900').addClass('text-gray-700');
+
+        // Adicionar seleção ao botão clicado
+        $(`#type-btn-${type}`).removeClass('border-gray-300').addClass('border-purple-900 bg-purple-100');
+        $(`#type-btn-${type} i`).removeClass('text-gray-600').addClass('text-purple-900');
+        $(`#type-btn-${type} span`).removeClass('text-gray-700').addClass('text-purple-900');
+
+        // Definir valor no input hidden
+        $('#modal-vehicle-type').val(type);
+
+        // Limpar erro de tipo se houver
+        $('#type-error').addClass('hidden');
+
+        // Mostrar/esconder campo de descrição
+        if (type === 'other') {
+            $('#other-description-container').removeClass('hidden');
+            $('#modal-vehicle-other-description').focus();
+        } else {
+            $('#other-description-container').addClass('hidden');
+        }
+    };
+
+    // Limpar erro de descrição quando o usuário digitar
+    $(document).on('input', '#modal-vehicle-other-description', function() {
+        if ($(this).val().trim()) {
+            $(this).removeClass('border-red-500').addClass('border-gray-300');
+            $('#description-error').addClass('hidden');
+        }
+    });
+
+    // Limpar erro de data quando o usuário selecionar
+    $(document).on('change', '#modal-vehicle-date', function() {
+        if ($(this).val()) {
+            $(this).removeClass('border-red-500').addClass('border-gray-300');
+            $('#date-error').addClass('hidden');
+        }
+    });
+
+    // Limpar erro de valor quando o usuário digitar
+    $(document).on('input', '#modal-vehicle-amount', function() {
+        const amount = parseMoneyValue($(this).val());
+        if (amount > 0) {
+            $(this).removeClass('border-red-500').addClass('border-gray-300');
+            $('#amount-error').addClass('hidden');
+        }
+    });
+
+    // Função para limpar todos os erros de validação
+    function clearValidationErrors() {
+        // Esconder todas as mensagens de erro
+        $('#type-error, #description-error, #date-error, #amount-error').addClass('hidden');
+
+        // Remover bordas vermelhas dos inputs
+        $('#modal-vehicle-date').removeClass('border-red-500').addClass('border-gray-300');
+        $('#modal-vehicle-other-description').removeClass('border-red-500').addClass('border-gray-300');
+        $('#modal-vehicle-amount').removeClass('border-red-500').addClass('border-gray-300');
+    }
+
+    // Função para abrir modal de despesa de veículo
+    window.openVehicleModal = function() {
+        // Definir data padrão (hoje)
+        const today = new Date().toISOString().split('T')[0];
+        $('#modal-vehicle-date').val(today);
+
+        // Resetar campos
+        $('#modal-vehicle-type').val('');
+        $('#modal-vehicle-amount').val('0,00');
+        $('#modal-vehicle-other-description').val('');
+        $('#other-description-container').addClass('hidden');
+
+        // Limpar erros de validação
+        clearValidationErrors();
+
+        // Resetar seleção de botões
+        $('.vehicle-type-btn').removeClass('border-purple-900 bg-purple-100').addClass('border-gray-300');
+        $('.vehicle-type-btn i').removeClass('text-purple-900').addClass('text-gray-600');
+        $('.vehicle-type-btn span').removeClass('text-purple-900').addClass('text-gray-700');
+
+        // Aplicar máscara monetária no campo de valor
+        $('#modal-vehicle-amount').mask('#.##0,00', {
+            reverse: true,
+            placeholder: '0,00'
+        });
+
+        // Mostrar modal
+        $('#vehicle-expense-modal').removeClass('hidden');
+    };
+
+    // Função para fechar modal
+    window.closeVehicleModal = function() {
+        $('#vehicle-expense-modal').addClass('hidden');
+    };
+
+    // Variável para controlar se o mousedown aconteceu no overlay
+    let mouseDownOnOverlay = false;
+
+    // Detectar mousedown no overlay
+    $('#vehicle-expense-modal').on('mousedown', function(e) {
+        if (e.target.id === 'vehicle-expense-modal') {
+            mouseDownOnOverlay = true;
+        } else {
+            mouseDownOnOverlay = false;
+        }
+    });
+
+    // Fechar modal ao clicar fora dele (apenas se mousedown também foi no overlay)
+    $('#vehicle-expense-modal').on('click', function(e) {
+        if (e.target.id === 'vehicle-expense-modal' && mouseDownOnOverlay) {
+            closeVehicleModal();
+        }
+    });
+
+    // Fechar modal com ESC
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && !$('#vehicle-expense-modal').hasClass('hidden')) {
+            closeVehicleModal();
+        }
+    });
+
+    // Função para confirmar adição de despesa
+    window.confirmAddVehicleExpense = function() {
+        // Limpar erros anteriores
+        clearValidationErrors();
+
+        const date = $('#modal-vehicle-date').val();
+        const type = $('#modal-vehicle-type').val();
+        const amount = parseMoneyValue($('#modal-vehicle-amount').val());
+        const customDescription = $('#modal-vehicle-other-description').val().trim();
+
+        let hasError = false;
+
+        // Validar data
+        if (!date) {
+            $('#modal-vehicle-date').removeClass('border-gray-300').addClass('border-red-500');
+            $('#date-error').removeClass('hidden');
+            hasError = true;
+        }
+
+        // Validar tipo
+        if (!type) {
+            $('#type-error').removeClass('hidden');
+            hasError = true;
+        }
+
+        // Validar descrição se tipo for "outro"
+        if (type === 'other' && !customDescription) {
+            $('#modal-vehicle-other-description').removeClass('border-gray-300').addClass('border-red-500');
+            $('#description-error').removeClass('hidden');
+            hasError = true;
+        }
+
+        // Validar valor
+        if (amount <= 0) {
+            $('#modal-vehicle-amount').removeClass('border-gray-300').addClass('border-red-500');
+            $('#amount-error').removeClass('hidden');
+            hasError = true;
+        }
+
+        // Se houver erros, interromper
+        if (hasError) {
+            return;
+        }
+
+        // Adicionar despesa
+        addVehicleExpenseRow(date, type, amount, customDescription);
+
+        // Fechar modal
+        closeVehicleModal();
+    };
+
+    // Função para adicionar linha de despesa de veículo
+    function addVehicleExpenseRow(date, type, amount, customDescription) {
+        vehicleExpenseCounter++;
+
+        const expenseInfo = getExpenseIconAndName(type, customDescription);
+
+        const rowHtml = `
+            <div class="vehicle-expense-item flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                 data-expense-id="${vehicleExpenseCounter}"
+                 data-type="${type}"
+                 data-amount="${amount}"
+                 data-custom-description="${customDescription || ''}">
+                <!-- Data -->
+                <div class="w-36">
+                    <input type="date" id="vehicle-expense-date-${vehicleExpenseCounter}" class="vehicle-expense-date w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-purple-500" value="${date}">
+                </div>
+
+                <!-- Tipo de Despesa -->
+                <div class="flex items-center gap-2 flex-1">
+                    <i class="fas ${expenseInfo.icon} text-purple-900 text-xs"></i>
+                    <span class="text-sm text-gray-700 font-medium">${expenseInfo.name}</span>
+                </div>
+
+                <!-- Valor -->
+                <div class="text-right">
+                    <span class="text-sm font-bold text-purple-900">R$ ${amount.toFixed(2).replace('.', ',')}</span>
+                </div>
+
+                <!-- Botão Excluir -->
+                <button type="button" onclick="removeVehicleExpense(${vehicleExpenseCounter})" class="text-red-600 hover:text-red-800 transition-colors">
+                    <i class="fas fa-trash text-xs"></i>
+                </button>
+            </div>
+        `;
+
+        $('#vehicle-expenses-list').append(rowHtml);
+
+        // Adicionar listener para mudança de data
+        $(`#vehicle-expense-date-${vehicleExpenseCounter}`).on('change', function() {
+            calculateVehicleTotal();
+        });
+
+        calculateVehicleTotal();
+    }
+
+    // Função para remover despesa de veículo
+    window.removeVehicleExpense = function(expenseId) {
+        $(`.vehicle-expense-item[data-expense-id="${expenseId}"]`).remove();
+        calculateVehicleTotal();
+    };
+
+    // Função para calcular total de despesas de veículo
+    window.calculateVehicleTotal = function() {
+        let total = 0;
+        accountabilityData.vehicle.expenses = [];
+
+        $('.vehicle-expense-item').each(function() {
+            const expenseId = $(this).data('expense-id');
+            const date = $(`#vehicle-expense-date-${expenseId}`).val();
+            const type = $(this).data('type');
+            const amount = parseFloat($(this).data('amount'));
+            const customDescription = $(this).data('custom-description');
+
+            const expenseInfo = getExpenseIconAndName(type, customDescription);
+            const dateObj = new Date(date + 'T00:00:00');
+            const formattedDate = dateObj.toLocaleDateString('pt-BR');
+
+            accountabilityData.vehicle.expenses.push({
+                expense_number: accountabilityData.vehicle.expenses.length + 1,
+                date: date,
+                date_formatted: formattedDate,
+                type: type,
+                name: expenseInfo.name,
+                amount: amount
+            });
+            total += amount;
+        });
+
+        accountabilityData.vehicle.amount = total;
+        accountabilityData.vehicle.expenses_count = accountabilityData.vehicle.expenses.length;
+
+        $('#vehicle-total').text('R$ ' + total.toFixed(2).replace('.', ','));
+
+        updateJSON();
+    };
+
+    // ==================== FUNÇÕES DE HOSPEDAGEM ====================
+
+    // Função para limpar erros de validação de hospedagem
+    function clearLodgingValidationErrors() {
+        $('#lodging-date-error, #lodging-amount-error').addClass('hidden');
+        $('#modal-lodging-date').removeClass('border-red-500').addClass('border-gray-300');
+        $('#modal-lodging-amount').removeClass('border-red-500').addClass('border-gray-300');
+    }
+
+    // Função para abrir modal de hospedagem
+    window.openLodgingModal = function() {
+        // Definir data padrão (hoje)
+        const today = new Date().toISOString().split('T')[0];
+        $('#modal-lodging-date').val(today);
+
+        // Resetar campos
+        $('#modal-lodging-amount').val('0,00');
+
+        // Limpar erros de validação
+        clearLodgingValidationErrors();
+
+        // Aplicar máscara monetária no campo de valor
+        $('#modal-lodging-amount').mask('#.##0,00', {
+            reverse: true,
+            placeholder: '0,00'
+        });
+
+        // Mostrar modal
+        $('#lodging-expense-modal').removeClass('hidden');
+    };
+
+    // Função para fechar modal de hospedagem
+    window.closeLodgingModal = function() {
+        $('#lodging-expense-modal').addClass('hidden');
+    };
+
+    // Variável para controlar se o mousedown aconteceu no overlay de hospedagem
+    let mouseDownOnLodgingOverlay = false;
+
+    // Detectar mousedown no overlay de hospedagem
+    $('#lodging-expense-modal').on('mousedown', function(e) {
+        if (e.target.id === 'lodging-expense-modal') {
+            mouseDownOnLodgingOverlay = true;
+        } else {
+            mouseDownOnLodgingOverlay = false;
+        }
+    });
+
+    // Fechar modal de hospedagem ao clicar fora dele
+    $('#lodging-expense-modal').on('click', function(e) {
+        if (e.target.id === 'lodging-expense-modal' && mouseDownOnLodgingOverlay) {
+            closeLodgingModal();
+        }
+    });
+
+    // Fechar modal de hospedagem com ESC
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && !$('#lodging-expense-modal').hasClass('hidden')) {
+            closeLodgingModal();
+        }
+    });
+
+    // Limpar erro de data de hospedagem quando o usuário selecionar
+    $(document).on('change', '#modal-lodging-date', function() {
+        if ($(this).val()) {
+            $(this).removeClass('border-red-500').addClass('border-gray-300');
+            $('#lodging-date-error').addClass('hidden');
+        }
+    });
+
+    // Limpar erro de valor de hospedagem quando o usuário digitar
+    $(document).on('input', '#modal-lodging-amount', function() {
+        const amount = parseMoneyValue($(this).val());
+        if (amount > 0) {
+            $(this).removeClass('border-red-500').addClass('border-gray-300');
+            $('#lodging-amount-error').addClass('hidden');
+        }
+    });
+
+    // Função para confirmar adição de despesa de hospedagem
+    window.confirmAddLodgingExpense = function() {
+        // Limpar erros anteriores
+        clearLodgingValidationErrors();
+
+        const date = $('#modal-lodging-date').val();
+        const amount = parseMoneyValue($('#modal-lodging-amount').val());
+
+        let hasError = false;
+
+        // Validar data
+        if (!date) {
+            $('#modal-lodging-date').removeClass('border-gray-300').addClass('border-red-500');
+            $('#lodging-date-error').removeClass('hidden');
+            hasError = true;
+        }
+
+        // Validar valor
+        if (amount <= 0) {
+            $('#modal-lodging-amount').removeClass('border-gray-300').addClass('border-red-500');
+            $('#lodging-amount-error').removeClass('hidden');
+            hasError = true;
+        }
+
+        // Se houver erros, interromper
+        if (hasError) {
+            return;
+        }
+
+        // Adicionar despesa
+        addLodgingExpenseRow(date, amount);
+
+        // Fechar modal
+        closeLodgingModal();
+    };
+
+    // Função para adicionar linha de despesa de hospedagem
+    function addLodgingExpenseRow(date, amount) {
+        lodgingExpenseCounter++;
+
+        const rowHtml = `
+            <div class="lodging-expense-item flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                 data-expense-id="${lodgingExpenseCounter}"
+                 data-amount="${amount}">
+                <!-- Data -->
+                <div class="w-36">
+                    <input type="date" id="lodging-expense-date-${lodgingExpenseCounter}" class="lodging-expense-date w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-purple-500" value="${date}">
+                </div>
+
+                <!-- Tipo de Despesa -->
+                <div class="flex items-center gap-2 flex-1">
+                    <i class="fas fa-bed text-purple-900 text-xs"></i>
+                    <span class="text-sm text-gray-700 font-medium">Hospedagem</span>
+                </div>
+
+                <!-- Valor -->
+                <div class="text-right">
+                    <span class="text-sm font-bold text-purple-900">R$ ${amount.toFixed(2).replace('.', ',')}</span>
+                </div>
+
+                <!-- Botão Excluir -->
+                <button type="button" onclick="removeLodgingExpense(${lodgingExpenseCounter})" class="text-red-600 hover:text-red-800 transition-colors">
+                    <i class="fas fa-trash text-xs"></i>
+                </button>
+            </div>
+        `;
+
+        $('#lodging-expenses-list').append(rowHtml);
+
+        // Adicionar listener para mudança de data
+        $(`#lodging-expense-date-${lodgingExpenseCounter}`).on('change', function() {
+            calculateLodgingTotal();
+        });
+
+        calculateLodgingTotal();
+    }
+
+    // Função para remover despesa de hospedagem
+    window.removeLodgingExpense = function(expenseId) {
+        $(`.lodging-expense-item[data-expense-id="${expenseId}"]`).remove();
+        calculateLodgingTotal();
+    };
+
+    // Função para calcular total de despesas de hospedagem
+    window.calculateLodgingTotal = function() {
+        let total = 0;
+        accountabilityData.lodging.expenses = [];
+
+        $('.lodging-expense-item').each(function() {
+            const expenseId = $(this).data('expense-id');
+            const date = $(`#lodging-expense-date-${expenseId}`).val();
+            const amount = parseFloat($(this).data('amount'));
+
+            const dateObj = new Date(date + 'T00:00:00');
+            const formattedDate = dateObj.toLocaleDateString('pt-BR');
+
+            accountabilityData.lodging.expenses.push({
+                expense_number: accountabilityData.lodging.expenses.length + 1,
+                date: date,
+                date_formatted: formattedDate,
+                type: 'lodging',
+                name: 'Hospedagem',
+                amount: amount
+            });
+            total += amount;
+        });
+
+        accountabilityData.lodging.amount = total;
+        accountabilityData.lodging.expenses_count = accountabilityData.lodging.expenses.length;
+
+        $('#lodging-total').text('R$ ' + total.toFixed(2).replace('.', ','));
+
+        updateJSON();
+    };
+
+    // ==================== FUNÇÕES DE OUTRAS DESPESAS ====================
+
+    // Função para limpar erros de validação de outras despesas
+    function clearOtherValidationErrors() {
+        $('#other-description-error, #other-date-error, #other-amount-error').addClass('hidden');
+        $('#modal-other-description').removeClass('border-red-500').addClass('border-gray-300');
+        $('#modal-other-date').removeClass('border-red-500').addClass('border-gray-300');
+        $('#modal-other-amount').removeClass('border-red-500').addClass('border-gray-300');
+    }
+
+    // Função para abrir modal de outras despesas
+    window.openOtherModal = function() {
+        // Definir data padrão (hoje)
+        const today = new Date().toISOString().split('T')[0];
+        $('#modal-other-date').val(today);
+
+        // Resetar campos
+        $('#modal-other-description').val('');
+        $('#modal-other-amount').val('0,00');
+        $('#char-counter').text('0/50');
+
+        // Limpar erros de validação
+        clearOtherValidationErrors();
+
+        // Aplicar máscara monetária no campo de valor
+        $('#modal-other-amount').mask('#.##0,00', {
+            reverse: true,
+            placeholder: '0,00'
+        });
+
+        // Mostrar modal
+        $('#other-expense-modal').removeClass('hidden');
+    };
+
+    // Função para fechar modal de outras despesas
+    window.closeOtherModal = function() {
+        $('#other-expense-modal').addClass('hidden');
+    };
+
+    // Variável para controlar se o mousedown aconteceu no overlay de outras despesas
+    let mouseDownOnOtherOverlay = false;
+
+    // Detectar mousedown no overlay de outras despesas
+    $('#other-expense-modal').on('mousedown', function(e) {
+        if (e.target.id === 'other-expense-modal') {
+            mouseDownOnOtherOverlay = true;
+        } else {
+            mouseDownOnOtherOverlay = false;
+        }
+    });
+
+    // Fechar modal de outras despesas ao clicar fora dele
+    $('#other-expense-modal').on('click', function(e) {
+        if (e.target.id === 'other-expense-modal' && mouseDownOnOtherOverlay) {
+            closeOtherModal();
+        }
+    });
+
+    // Fechar modal de outras despesas com ESC
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && !$('#other-expense-modal').hasClass('hidden')) {
+            closeOtherModal();
+        }
+    });
+
+    // Atualizar contador de caracteres do textarea
+    $(document).on('input', '#modal-other-description', function() {
+        const length = $(this).val().length;
+        $('#char-counter').text(`${length}/50`);
+
+        // Limpar erro se o usuário digitar
+        if ($(this).val().trim()) {
+            $(this).removeClass('border-red-500').addClass('border-gray-300');
+            $('#other-description-error').addClass('hidden');
+        }
+    });
+
+    // Limpar erro de data de outras despesas quando o usuário selecionar
+    $(document).on('change', '#modal-other-date', function() {
+        if ($(this).val()) {
+            $(this).removeClass('border-red-500').addClass('border-gray-300');
+            $('#other-date-error').addClass('hidden');
+        }
+    });
+
+    // Limpar erro de valor de outras despesas quando o usuário digitar
+    $(document).on('input', '#modal-other-amount', function() {
+        const amount = parseMoneyValue($(this).val());
+        if (amount > 0) {
+            $(this).removeClass('border-red-500').addClass('border-gray-300');
+            $('#other-amount-error').addClass('hidden');
+        }
+    });
+
+    // Função para confirmar adição de outras despesas
+    window.confirmAddOtherExpense = function() {
+        // Limpar erros anteriores
+        clearOtherValidationErrors();
+
+        const description = $('#modal-other-description').val().trim();
+        const date = $('#modal-other-date').val();
+        const amount = parseMoneyValue($('#modal-other-amount').val());
+
+        let hasError = false;
+
+        // Validar descrição
+        if (!description) {
+            $('#modal-other-description').removeClass('border-gray-300').addClass('border-red-500');
+            $('#other-description-error').removeClass('hidden');
+            hasError = true;
+        }
+
+        // Validar data
+        if (!date) {
+            $('#modal-other-date').removeClass('border-gray-300').addClass('border-red-500');
+            $('#other-date-error').removeClass('hidden');
+            hasError = true;
+        }
+
+        // Validar valor
+        if (amount <= 0) {
+            $('#modal-other-amount').removeClass('border-gray-300').addClass('border-red-500');
+            $('#other-amount-error').removeClass('hidden');
+            hasError = true;
+        }
+
+        // Se houver erros, interromper
+        if (hasError) {
+            return;
+        }
+
+        // Adicionar despesa
+        addOtherExpenseRow(description, date, amount);
+
+        // Fechar modal
+        closeOtherModal();
+    };
+
+    // Função para adicionar linha de outras despesas
+    function addOtherExpenseRow(description, date, amount) {
+        otherExpenseCounter++;
+
+        const rowHtml = `
+            <div class="other-expense-item flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                 data-expense-id="${otherExpenseCounter}"
+                 data-amount="${amount}"
+                 data-description="${description}">
+                <!-- Data -->
+                <div class="w-36">
+                    <input type="date" id="other-expense-date-${otherExpenseCounter}" class="other-expense-date w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-purple-500" value="${date}">
+                </div>
+
+                <!-- Descrição -->
+                <div class="flex items-center gap-2 flex-1">
+                    <i class="fas fa-receipt text-purple-900 text-xs"></i>
+                    <span class="text-sm text-gray-700 font-medium">${description}</span>
+                </div>
+
+                <!-- Valor -->
+                <div class="text-right">
+                    <span class="text-sm font-bold text-purple-900">R$ ${amount.toFixed(2).replace('.', ',')}</span>
+                </div>
+
+                <!-- Botão Excluir -->
+                <button type="button" onclick="removeOtherExpense(${otherExpenseCounter})" class="text-red-600 hover:text-red-800 transition-colors">
+                    <i class="fas fa-trash text-xs"></i>
+                </button>
+            </div>
+        `;
+
+        $('#other-expenses-list').append(rowHtml);
+
+        // Adicionar listener para mudança de data
+        $(`#other-expense-date-${otherExpenseCounter}`).on('change', function() {
+            calculateOtherTotal();
+        });
+
+        calculateOtherTotal();
+    }
+
+    // Função para remover outras despesas
+    window.removeOtherExpense = function(expenseId) {
+        $(`.other-expense-item[data-expense-id="${expenseId}"]`).remove();
+        calculateOtherTotal();
+    };
+
+    // Função para calcular total de outras despesas
+    window.calculateOtherTotal = function() {
+        let total = 0;
+        accountabilityData.other.expenses = [];
+
+        $('.other-expense-item').each(function() {
+            const expenseId = $(this).data('expense-id');
+            const date = $(`#other-expense-date-${expenseId}`).val();
+            const amount = parseFloat($(this).data('amount'));
+            const description = $(this).data('description');
+
+            const dateObj = new Date(date + 'T00:00:00');
+            const formattedDate = dateObj.toLocaleDateString('pt-BR');
+
+            accountabilityData.other.expenses.push({
+                expense_number: accountabilityData.other.expenses.length + 1,
+                date: date,
+                date_formatted: formattedDate,
+                description: description,
+                amount: amount
+            });
+            total += amount;
+        });
+
+        accountabilityData.other.amount = total;
+        accountabilityData.other.expenses_count = accountabilityData.other.expenses.length;
+
+        $('#other-total').text('R$ ' + total.toFixed(2).replace('.', ','));
+
+        updateJSON();
+    };
+
+    // Função para coletar dados do passo atual
+    function collectCurrentStepData() {
+        if (currentStep === 1) {
+            calculateFoodTotal();
+        } else if (currentStep === 2) {
+            calculateVehicleTotal();
+        } else if (currentStep === 3) {
+            calculateLodgingTotal();
+        } else if (currentStep === 4) {
+            calculateOtherTotal();
+        }
+        updateJSON();
+    }
+
+    // Função para renderizar resumo
+    function renderSummary() {
+        const total = accountabilityData.food.amount +
+                     accountabilityData.vehicle.amount +
+                     accountabilityData.lodging.amount +
+                     accountabilityData.other.amount;
+
+        let html = `
+            <div class="py-2 border-b border-purple-200">
+                <div class="mb-2">
+                    <span class="text-base font-medium">Alimentação:</span>
+                </div>
+        `;
+
+        // Adicionar detalhes dos dias de alimentação
+        if (accountabilityData.food.days && accountabilityData.food.days.length > 0) {
+            html += '<div class="ml-4 space-y-2 mb-3">';
+            accountabilityData.food.days.forEach(day => {
+                // Criar objeto com todas as refeições (valor 0 se não existir)
+                const mealsMap = {
+                    breakfast: { name: 'Café', value: 0, icon: 'fa-coffee' },
+                    lunch: { name: 'Almoço', value: 0, icon: 'fa-utensils' },
+                    dinner: { name: 'Janta', value: 0, icon: 'fa-moon' }
+                };
+
+                // Atualizar com os valores das refeições marcadas
+                day.meals.forEach(meal => {
+                    if (mealsMap[meal.type]) {
+                        mealsMap[meal.type].value = meal.value;
+                    }
+                });
+
+                html += `
+                    <div class="flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
+                        <!-- Data -->
+                        <div class="w-24">
+                            <span class="font-medium text-gray-700">${day.date_formatted}</span>
+                        </div>
+
+                        <!-- Café -->
+                        <div class="flex items-center gap-1.5">
+                            <i class="fas ${mealsMap.breakfast.icon} text-purple-900 text-sm"></i>
+                            <span class="text-gray-700">${mealsMap.breakfast.name}</span>
+                            <span class="ml-1 px-2 py-0.5 bg-purple-100 text-purple-900 font-bold rounded-full text-sm">R$ ${mealsMap.breakfast.value.toFixed(2).replace('.', ',')}</span>
+                        </div>
+
+                        <!-- Almoço -->
+                        <div class="flex items-center gap-1.5">
+                            <i class="fas ${mealsMap.lunch.icon} text-purple-900 text-sm"></i>
+                            <span class="text-gray-700">${mealsMap.lunch.name}</span>
+                            <span class="ml-1 px-2 py-0.5 bg-purple-100 text-purple-900 font-bold rounded-full text-sm">R$ ${mealsMap.lunch.value.toFixed(2).replace('.', ',')}</span>
+                        </div>
+
+                        <!-- Janta -->
+                        <div class="flex items-center gap-1.5">
+                            <i class="fas ${mealsMap.dinner.icon} text-purple-900 text-sm"></i>
+                            <span class="text-gray-700">${mealsMap.dinner.name}</span>
+                            <span class="ml-1 px-2 py-0.5 bg-purple-100 text-purple-900 font-bold rounded-full text-sm">R$ ${mealsMap.dinner.value.toFixed(2).replace('.', ',')}</span>
+                        </div>
+
+                        <!-- Total do Dia -->
+                        <div class="flex-1 text-right">
+                            <span class="text-gray-600">Total:</span>
+                            <span class="ml-2 font-bold text-purple-900">R$ ${day.amount.toFixed(2).replace('.', ',')}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+        }
+
+        html += `
+                <div class="flex justify-end">
+                    <span class="font-bold text-purple-900">R$ ${accountabilityData.food.amount.toFixed(2).replace('.', ',')}</span>
+                </div>
+            </div>
+            <div class="py-2 border-b border-purple-200">
+                <div class="mb-2">
+                    <span class="text-base font-medium">Veículo:</span>
+                </div>
+        `;
+
+        // Adicionar detalhes das despesas de veículo
+        if (accountabilityData.vehicle.expenses && accountabilityData.vehicle.expenses.length > 0) {
+            html += '<div class="ml-4 space-y-2 mb-3">';
+            accountabilityData.vehicle.expenses.forEach(expense => {
+                html += `
+                    <div class="flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
+                        <div class="w-24">
+                            <span class="font-medium text-gray-700">${expense.date_formatted}</span>
+                        </div>
+                        <div class="flex items-center gap-2 flex-1">
+                            <i class="fas fa-car text-purple-900"></i>
+                            <span class="text-gray-700 font-medium">${expense.name}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-bold text-purple-900">R$ ${expense.amount.toFixed(2).replace('.', ',')}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+        }
+
+        html += `
+                <div class="flex justify-end">
+                    <span class="font-bold text-purple-900">R$ ${accountabilityData.vehicle.amount.toFixed(2).replace('.', ',')}</span>
+                </div>
+            </div>
+            <div class="py-2 border-b border-purple-200">
+                <div class="mb-2">
+                    <span class="text-base font-medium">Hospedagem:</span>
+                </div>
+        `;
+
+        // Adicionar detalhes das despesas de hospedagem
+        if (accountabilityData.lodging.expenses && accountabilityData.lodging.expenses.length > 0) {
+            html += '<div class="ml-4 space-y-2 mb-3">';
+            accountabilityData.lodging.expenses.forEach(expense => {
+                html += `
+                    <div class="flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
+                        <div class="w-24">
+                            <span class="font-medium text-gray-700">${expense.date_formatted}</span>
+                        </div>
+                        <div class="flex items-center gap-2 flex-1">
+                            <i class="fas fa-bed text-purple-900"></i>
+                            <span class="text-gray-700 font-medium">${expense.name}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-bold text-purple-900">R$ ${expense.amount.toFixed(2).replace('.', ',')}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+        }
+
+        html += `
+                <div class="flex justify-end">
+                    <span class="font-bold text-purple-900">R$ ${accountabilityData.lodging.amount.toFixed(2).replace('.', ',')}</span>
+                </div>
+            </div>
+            <div class="py-2 border-b border-purple-200">
+                <div class="mb-2">
+                    <span class="text-base font-medium">Outras Despesas:</span>
+                </div>
+        `;
+
+        // Adicionar detalhes das outras despesas
+        if (accountabilityData.other.expenses && accountabilityData.other.expenses.length > 0) {
+            html += '<div class="ml-4 space-y-2 mb-3">';
+            accountabilityData.other.expenses.forEach(expense => {
+                html += `
+                    <div class="flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
+                        <div class="w-24">
+                            <span class="font-medium text-gray-700">${expense.date_formatted}</span>
+                        </div>
+                        <div class="flex items-center gap-2 flex-1">
+                            <i class="fas fa-receipt text-purple-900"></i>
+                            <span class="text-gray-700 font-medium">${expense.description}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-bold text-purple-900">R$ ${expense.amount.toFixed(2).replace('.', ',')}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+        }
+
+        html += `
+                <div class="flex justify-end">
+                    <span class="font-bold text-purple-900">R$ ${accountabilityData.other.amount.toFixed(2).replace('.', ',')}</span>
+                </div>
+            </div>
+            <div class="flex justify-between py-3 mt-3">
+                <span class="font-bold text-lg">Total:</span>
+                <span class="font-bold text-xl text-purple-900">R$ ${total.toFixed(2).replace('.', ',')}</span>
+            </div>
+            <div class="flex justify-between py-2 mt-2 bg-gray-100 rounded-lg px-3">
+                <span class="font-medium">Valor do Repasse:</span>
+                <span class="font-bold">R$ ${accountabilityData.amount.toFixed(2).replace('.', ',')}</span>
+            </div>
+        `;
+
+        $('#summary-content').html(html);
+    }
+
+    // Atualizar JSON em tempo real
+    $('.money-input, textarea').on('input', function() {
+        collectCurrentStepData();
+    });
+
+    window.nextStep = function() {
+        if (currentStep < totalSteps) {
+            collectCurrentStepData();
+
+            // Esconder passo atual
+            $(`#wizard-step-${currentStep}`).addClass('hidden');
+
+            // Avançar para próximo passo
+            currentStep++;
+
+            // Se for o último passo, renderizar resumo
+            if (currentStep === totalSteps) {
+                renderSummary();
+            }
+
+            // Mostrar próximo passo
+            $(`#wizard-step-${currentStep}`).removeClass('hidden');
+
+            // Scroll suave para o topo
+            $('html, body').animate({ scrollTop: 0 }, 400);
+        }
+    };
+
+    window.previousStep = function() {
+        if (currentStep > 1) {
+            collectCurrentStepData();
+
+            // Esconder passo atual
+            $(`#wizard-step-${currentStep}`).addClass('hidden');
+
+            // Voltar para passo anterior
+            currentStep--;
+
+            // Mostrar passo anterior
+            $(`#wizard-step-${currentStep}`).removeClass('hidden');
+
+            // Scroll suave para o topo
+            $('html, body').animate({ scrollTop: 0 }, 400);
+        }
+    };
+
+    // Função para ir diretamente para um passo específico
+    window.goToStep = function(targetStep) {
+        if (targetStep >= 1 && targetStep <= totalSteps && targetStep !== currentStep) {
+            collectCurrentStepData();
+
+            // Esconder passo atual
+            $(`#wizard-step-${currentStep}`).addClass('hidden');
+
+            // Atualizar passo atual
+            currentStep = targetStep;
+
+            // Se for o último passo, renderizar resumo
+            if (currentStep === totalSteps) {
+                renderSummary();
+            }
+
+            // Mostrar passo alvo
+            $(`#wizard-step-${currentStep}`).removeClass('hidden');
+
+            // Scroll suave para o topo
+            $('html, body').animate({ scrollTop: 0 }, 400);
+        }
+    };
+
+    // Permitir apenas números nos campos de quilometragem
+    $('#km-departure, #km-arrival').on('input', function() {
+        // Remove tudo que não seja dígito
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+
+    // Inicializar JSON
+    updateJSON();
+
+    // Inicializar estado do botão de adicionar alimentação
+    updateAddFoodDayButton();
+});
+</script>
+{% endblock %}

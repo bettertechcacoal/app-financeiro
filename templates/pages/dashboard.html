@@ -4,9 +4,9 @@
 
 {% block content %}
 <div class="flex flex-col lg:flex-row gap-6 py-8">
-    
+
     <!-- Sidebar -->
-    <aside class="w-full lg:w-80 flex-shrink-0">
+    <aside class="w-full lg:w-80 flex-shrink-0 lg:sticky lg:top-24 lg:self-start">
         <div class="space-y-6">
             
             <!-- User Profile Card -->
@@ -24,34 +24,37 @@
 
                     <!-- Small wave 3 -->
                     <path d="M0,85 C70,70 140,100 220,90 C300,80 350,105 400,90 L400,120 L0,120 Z" fill="rgba(168, 85, 247, 0.4)" opacity="0.6"/>
-
-                    <!-- Splash drops/circles - bem espaçados -->
-                    <circle cx="60" cy="15" r="18" fill="rgba(236, 72, 153, 0.3)" />
-
-                    <circle cx="320" cy="20" r="22" fill="rgba(59, 130, 246, 0.3)" />
-
-                    <circle cx="180" cy="25" r="14" fill="rgba(251, 191, 36, 0.35)" />
-
-                    <!-- Small accent circles -->
-                    <circle cx="140" cy="10" r="8" fill="rgba(255, 255, 255, 0.25)" />
-                    <circle cx="260" cy="35" r="10" fill="rgba(168, 85, 247, 0.3)" />
                 </svg>
 
                 <!-- Content -->
-                <div class="relative px-4 py-4 z-10">
-                    <div class="flex items-center gap-3">
-                        <div class="relative">
-                            <div class="w-14 h-14 bg-white bg-opacity-95 rounded-full flex items-center justify-center flex-shrink-0 shadow-xl">
-                                <i class="fas fa-user text-purple-600 text-xl"></i>
-                            </div>
-                            <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 border-3 border-white rounded-full shadow-md"></div>
+                <div class="relative px-5 py-5 z-10">
+                    <div class="text-center">
+                        <div class="flex items-center justify-center mb-2">
+                            <i class="fas fa-cloud-sun text-white text-4xl drop-shadow-lg"></i>
                         </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="text-sm font-bold text-white truncate drop-shadow-md">{{ session.get('user_name', 'Usuário') }}</h3>
-                            <p class="text-xs text-white text-opacity-95 truncate drop-shadow">{{ session.get('user_email', '') }}</p>
+                        <div id="currentTime" class="text-3xl font-bold text-white drop-shadow-md mb-1">--:--</div>
+                        <div id="currentDate" class="text-sm text-white text-opacity-90 drop-shadow"></div>
+                        <div class="mt-3 flex items-center justify-center gap-2">
+                            <i class="fas fa-temperature-high text-white text-opacity-80"></i>
+                            <span class="text-sm text-white text-opacity-90">25°C</span>
+                            <span class="mx-2 text-white text-opacity-50">•</span>
+                            <i class="fas fa-tint text-white text-opacity-80"></i>
+                            <span class="text-sm text-white text-opacity-90">60%</span>
                         </div>
                     </div>
                 </div>
+
+                <script>
+                function updateTime() {
+                    const now = new Date();
+                    const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    const date = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+                    document.getElementById('currentTime').textContent = time;
+                    document.getElementById('currentDate').textContent = date.charAt(0).toUpperCase() + date.slice(1);
+                }
+                updateTime();
+                setInterval(updateTime, 1000);
+                </script>
             </div>
 
             <!-- Minhas Notas (Sticky Notes) -->
@@ -129,25 +132,11 @@
     <main class="flex-1">
         <div class="space-y-6">
             
-            <!-- Welcome Header -->
-            <div class="flex items-center justify-between animate-fade-in">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Olá, {{ session.get('user_name', 'Usuário') }}!</h1>
-                    <p class="text-gray-600">Acesse os módulos do sistema abaixo</p>
-                </div>
-                <div class="hidden md:block">
-                    <div class="badge bg-green-100 text-green-700">
-                        <i class="fas fa-check-circle mr-1"></i>
-                        Conta Ativa
-                    </div>
-                </div>
-            </div>
-
             <!-- System Modules Grid -->
             <div>
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-xl font-bold text-gray-900">Módulos do Sistema</h2>
-                    <span class="text-sm text-gray-500">Clique para acessar</span>
+                    <span class="text-sm text-gray-500">Clique em um módulo para acessar</span>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -183,7 +172,7 @@
 
                     <!-- Financeiro -->
                     {% if 'financeiro_view' in user_permissions %}
-                    <a href="#" class="block">
+                    <a href="{{ url_for('admin.financial_payouts_list') }}" class="block">
                         <div class="module-card">
                             <div class="module-icon bg-gradient-to-br from-purple-500 to-purple-600">
                                 <i class="fas fa-dollar-sign"></i>
@@ -222,7 +211,7 @@
 
                     <!-- Veículos -->
                     {% if 'veiculos_view' in user_permissions %}
-                    <a href="#" class="block">
+                    <a href="{{ url_for('admin.vehicles_list') }}" class="block">
                         <div class="module-card">
                             <div class="module-icon bg-gradient-to-br from-cyan-500 to-cyan-600">
                                 <i class="fas fa-car"></i>

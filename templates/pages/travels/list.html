@@ -119,17 +119,18 @@
 
                                     <!-- Botões de Ação -->
                                     <div class="flex flex-wrap gap-2 lg:flex-shrink-0">
+                                        {% if travel.status == 'approved' %}
+                                        <a href="{{ url_for('admin.travels_view', travel_id=travel.id) }}"
+                                           class="inline-flex items-center px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
+                                            <i class="fas fa-eye mr-1.5"></i>
+                                            Ver Resumo
+                                        </a>
+                                        {% else %}
                                         <a href="{{ url_for('admin.travels_edit', travel_id=travel.id) }}"
                                            class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
                                             <i class="fas fa-edit mr-1.5"></i>
                                             Editar
                                         </a>
-                                        {% if travel.status == 'pending' %}
-                                        <button onclick="approveTravel({{ travel.id }})"
-                                                class="inline-flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
-                                            <i class="fas fa-check-circle mr-1.5"></i>
-                                            Aprovar
-                                        </button>
                                         {% endif %}
                                         {% if travel.status in ['pending', 'approved'] %}
                                         <button onclick="cancelTravel({{ travel.id }})"
@@ -138,11 +139,13 @@
                                             Cancelar
                                         </button>
                                         {% endif %}
-                                        <button onclick="deleteTravel({{ travel.id }})"
-                                                class="inline-flex items-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
-                                            <i class="fas fa-trash-alt mr-1.5"></i>
-                                            Excluir
-                                        </button>
+                                        {% if travel.status == 'pending' %}
+                                        <a href="{{ url_for('admin.travels_analyze', travel_id=travel.id) }}"
+                                           class="inline-flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
+                                            <i class="fas fa-search mr-1.5"></i>
+                                            Analisar
+                                        </a>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -319,12 +322,6 @@
     function deleteTravel(travelId) {
         if (confirm('Tem certeza que deseja excluir esta viagem?')) {
             window.location.href = `/admin/travels/${travelId}/delete`;
-        }
-    }
-
-    function approveTravel(travelId) {
-        if (confirm('Deseja aprovar esta viagem?')) {
-            window.location.href = `/admin/travels/${travelId}/approve`;
         }
     }
 

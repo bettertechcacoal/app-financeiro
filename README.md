@@ -1,69 +1,81 @@
-# App Financeiro - Sistema Completo
+# App Financeiro - Sistema de Gestão Empresarial
 
-Sistema de gestão financeira com integração ao Movidesk para sincronização de organizações, gerenciamento de clientes e visualização de tickets.
+Sistema completo de gestão empresarial com integração ao Movidesk para sincronização de organizações, gerenciamento de clientes, tickets, controle de frota e muito mais.
 
-## Funcionalidades Implementadas
+## Funcionalidades Principais
 
-### 1. Sistema de Autenticação
+### 1. Sistema de Autenticação e Autorização
 - Integração com Auth-Service (microserviço de autenticação)
 - Login com JWT tokens
 - Proteção de rotas com middleware de autenticação
-- Gerenciamento de sessões
+- Sistema de grupos e permissões granulares
+- Gerenciamento de usuários com níveis de acesso
 
-### 2. Sistema de Integração com Movidesk
-- Card "Integrações" no dashboard principal
-- Tela de seleção de integrações disponíveis
-- Tela de opções do Movidesk (Tickets e Organizações)
-- Sistema de sincronização de organizações
+### 2. Integração com Movidesk
+- Sincronização automática de organizações
 - Sincronização de tickets do Movidesk
-- Vinculação de clientes a organizações do Movidesk
+- Vinculação múltipla de clientes a organizações
+- Gerenciamento de status de organizações
+- Histórico de sincronizações com logs detalhados
 
 ### 3. Gerenciamento de Clientes
-- Card "Clientes" no dashboard
-- Lista de clientes cadastrados com busca
-- Cadastro e edição de clientes com tabs organizadas
-- Vinculação múltipla de clientes a organizações do Movidesk
-- Validação de campos obrigatórios
-- Configuração de ciclos de cobrança (fixo ou mensal)
-- Cache de tabs usando localStorage
-- Persistência de dados ao salvar (permanece na mesma página)
+- Cadastro completo com validação de CPF/CNPJ
+- Interface organizada em tabs:
+  - **Pessoa**: Dados básicos e vinculação com Movidesk
+  - **Cobrança**: Configuração de ciclos (fixo ou mensal)
+  - **Endereços**: Localização completa com CEP
+  - **Módulos**: Controle de módulos contratados
+  - **Contatos**: Pessoas de contato vinculadas
+- Sistema de busca e filtros avançados
+- Vinculação múltipla com organizações do Movidesk
 
-### 4. Gerenciamento de Tickets
-- Visualização de tickets por cliente
-- Lista de tickets por organização vinculada
-- Integração com API do Movidesk
-- Filtros e busca de tickets
-- Sincronização automática de tickets
+### 4. Sistema de Tickets
+- Visualização de tickets por cliente e organização
+- Integração em tempo real com API do Movidesk
+- Filtros avançados por status, categoria e urgência
+- Relatórios de tickets em PDF
+- Dashboard com métricas de atendimento
 
-### 5. Sistema de Viagens
-- Cadastro de viagens
-- Gerenciamento de solicitações de viagem
-- Aprovação de viagens
-- Controle de estados e cidades
+### 5. Gerenciamento de Frota (Veículos)
+- Cadastro completo de veículos da frota
+- Controle de status ativo/inativo
+- Sistema de manutenções periódicas configuráveis
+- Configuração de intervalos de manutenção por tipo
+- Histórico de viagens por veículo
+- Controle de quilometragem
+- Metadados calculados automaticamente
 
-### 6. Perfil do Usuário
-- Visualização de dados do usuário
-- Edição de perfil
-- Gerenciamento de grupos e permissões
+### 6. Sistema de Viagens
+- Solicitação de viagens
+- Aprovação de viagens com workflow
+- Controle por estado e cidade
+- Histórico completo de viagens
 
-### 7. Sistema de Breadcrumbs
-- Navegação hierárquica em todas as telas
-- Componente reutilizável para breadcrumbs
-- Integrado em todas as páginas do sistema
+### 7. Sistema de Licenças
+- Gerenciamento de licenças de software
+- Upload de licenças em lote
+- Geração de relatórios em PDF
+- Controle de módulos por licença
+- Visualização de datas de vencimento
 
-### 8. Banco de Dados
-- PostgreSQL com SQLAlchemy ORM
-- Sistema de migrations com Alembic
-- Modelos completos:
-  - Organizations (organizações do Movidesk)
-  - Clients (clientes do sistema)
-  - ClientOrganization (relacionamento many-to-many)
-  - Tickets (tickets do Movidesk)
-  - Users (usuários do sistema)
-  - Groups (grupos de permissões)
-  - States e Cities (localização)
-  - Travels (viagens)
-- Seeders para popular dados iniciais
+### 8. Perfil e Notificações
+- Gerenciamento de perfil do usuário
+- Sistema de notificações em tempo real
+- Central de notificações com contador
+- Marcação de leitura individual ou em massa
+- Histórico de atividades
+
+### 9. Configurações do Sistema
+- Parâmetros configuráveis por módulo
+- Interface intuitiva para ajustes
+- Controle de integrações
+- Logs de auditoria
+
+### 10. Sistema de Navegação
+- Breadcrumbs em todas as páginas
+- Menu lateral responsivo
+- Dashboard com cards informativos
+- Interface moderna com TailwindCSS
 
 ## Estrutura do Projeto
 
@@ -72,50 +84,61 @@ app-financeiro/
 ├── app/
 │   ├── controllers/
 │   │   ├── auth/
-│   │   │   └── login_controller.py
 │   │   ├── clients/
-│   │   │   └── clients_controller.py
 │   │   ├── dashboard/
-│   │   │   └── dashboard_controller.py
+│   │   ├── groups/
 │   │   ├── integrations/
-│   │   │   └── integrations_controller.py
+│   │   ├── licenses/
+│   │   ├── permissions/
+│   │   ├── reports/
+│   │   ├── settings/
 │   │   ├── tickets/
-│   │   │   └── tickets_controller.py
+│   │   ├── users/
+│   │   ├── vehicles/
+│   │   ├── notes_controller.py
+│   │   ├── notifications_controller.py
 │   │   ├── profile_controller.py
 │   │   └── travels_controller.py
 │   ├── models/
-│   │   ├── database.py
-│   │   ├── organization.py
-│   │   ├── client.py
-│   │   ├── client_organization.py
-│   │   ├── ticket.py
-│   │   ├── user.py
-│   │   ├── group.py
-│   │   ├── user_group.py
-│   │   ├── state.py
+│   │   ├── application.py
 │   │   ├── city.py
+│   │   ├── client.py
+│   │   ├── client_application.py
+│   │   ├── client_contact.py
+│   │   ├── client_organization.py
+│   │   ├── database.py
+│   │   ├── group.py
+│   │   ├── license.py
+│   │   ├── license_date.py
+│   │   ├── license_module.py
+│   │   ├── maintenance_type.py
+│   │   ├── note.py
+│   │   ├── notification.py
+│   │   ├── organization.py
+│   │   ├── parameter.py
+│   │   ├── permission.py
+│   │   ├── state.py
+│   │   ├── sync_log.py
+│   │   ├── ticket.py
 │   │   ├── travel.py
-│   │   └── sync_log.py
-│   └── services/
-│       ├── auth_service.py
-│       ├── client_service.py
-│       ├── movidesk_service.py
-│       └── ticket_service.py
+│   │   ├── user.py
+│   │   ├── user_group.py
+│   │   ├── vehicle.py
+│   │   ├── vehicle_maintenance_config.py
+│   │   ├── vehicle_maintenance_history.py
+│   │   ├── vehicle_meta.py
+│   │   └── vehicle_travel_history.py
+│   ├── services/
+│   │   ├── auth_service.py
+│   │   ├── client_service.py
+│   │   ├── movidesk_service.py
+│   │   └── ticket_service.py
+│   └── utils/
+│       └── permissions_helper.py
 ├── database/
 │   ├── migrations/
 │   │   └── versions/
-│   │       ├── 001_create_groups_table.py
-│   │       ├── 002_create_users_table.py
-│   │       ├── 003_create_user_groups_table.py
-│   │       ├── 004_create_states_table.py
-│   │       ├── 005_create_cities_table.py
-│   │       ├── 006_create_travels_table.py
-│   │       ├── 007_create_organizations_table.py
-│   │       ├── 008_create_clients_table.py
-│   │       ├── 009_create_client_organizations_table.py
-│   │       ├── 010_create_sync_logs_table.py
-│   │       ├── 011_create_tickets_table.py
-│   │       └── 012_add_billing_fields_to_clients.py
+│   │       └── (32 migrations)
 │   └── seeders/
 │       ├── database_seeder.py
 │       ├── groups_seeder.py
@@ -126,33 +149,27 @@ app-financeiro/
 │   │   └── breadcrumbs.html
 │   ├── pages/
 │   │   ├── auth/
-│   │   │   └── login.html
 │   │   ├── clients/
-│   │   │   ├── manage.html
-│   │   │   └── form.html
+│   │   ├── groups/
 │   │   ├── integrations/
-│   │   │   ├── list.html
-│   │   │   ├── movidesk_options.html
-│   │   │   ├── movidesk_organizations.html
-│   │   │   ├── movidesk_tickets.html
-│   │   │   └── organization_edit.html
-│   │   ├── tickets/
-│   │   │   ├── list.html
-│   │   │   └── view.html
-│   │   ├── travels/
-│   │   │   ├── list.html
-│   │   │   └── form.html
+│   │   ├── licenses/
+│   │   ├── notes/
+│   │   ├── notifications/
+│   │   ├── permissions/
 │   │   ├── profile/
-│   │   │   └── profile.html
+│   │   ├── reports/
+│   │   ├── settings/
+│   │   ├── tickets/
+│   │   ├── travels/
+│   │   ├── users/
+│   │   ├── vehicles/
 │   │   └── dashboard.html
 │   └── base.html
 ├── static/
 │   └── css/
 │       └── dashboard.css
-├── test/
-│   ├── test_login_flow.py
-│   └── test_all_routes.py
 ├── .env
+├── .gitignore
 ├── alembic.ini
 ├── config.py
 ├── routes.py
@@ -161,19 +178,25 @@ app-financeiro/
 └── README.md
 ```
 
-## Configuração
+## Requisitos do Sistema
 
-### 1. Requisitos
-- Python 3.8+
-- PostgreSQL 12+
-- Auth-Service rodando em http://localhost:8000
+- **Python**: 3.8 ou superior
+- **Banco de Dados**: PostgreSQL 12 ou superior
+- **Auth-Service**: Microserviço de autenticação rodando
+- **Memória**: Mínimo 2GB RAM
+- **Espaço em Disco**: Mínimo 1GB
 
-### 2. Instalação
+## Instalação
+
+### 1. Clonar o Repositório
 
 ```bash
-# Clonar/acessar o diretório
 cd app-financeiro
+```
 
+### 2. Criar Ambiente Virtual
+
+```bash
 # Criar ambiente virtual
 python -m venv venv
 
@@ -182,63 +205,70 @@ python -m venv venv
 venv\Scripts\activate
 # Linux/Mac:
 source venv/bin/activate
+```
 
-# Instalar dependências
+### 3. Instalar Dependências
+
+```bash
 pip install -r requirements.txt
 ```
 
-### 3. Configurar Banco de Dados
+### 4. Configurar Banco de Dados
 
 Criar banco de dados PostgreSQL:
 
 ```sql
 CREATE DATABASE app_financeiro;
+CREATE USER app_financeiro_user WITH PASSWORD 'your_secure_password';
+GRANT ALL PRIVILEGES ON DATABASE app_financeiro TO app_financeiro_user;
 ```
 
-### 4. Configurar Variáveis de Ambiente
+### 5. Configurar Variáveis de Ambiente
 
-Editar o arquivo `.env`:
+Criar arquivo `.env` na raiz do projeto:
 
 ```env
 # Flask Configuration
-FLASK_ENV=development
-FLASK_DEBUG=True
-SECRET_KEY=sua-chave-secreta-aqui-mude-em-producao
+FLASK_ENV=production
+FLASK_DEBUG=False
+SECRET_KEY=your-very-secure-random-secret-key-here
 
 # Auth Service Configuration
-AUTH_SERVICE_URL=http://localhost:8000
+AUTH_SERVICE_URL=http://your-auth-service-url:8000
 AUTH_SERVICE_TIMEOUT=10
 
 # JWT Configuration
-JWT_SECRET_KEY=your-secret-key
+JWT_SECRET_KEY=your-jwt-secret-key-here
 JWT_ALGORITHM=HS256
 
 # Database Configuration
-DB_USER=postgres
-DB_PASSWORD=sua-senha-postgres
+DB_USER=app_financeiro_user
+DB_PASSWORD=your_secure_password
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=app_financeiro
 
 # Movidesk API Configuration
-MOVIDESK_TOKEN=seu-token-movidesk-aqui
+MOVIDESK_TOKEN=your-movidesk-api-token-here
 ```
 
-### 5. Executar Migrations
+**Importante**: Substitua todos os valores de exemplo por valores reais e seguros.
+
+### 6. Executar Migrations
 
 ```bash
 # Executar todas as migrations
 alembic upgrade head
 ```
 
-### 6. Popular Dados Iniciais (Opcional)
+### 7. Popular Dados Iniciais (Opcional)
 
 ```bash
-# Popular grupos e usuários
+# Popular grupos, usuários e cidades
 python database/seeders/database_seeder.py
 ```
 
-### 7. Inicializar o Sistema
+### 8. Inicializar o Sistema
 
 ```bash
 python main.py
@@ -246,210 +276,146 @@ python main.py
 
 O sistema estará disponível em `http://localhost:5000`
 
-**Credenciais padrão:**
-- Email: `demo@demo.com`
-- Senha: `demo123`
+## Configuração para Produção
 
-## Fluxo de Uso
+### Segurança
 
-### Sincronizar Organizações do Movidesk
+1. **Alterar SECRET_KEY**: Gere uma chave aleatória segura
+2. **Desabilitar DEBUG**: `FLASK_DEBUG=False`
+3. **Usar HTTPS**: Configure certificado SSL/TLS
+4. **Firewall**: Proteja a porta do banco de dados
+5. **Senhas**: Use senhas fortes e únicas
 
-1. Acesse o dashboard
-2. Clique no card "Integrações"
-3. Clique em "Movidesk"
-4. Clique em "Organizações"
-5. Clique no botão "Sincronizar Agora"
-6. Aguarde a sincronização (as organizações serão importadas do Movidesk)
+### Performance
 
-### Cadastrar um Cliente
+1. **Usar servidor WSGI**: Gunicorn ou uWSGI
+2. **Configurar proxy reverso**: Nginx ou Apache
+3. **Habilitar cache**: Redis ou Memcached
+4. **Otimizar queries**: Índices no banco de dados
 
-1. Acesse o dashboard
-2. Clique no card "Clientes"
-3. Clique em "Novo Cliente"
-4. Preencha os dados nas abas:
-   - **Pessoa**: Dados básicos e vinculação com Movidesk
-   - **Cobrança**: Configuração do ciclo de cobrança (fixo ou mensal)
-   - **Endereços**: Endereço completo
-   - **Módulos**: Módulos do sistema (em desenvolvimento)
-   - **Contatos**: Pessoas de contato (em desenvolvimento)
-5. Clique em "Salvar"
+### Backup
 
-### Visualizar Tickets de um Cliente
+1. **Banco de Dados**: Backup diário automático
+2. **Arquivos**: Backup de uploads e logs
+3. **Configurações**: Versionamento de `.env`
 
-1. Acesse o dashboard
-2. Clique no card "Tickets"
-3. Localize o cliente na lista
-4. Clique em "Visualizar"
-5. Veja os tickets separados por organização vinculada
+### Monitoramento
 
-## Rotas da API
+1. **Logs**: Configurar sistema de logs centralizado
+2. **Métricas**: Monitorar uso de recursos
+3. **Alertas**: Notificações de erros críticos
+
+## Rotas Principais da API
 
 ### Autenticação
-
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| GET | `/` | Redireciona para login ou dashboard |
-| GET/POST | `/login` | Tela de login |
-| GET | `/logout` | Logout do sistema |
+- `GET /` - Página inicial (redireciona para login ou dashboard)
+- `GET/POST /login` - Login no sistema
+- `GET /logout` - Logout
 
 ### Dashboard
-
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| GET | `/admin/dashboard` | Dashboard principal |
+- `GET /admin/dashboard` - Dashboard principal
 
 ### Clientes
+- `GET /admin/clients` - Lista de clientes
+- `GET /admin/clients/new` - Novo cliente
+- `POST /admin/clients/create` - Criar cliente
+- `GET /admin/clients/<id>/edit` - Editar cliente
+- `POST /admin/clients/<id>/update` - Atualizar cliente
+- `POST /admin/clients/<id>/delete` - Remover cliente
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| GET | `/admin/clients` | Lista clientes |
-| GET | `/admin/clients/new` | Formulário novo cliente |
-| POST | `/admin/clients/create` | Cria cliente |
-| GET | `/admin/clients/<id>/edit` | Formulário edição |
-| POST | `/admin/clients/<id>/update` | Atualiza cliente |
-| POST | `/admin/clients/<id>/delete` | Remove cliente |
-| GET | `/admin/api/organizations` | Lista organizações (API) |
-| GET | `/admin/api/clients` | Lista clientes (API) |
+### Veículos
+- `GET /admin/vehicles` - Lista de veículos
+- `GET /admin/vehicles/new` - Novo veículo
+- `POST /admin/vehicles/create` - Criar veículo
+- `GET /admin/vehicles/<id>` - Detalhes do veículo
+- `GET /admin/vehicles/<id>/edit` - Editar veículo
+- `POST /admin/vehicles/<id>/update` - Atualizar veículo
+- `POST /admin/vehicles/<id>/toggle-status` - Ativar/Inativar veículo
+- `POST /admin/vehicles/<id>/maintenance-configs` - Adicionar config. de manutenção
+- `DELETE /admin/vehicles/<id>/maintenance-configs/<config_id>` - Remover config. de manutenção
 
 ### Tickets
-
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| GET | `/admin/tickets` | Lista clientes para visualizar tickets |
-| GET | `/admin/tickets/client/<id>` | Visualiza tickets do cliente |
+- `GET /admin/tickets` - Lista de tickets
+- `GET /admin/tickets/client/<id>` - Tickets por cliente
+- `GET /admin/tickets/client/<id>/report/pdf` - Relatório PDF
 
 ### Integrações
+- `GET /admin/integrations` - Lista de integrações
+- `GET /admin/integrations/movidesk` - Opções Movidesk
+- `GET /admin/integrations/movidesk/organizations` - Organizações
+- `POST /admin/integrations/movidesk/organizations/sync` - Sincronizar organizações
+- `GET /admin/integrations/movidesk/tickets` - Tickets Movidesk
+- `POST /admin/integrations/movidesk/tickets/sync` - Sincronizar tickets
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| GET | `/admin/integrations` | Lista integrações |
-| GET | `/admin/integrations/movidesk` | Opções Movidesk |
-| GET | `/admin/integrations/movidesk/organizations` | Tela sincronização organizações |
-| POST | `/admin/integrations/movidesk/organizations/sync` | Sincroniza organizações |
-| GET | `/admin/integrations/movidesk/tickets` | Tela sincronização tickets |
-| POST | `/admin/integrations/movidesk/tickets/sync` | Sincroniza tickets |
-| GET | `/admin/organizations/<id>/edit` | Editar organização |
-| POST | `/admin/organizations/<id>/update` | Atualizar organização |
-| GET | `/admin/api/clients/unlinked` | Lista clientes não vinculados |
-| POST | `/admin/organizations/<id>/clients/<id>/link` | Vincular cliente |
-| POST | `/admin/organizations/<id>/clients/<id>/unlink` | Desvincular cliente |
-| POST | `/admin/organizations/<id>/toggle-status` | Ativar/desativar organização |
+### Usuários e Permissões
+- `GET /admin/users` - Lista de usuários
+- `GET /admin/groups` - Lista de grupos
+- `GET /admin/permissions` - Gerenciar permissões
+- `GET /admin/permissions/groups` - Permissões por grupo
+
+### Licenças
+- `GET /admin/licenses` - Lista de licenças
+- `GET /admin/licenses/upload` - Upload de licenças
+- `GET /admin/licenses/generate` - Gerar licença
+- `GET /admin/licenses/view-pdf` - Visualizar PDF
 
 ### Viagens
+- `GET /admin/travels` - Lista de viagens
+- `GET /admin/travels/new` - Nova viagem
+- `POST /admin/travels/create` - Criar viagem
+- `GET /admin/travels/<id>/approve` - Aprovar viagem
+- `GET /admin/travels/<id>/cancel` - Cancelar viagem
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| GET | `/admin/travels` | Lista viagens |
-| GET | `/admin/travels/new` | Formulário nova viagem |
-| POST | `/admin/travels/create` | Cria viagem |
-| GET | `/admin/travels/<id>/edit` | Formulário edição |
-| POST | `/admin/travels/<id>/update` | Atualiza viagem |
-| GET | `/admin/travels/<id>/delete` | Remove viagem |
-| GET | `/admin/travels/<id>/approve` | Aprovar viagem |
+### Notificações
+- `GET /admin/notifications` - Central de notificações
+- `GET /admin/api/notifications` - Lista de notificações (API)
+- `GET /admin/api/notifications/unread-count` - Contador de não lidas
+- `POST /admin/api/notifications/<id>/read` - Marcar como lida
+- `POST /admin/api/notifications/read-all` - Marcar todas como lidas
 
 ### Perfil
+- `GET /admin/profile` - Visualizar perfil
+- `POST /admin/profile/update` - Atualizar perfil
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| GET | `/admin/profile` | Visualizar perfil |
-| POST | `/admin/profile/update` | Atualizar perfil |
-
-## Modelos de Dados
-
-### Organization
-
-```python
-{
-    'id': String(50),              # ID do Movidesk
-    'business_name': String(255),  # Razão social
-    'person_type': String(20),     # Tipo de pessoa
-    'is_active': Boolean,          # Ativo/Inativo
-    'created_at': DateTime,
-    'updated_at': DateTime
-}
-```
-
-### Client
-
-```python
-{
-    'id': Integer,                 # ID autoincrement
-    'name': String(255),           # Nome completo
-    'email': String(255),          # Email
-    'phone': String(50),           # Telefone
-    'document': String(50),        # CPF/CNPJ (único)
-    'organization_id': String(50), # FK para organizations (legado)
-    'address': String(500),        # Endereço
-    'city': String(100),           # Cidade
-    'state': String(2),            # UF
-    'zipcode': String(20),         # CEP
-    'billing_cycle': Integer,      # Ciclo de cobrança em dias
-    'billing_day': Integer,        # Dia do mês para cobrança
-    'billing_cycle_type': String(20),  # Tipo: 'fixo' ou 'mensal'
-    'fixed_start_day': Integer,    # Dia de início (ciclo fixo)
-    'created_at': DateTime,
-    'updated_at': DateTime
-}
-```
-
-### ClientOrganization (Tabela de Relacionamento)
-
-```python
-{
-    'id': Integer,                 # ID autoincrement
-    'client_id': Integer,          # FK para clients
-    'organization_id': String(50), # FK para organizations
-    'created_at': DateTime
-}
-```
-
-### Ticket
-
-```python
-{
-    'id': Integer,                 # ID do ticket no Movidesk
-    'protocol': Integer,           # Protocolo do ticket
-    'subject': String(500),        # Assunto
-    'category': String(255),       # Categoria
-    'urgency': String(50),         # Urgência
-    'status': String(50),          # Status
-    'created_date': DateTime,      # Data de criação
-    'organization_business_name': String(255),  # Nome da organização
-    'owner_team': String(255),     # Time responsável
-    'owner_name': String(255),     # Nome do responsável
-    'actions_count': Integer,      # Número de ações
-    'resolved_in': String(100),    # Tempo de resolução
-    'created_at': DateTime,
-    'updated_at': DateTime
-}
-```
+### Configurações
+- `GET /admin/settings` - Configurações do sistema
+- `POST /admin/settings/<id>/update` - Atualizar parâmetro
 
 ## Tecnologias Utilizadas
 
-- **Backend**: Flask 3.0.0
-- **ORM**: SQLAlchemy 2.0.25
-- **Migrations**: Alembic
-- **Banco de Dados**: PostgreSQL (via psycopg2-binary)
-- **Frontend**: TailwindCSS, Font Awesome, jQuery
-- **Máscaras**: jQuery Mask Plugin
-- **Integração**: API Movidesk
-- **Autenticação**: JWT via Auth-Service
-- **Ambiente**: python-dotenv
+### Backend
+- **Flask** 3.0.0 - Framework web
+- **SQLAlchemy** 2.0.25 - ORM
+- **Alembic** - Sistema de migrations
+- **psycopg2-binary** - Driver PostgreSQL
+- **python-dotenv** - Gerenciamento de variáveis de ambiente
+- **requests** - Cliente HTTP
 
-## Migrations
+### Frontend
+- **TailwindCSS** - Framework CSS
+- **Font Awesome** - Ícones
+- **jQuery** - Manipulação DOM
+- **jQuery Mask Plugin** - Máscaras de input
 
-O projeto usa Alembic para gerenciamento de migrations do banco de dados.
+### Segurança
+- **JWT** - Autenticação e autorização
+- **bcrypt** - Hash de senhas (via Auth-Service)
+- **CSRF Protection** - Proteção contra CSRF
 
-### Comandos Úteis
+### Integrações
+- **Movidesk API** - Sincronização de tickets e organizações
+- **Auth-Service** - Microserviço de autenticação
+
+## Comandos Úteis do Alembic
 
 ```bash
-# Verificar status das migrations
+# Ver status atual
 alembic current
 
 # Ver histórico de migrations
 alembic history
 
-# Executar todas as migrations pendentes
+# Executar migrations pendentes
 alembic upgrade head
 
 # Reverter última migration
@@ -462,19 +428,7 @@ alembic downgrade base
 alembic revision -m "descrição da mudança"
 ```
 
-## Testes
-
-O projeto inclui scripts de teste na pasta `test/`:
-
-```bash
-# Testar fluxo de login
-python test/test_login_flow.py
-
-# Testar todas as rotas
-python test/test_all_routes.py
-```
-
-## Solução de Problemas
+## Solução de Problemas Comuns
 
 ### Erro de Conexão com Banco de Dados
 
@@ -482,23 +436,31 @@ python test/test_all_routes.py
 sqlalchemy.exc.OperationalError: could not connect to server
 ```
 
-**Solução**: Verifique se o PostgreSQL está rodando e as credenciais no `.env` estão corretas.
+**Solução**:
+- Verifique se o PostgreSQL está rodando
+- Confirme as credenciais no arquivo `.env`
+- Teste a conexão: `psql -U app_financeiro_user -d app_financeiro`
 
-### Erro ao Sincronizar Organizações
+### Erro ao Sincronizar com Movidesk
 
 ```
 Erro: 401 Unauthorized
 ```
 
-**Solução**: Verifique se o token do Movidesk no `.env` está correto e válido.
+**Solução**:
+- Verifique se o token do Movidesk está correto
+- Confirme se o token tem as permissões necessárias
+- Teste o token diretamente na API do Movidesk
 
 ### Erro de Coluna Inexistente
 
 ```
-psycopg2.errors.UndefinedColumn: column clients.billing_cycle_type does not exist
+psycopg2.errors.UndefinedColumn: column does not exist
 ```
 
-**Solução**: Execute as migrations: `alembic upgrade head`
+**Solução**:
+- Execute todas as migrations: `alembic upgrade head`
+- Verifique o status: `alembic current`
 
 ### Auth-Service Não Conecta
 
@@ -506,12 +468,74 @@ psycopg2.errors.UndefinedColumn: column clients.billing_cycle_type does not exis
 Erro ao conectar no auth-service
 ```
 
-**Solução**: Certifique-se de que o Auth-Service está rodando em `http://localhost:8000` e acessível.
+**Solução**:
+- Certifique-se de que o Auth-Service está rodando
+- Verifique a URL no arquivo `.env`
+- Teste a conectividade: `curl http://auth-service-url:8000/health`
+
+### Erro de Permissão
+
+```
+403 Forbidden - Você não tem permissão para acessar esta página
+```
+
+**Solução**:
+- Verifique se o usuário está no grupo correto
+- Confirme as permissões do grupo em `/admin/permissions`
+- Execute o seeder de permissões se necessário
+
+## Manutenção
+
+### Limpeza de Logs
+
+```bash
+# Limpar logs antigos (implementar conforme necessário)
+find logs/ -name "*.log" -mtime +30 -delete
+```
+
+### Atualização do Sistema
+
+```bash
+# Atualizar código
+git pull origin main
+
+# Atualizar dependências
+pip install -r requirements.txt --upgrade
+
+# Executar novas migrations
+alembic upgrade head
+
+# Reiniciar aplicação
+systemctl restart app-financeiro
+```
+
+### Backup do Banco de Dados
+
+```bash
+# Backup completo
+pg_dump -U app_financeiro_user app_financeiro > backup_$(date +%Y%m%d).sql
+
+# Restaurar backup
+psql -U app_financeiro_user app_financeiro < backup_20240101.sql
+```
+
+## Boas Práticas
+
+1. **Sempre testar em ambiente de desenvolvimento** antes de deploy em produção
+2. **Fazer backup** antes de executar migrations
+3. **Documentar mudanças** em commits claros e descritivos
+4. **Monitorar logs** regularmente para identificar problemas
+5. **Manter dependências atualizadas** com patches de segurança
+6. **Revisar permissões** periodicamente
+7. **Auditar acessos** e atividades suspeitas
 
 ## Suporte
 
-Para dúvidas ou problemas, consulte a documentação ou entre em contato com a equipe de desenvolvimento.
+Para dúvidas técnicas ou problemas:
+1. Consulte este README
+2. Verifique os logs da aplicação
+3. Entre em contato com a equipe de desenvolvimento
 
 ## Licença
 
-Proprietário - Todos os direitos reservados
+Proprietário - Todos os direitos reservados © 2024

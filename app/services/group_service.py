@@ -10,7 +10,7 @@ class GroupService:
         """Retorna todos os grupos ativos"""
         db = SessionLocal()
         try:
-            groups = db.query(Group).filter_by(is_active=True).order_by(Group.hierarchy_level, Group.name).all()
+            groups = db.query(Group).filter_by(is_active=True).order_by(Group.name).all()
             return [group.to_dict() for group in groups]
         finally:
             db.close()

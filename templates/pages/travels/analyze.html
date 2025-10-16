@@ -1,0 +1,1182 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}Análise de Viagem{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Viagens', 'url': url_for('admin.travels_list')},
+    {'name': 'Análise de Viagem'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            <div class="flex items-center">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-900 to-purple-900 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+                    <i class="fas fa-clipboard-check text-white text-2xl sm:text-3xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Análise de Viagem</h1>
+                    <p class="text-sm sm:text-base text-gray-600">Viagem #{{ travel.id }} - {{ travel.user.name if travel.user else 'N/A' }}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="{{ url_for('admin.travels_list') }}" class="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 transition-all inline-flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wizard Content -->
+    <div class="animate-fade-in">
+        <!-- Passo 1: Informações da Viagem -->
+        <div id="wizard-step-1" class="wizard-step-content">
+            <div class="card">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-purple-900 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-info-circle text-white"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-900">Informações da Viagem</h2>
+                            <p class="text-sm text-gray-500">Revise os detalhes da solicitação de viagem</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wizard Steps Indicator -->
+                <div class="px-6 py-5 bg-gray-50 border-b border-gray-200">
+                    <div class="flex items-center justify-center">
+                        <div class="flex items-center space-x-3">
+                            <!-- Step 1 -->
+                            <div class="flex items-center">
+                                <div id="step-indicator-1" class="wizard-step-active flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div class="ml-3 hidden sm:block">
+                                    <p class="text-xs font-bold text-gray-500 uppercase">Passo 1</p>
+                                    <p class="text-sm font-semibold text-gray-900">Informações</p>
+                                </div>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div class="w-8 h-0.5 bg-gray-300"></div>
+
+                            <!-- Step 2 -->
+                            {% if travel.needs_vehicle %}
+                            <div class="flex items-center">
+                                <div id="step-indicator-2" class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
+                                    <i class="fas fa-car"></i>
+                                </div>
+                                <div class="ml-3 hidden sm:block">
+                                    <p class="text-xs font-bold text-gray-400 uppercase">Passo 2</p>
+                                    <p class="text-sm font-semibold text-gray-500">Veículo</p>
+                                </div>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div class="w-8 h-0.5 bg-gray-300"></div>
+                            {% endif %}
+
+                            <!-- Step 3 (ou 2 se não precisa de veículo) - Financeiro -->
+                            <div class="flex items-center">
+                                <div id="step-indicator-{% if travel.needs_vehicle %}3{% else %}2{% endif %}" class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <div class="ml-3 hidden sm:block">
+                                    <p class="text-xs font-bold text-gray-400 uppercase">Passo {% if travel.needs_vehicle %}3{% else %}2{% endif %}</p>
+                                    <p class="text-sm font-semibold text-gray-500">Financeiro</p>
+                                </div>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div class="w-8 h-0.5 bg-gray-300"></div>
+
+                            <!-- Step 4 (ou 3 se não precisa de veículo) - Finalizar -->
+                            <div class="flex items-center">
+                                <div id="step-indicator-{% if travel.needs_vehicle %}4{% else %}3{% endif %}" class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="ml-3 hidden sm:block">
+                                    <p class="text-xs font-bold text-gray-400 uppercase">Passo {% if travel.needs_vehicle %}4{% else %}3{% endif %}</p>
+                                    <p class="text-sm font-semibold text-gray-500">Finalizar</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <!-- Seção: Dados da Solicitação -->
+                    <div class="mb-8">
+                        <h3 class="text-xs font-bold text-gray-500 uppercase mb-5 tracking-wide">Dados da Solicitação</h3>
+                        <div class="space-y-5">
+                            <div class="flex items-center">
+                                <div class="w-44 flex-shrink-0">
+                                    <span class="text-base text-gray-600 font-medium">Solicitante:</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-base font-semibold text-gray-900 leading-relaxed">{{ travel.user.name if travel.user else 'N/A' }}</p>
+                                    <p class="text-sm text-gray-500 mt-1">{{ travel.user.email if travel.user else '' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center">
+                                <div class="w-44 flex-shrink-0">
+                                    <span class="text-base text-gray-600 font-medium">Destino:</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-base font-semibold text-gray-900 leading-relaxed">
+                                        {{ travel.city.name if travel.city else 'N/A' }}
+                                        {% if travel.city and travel.city.state %}
+                                            <span class="text-gray-600 font-normal">/ {{ travel.city.state.uf }}</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center">
+                                <div class="w-44 flex-shrink-0">
+                                    <span class="text-base text-gray-600 font-medium">Período:</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-base font-semibold text-gray-900 leading-relaxed">
+                                        {% if travel.departure_date %}
+                                            {{ travel.departure_date[8:10] }}/{{ travel.departure_date[5:7] }}/{{ travel.departure_date[:4] }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                        <span class="text-gray-600 font-normal">até</span>
+                                        {% if travel.return_date %}
+                                            {{ travel.return_date[8:10] }}/{{ travel.return_date[5:7] }}/{{ travel.return_date[:4] }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </p>
+                                    <p class="text-sm text-gray-500 mt-1.5 leading-relaxed">
+                                        {% if travel.departure_date %}
+                                            Saída às {{ travel.departure_date[11:16] }}
+                                        {% endif %}
+                                        {% if travel.return_date %}
+                                            • Retorno às {{ travel.return_date[11:16] }}
+                                        {% endif %}
+                                    </p>
+                                    {% if travel.days and travel.days > 0 %}
+                                    <p class="text-xs text-gray-600 mt-1.5 leading-relaxed">
+                                        <span class="font-semibold text-gray-700">{{ travel.days }} {{ 'dia' if travel.days == 1 else 'dias' }} de viagem</span>
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="flex items-center">
+                                <div class="w-44 flex-shrink-0">
+                                    <span class="text-base text-gray-600 font-medium">Motivo:</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-base text-gray-900 leading-relaxed">{{ travel.purpose }}</p>
+                                </div>
+                            </div>
+
+                            {% if travel.notes %}
+                            <div class="flex items-center">
+                                <div class="w-44 flex-shrink-0">
+                                    <span class="text-base text-gray-600 font-medium">Observações:</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-base text-gray-700 leading-relaxed">{{ travel.notes }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Seção: Detalhes Adicionais -->
+                    {% if travel.needs_vehicle or (travel.passengers and travel.passengers|length > 0) %}
+                    <div class="pt-7 border-t border-gray-200">
+                        <h3 class="text-xs font-bold text-gray-500 uppercase mb-5 tracking-wide">Detalhes Adicionais</h3>
+                        <div class="space-y-6">
+                            {% if travel.needs_vehicle %}
+                            <div>
+                                <div class="inline-flex items-center justify-center px-3.5 py-1.5 bg-purple-50 border border-purple-200 rounded-lg">
+                                    <i class="fas fa-car text-purple-900 text-sm mr-2 flex items-center"></i>
+                                    <span class="text-base text-purple-900 font-medium leading-none">Requer reserva de veículo</span>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if travel.passengers and travel.passengers|length > 0 %}
+                            <div class="flex items-center">
+                                <div class="w-44 flex-shrink-0">
+                                    <span class="text-base text-gray-600 font-medium">Passageiros:</span>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="space-y-2.5">
+                                        {% for passenger in travel.passengers %}
+                                        <div class="flex items-center">
+                                            <div class="w-7 h-7 bg-gray-100 rounded flex items-center justify-center mr-2.5">
+                                                <i class="fas fa-user text-gray-500 text-xs"></i>
+                                            </div>
+                                            <span class="text-base text-gray-900">{{ passenger.name }}</span>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+                    <button type="button" onclick="nextStep()" class="px-8 py-3 bg-purple-900 hover:bg-purple-900 text-white rounded-lg font-semibold transition-all inline-flex items-center">
+                        Próximo
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Passo 2: Seleção de Veículo (apenas se necessário) -->
+        {% if travel.needs_vehicle %}
+        <div id="wizard-step-2" class="wizard-step-content hidden">
+            <div class="card">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-purple-900 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-car text-white"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-900">Selecionar Veículo</h2>
+                            <p class="text-sm text-gray-500">Reserva de veículo</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wizard Steps Indicator -->
+                <div class="px-6 py-5 bg-gray-50 border-b border-gray-200">
+                    <div class="flex items-center justify-center">
+                        <div class="flex items-center space-x-3">
+                            <!-- Step 1 -->
+                            <div class="flex items-center">
+                                <div id="step-indicator-1-b" class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="ml-3 hidden sm:block">
+                                    <p class="text-xs font-bold text-gray-500 uppercase">Passo 1</p>
+                                    <p class="text-sm font-semibold text-gray-900">Informações</p>
+                                </div>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div class="w-8 h-0.5 bg-purple-900"></div>
+
+                            <!-- Step 2 -->
+                            <div class="flex items-center">
+                                <div id="step-indicator-2-b" class="wizard-step-active flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-car"></i>
+                                </div>
+                                <div class="ml-3 hidden sm:block">
+                                    <p class="text-xs font-bold text-gray-500 uppercase">Passo 2</p>
+                                    <p class="text-sm font-semibold text-gray-900">Veículo</p>
+                                </div>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div class="w-8 h-0.5 bg-gray-300"></div>
+
+                            <!-- Step 3 - Financeiro -->
+                            <div class="flex items-center">
+                                <div id="step-indicator-3-b" class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <div class="ml-3 hidden sm:block">
+                                    <p class="text-xs font-bold text-gray-400 uppercase">Passo 3</p>
+                                    <p class="text-sm font-semibold text-gray-500">Financeiro</p>
+                                </div>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div class="w-8 h-0.5 bg-gray-300"></div>
+
+                            <!-- Step 4 - Finalizar -->
+                            <div class="flex items-center">
+                                <div id="step-indicator-4-b" class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="ml-3 hidden sm:block">
+                                    <p class="text-xs font-bold text-gray-400 uppercase">Passo 4</p>
+                                    <p class="text-sm font-semibold text-gray-500">Finalizar</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contexto da viagem -->
+                <div class="px-6 pt-6 pb-4 bg-purple-50 border-b border-purple-100">
+                    <p class="text-sm text-purple-900 font-medium">
+                        <i class="fas fa-info-circle text-purple-900 mr-2"></i>
+                        Esta viagem requer a alocação de um veículo
+                    </p>
+                </div>
+
+                <div class="p-6">
+                    <!-- Busca e contador -->
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex-1 max-w-md">
+                            <div class="relative">
+                                <input type="text" id="vehicle-search" placeholder="Buscar por marca, modelo ou placa..." class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <span id="vehicle-count" class="text-sm text-gray-600 font-medium"></span>
+                        </div>
+                    </div>
+
+                    <!-- Lista de veículos -->
+                    <div id="vehicles-list">
+                        <div class="text-center py-12">
+                            <i class="fas fa-spinner fa-spin text-4xl text-purple-400 mb-4"></i>
+                            <p class="text-gray-600 font-medium">Carregando veículos disponíveis...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between">
+                    <button type="button" onclick="previousStep()" class="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-all inline-flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Voltar
+                    </button>
+                    <button type="button" onclick="nextStep()" class="px-8 py-3 bg-purple-900 hover:bg-purple-900 text-white rounded-lg font-semibold transition-all inline-flex items-center">
+                        Próximo
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Passo 3 (ou 2): Financeiro -->
+        <div id="wizard-step-{% if travel.needs_vehicle %}3{% else %}2{% endif %}" class="wizard-step-content hidden">
+            <div class="card">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-purple-900 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-dollar-sign text-white"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-900">Informações Financeiras</h2>
+                            <p class="text-sm text-gray-500">Defina os valores de repasse para cada participante</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wizard Steps Indicator -->
+                <div class="px-6 py-5 bg-gray-50 border-b border-gray-200">
+                    <div class="flex items-center justify-center">
+                        <div class="flex items-center space-x-3">
+                            <!-- Step 1 -->
+                            <div class="flex items-center">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="ml-3 hidden sm:block">
+                                    <p class="text-xs font-bold text-gray-500 uppercase">Passo 1</p>
+                                    <p class="text-sm font-semibold text-gray-900">Informações</p>
+                                </div>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div class="w-8 h-0.5 bg-purple-900"></div>
+
+                            {% if travel.needs_vehicle %}
+                            <!-- Step 2 -->
+                            <div class="flex items-center">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="ml-3 hidden sm:block">
+                                    <p class="text-xs font-bold text-gray-500 uppercase">Passo 2</p>
+                                    <p class="text-sm font-semibold text-gray-900">Veículo</p>
+                                </div>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div class="w-8 h-0.5 bg-purple-900"></div>
+                            {% endif %}
+
+                            <!-- Step 3 (ou 2) - Financeiro -->
+                            <div class="flex items-center">
+                                <div class="wizard-step-active flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <div class="ml-3 hidden sm:block">
+                                    <p class="text-xs font-bold text-gray-500 uppercase">Passo {% if travel.needs_vehicle %}3{% else %}2{% endif %}</p>
+                                    <p class="text-sm font-semibold text-gray-900">Financeiro</p>
+                                </div>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div class="w-8 h-0.5 bg-gray-300"></div>
+
+                            <!-- Step 4 (ou 3) - Finalizar -->
+                            <div class="flex items-center">
+                                <div class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="ml-3 hidden sm:block">
+                                    <p class="text-xs font-bold text-gray-400 uppercase">Passo {% if travel.needs_vehicle %}4{% else %}3{% endif %}</p>
+                                    <p class="text-sm font-semibold text-gray-500">Finalizar</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contexto -->
+                <div class="px-6 pt-6 pb-4 bg-purple-50 border-b border-purple-100">
+                    <p class="text-sm text-purple-900 font-medium">
+                        <i class="fas fa-info-circle text-purple-900 mr-2"></i>
+                        Informe o valor de repasse para cada participante da viagem
+                    </p>
+                </div>
+
+                <div class="p-6">
+                    <!-- Lista de participantes -->
+                    <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Participante</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Tipo</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Valor (R$)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <!-- Solicitante -->
+                                <tr class="hover:bg-purple-50 transition-colors">
+                                    <td class="px-4 py-4">
+                                        <div class="flex items-center">
+                                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                                                <i class="fas fa-user text-purple-900"></i>
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-semibold text-gray-900">{{ travel.user.name if travel.user else 'N/A' }}</p>
+                                                <p class="text-xs text-gray-500">{{ travel.user.email if travel.user else '' }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                                            Solicitante
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <div class="relative">
+                                            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
+                                            <input type="text"
+                                                   name="financial_amount_user_{{ travel.user_id }}"
+                                                   id="financial_amount_user_{{ travel.user_id }}"
+                                                   value="0,00"
+                                                   class="financial-input w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Passageiros -->
+                                {% if travel.passengers and travel.passengers|length > 0 %}
+                                    {% for passenger in travel.passengers %}
+                                    <tr class="hover:bg-purple-50 transition-colors">
+                                        <td class="px-4 py-4">
+                                            <div class="flex items-center">
+                                                <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                                                    <i class="fas fa-user text-gray-600"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-semibold text-gray-900">{{ passenger.name }}</p>
+                                                    <p class="text-xs text-gray-500">{{ passenger.email if passenger.email else 'N/A' }}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
+                                                Passageiro
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-4">
+                                            <div class="relative">
+                                                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
+                                                <input type="text"
+                                                       name="financial_amount_user_{{ passenger.id }}"
+                                                       id="financial_amount_user_{{ passenger.id }}"
+                                                       value="0,00"
+                                                       class="financial-input w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between">
+                    <button type="button" onclick="previousStep()" class="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-all inline-flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Voltar
+                    </button>
+                    <button type="button" onclick="nextStep()" class="px-8 py-3 bg-purple-900 hover:bg-purple-900 text-white rounded-lg font-semibold transition-all inline-flex items-center">
+                        Próximo
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Passo Final: Decisão -->
+        <div id="wizard-step-{% if travel.needs_vehicle %}4{% else %}3{% endif %}" class="wizard-step-content hidden">
+            <div class="card">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-purple-900 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-check-circle text-white"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-900">Decisão Final</h2>
+                            <p class="text-sm text-gray-500">Aprove ou rejeite a solicitação de viagem</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wizard Steps Indicator -->
+                <div class="px-6 py-5 bg-gray-50 border-b border-gray-200">
+                    <div class="flex items-center justify-center">
+                        <div class="flex items-center space-x-3">
+                            <!-- Step 1 -->
+                            <div class="flex items-center">
+                                <div id="step-indicator-1-c" class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="ml-3 hidden sm:block">
+                                    <p class="text-xs font-bold text-gray-500 uppercase">Passo 1</p>
+                                    <p class="text-sm font-semibold text-gray-900">Informações</p>
+                                </div>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div class="w-8 h-0.5 bg-purple-900"></div>
+
+                            <!-- Step 2 -->
+                            {% if travel.needs_vehicle %}
+                            <div class="flex items-center">
+                                <div id="step-indicator-2-c" class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="ml-3 hidden sm:block">
+                                    <p class="text-xs font-bold text-gray-500 uppercase">Passo 2</p>
+                                    <p class="text-sm font-semibold text-gray-900">Veículo</p>
+                                </div>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div class="w-8 h-0.5 bg-purple-900"></div>
+                            {% endif %}
+
+                            <!-- Step 3 (ou 2) - Financeiro -->
+                            <div class="flex items-center">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="ml-3 hidden sm:block">
+                                    <p class="text-xs font-bold text-gray-500 uppercase">Passo {% if travel.needs_vehicle %}3{% else %}2{% endif %}</p>
+                                    <p class="text-sm font-semibold text-gray-900">Financeiro</p>
+                                </div>
+                            </div>
+
+                            <!-- Arrow -->
+                            <div class="w-8 h-0.5 bg-purple-900"></div>
+
+                            <!-- Step 4 (ou 3) - Finalizar -->
+                            <div class="flex items-center">
+                                <div id="step-indicator-{% if travel.needs_vehicle %}4{% else %}3{% endif %}-c" class="wizard-step-active flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="ml-3 hidden sm:block">
+                                    <p class="text-xs font-bold text-gray-500 uppercase">Passo {% if travel.needs_vehicle %}4{% else %}3{% endif %}</p>
+                                    <p class="text-sm font-semibold text-gray-900">Finalizar</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <form id="analyze-form" method="POST" action="{{ url_for('admin.travels_analyze_process', travel_id=travel.id) }}">
+                        <input type="hidden" name="action" id="action-field" value="">
+                        <input type="hidden" name="vehicle_id" id="vehicle_id_field" value="">
+                        <!-- Campos hidden para valores financeiros -->
+                        <div id="financial-hidden-fields"></div>
+
+                        <!-- Botões de Ação -->
+                        <div class="flex justify-end gap-3 mb-6">
+                            <button type="button" onclick="rejectTravel()" class="px-5 py-2.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg font-semibold hover:from-red-700 hover:to-red-800 transition-all shadow hover:shadow-lg inline-flex items-center text-sm">
+                                <i class="fas fa-times-circle mr-2"></i>
+                                Rejeitar Viagem
+                            </button>
+                            <button type="button" onclick="approveTravel()" class="px-5 py-2.5 bg-gradient-to-r from-purple-900 to-purple-900 text-white rounded-lg font-semibold hover:from-purple-900 hover:to-purple-900 transition-all shadow hover:shadow-lg inline-flex items-center text-sm">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                Aprovar Viagem
+                            </button>
+                        </div>
+
+                        <!-- Resumo -->
+                        <div class="bg-purple-50 border-2 border-purple-200 rounded-xl p-6 mb-6">
+                            <h4 class="font-bold text-gray-900 mb-4 flex items-center">
+                                <i class="fas fa-clipboard-list text-purple-900 mr-2"></i>
+                                Resumo da Análise
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-600">Solicitante:</span>
+                                    <p class="font-semibold text-gray-900">{{ travel.user.name if travel.user else 'N/A' }}</p>
+                                    {% if travel.user and travel.user.email %}
+                                    <p class="text-xs text-gray-500 mt-0.5">{{ travel.user.email }}</p>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Destino:</span>
+                                    <p class="font-semibold text-gray-900">
+                                        {{ travel.city.name if travel.city else 'N/A' }}
+                                        {% if travel.city and travel.city.state %}
+                                            <span class="text-gray-600 font-normal">/ {{ travel.city.state.uf }}</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Período:</span>
+                                    <p class="font-semibold text-gray-900">
+                                        {% if travel.departure_date %}
+                                            {{ travel.departure_date[8:10] }}/{{ travel.departure_date[5:7] }}/{{ travel.departure_date[:4] }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                        <span class="text-gray-600 font-normal">até</span>
+                                        {% if travel.return_date %}
+                                            {{ travel.return_date[8:10] }}/{{ travel.return_date[5:7] }}/{{ travel.return_date[:4] }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </p>
+                                    {% if travel.days and travel.days > 0 %}
+                                    <p class="text-xs text-gray-500 mt-0.5">{{ travel.days }} {{ 'dia' if travel.days == 1 else 'dias' }} de viagem</p>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Motivo:</span>
+                                    <p class="font-semibold text-gray-900">{{ travel.purpose }}</p>
+                                </div>
+                                {% if travel.notes %}
+                                <div class="md:col-span-2">
+                                    <span class="text-gray-600">Observações:</span>
+                                    <p class="text-gray-700 mt-1">{{ travel.notes }}</p>
+                                </div>
+                                {% endif %}
+                                {% if travel.needs_vehicle %}
+                                <div class="md:col-span-2">
+                                    <span class="text-gray-600">Veículo Selecionado:</span>
+                                    <p id="selected-vehicle-summary" class="font-semibold text-purple-700 mt-1">
+                                        <i class="fas fa-exclamation-circle mr-1"></i>
+                                        Nenhum veículo selecionado
+                                    </p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Repasses Financeiros -->
+                        <div class="bg-purple-50 border-2 border-purple-200 rounded-xl p-6 mb-6">
+                            <h4 class="font-bold text-gray-900 mb-4 flex items-center">
+                                <i class="fas fa-dollar-sign text-purple-900 mr-2"></i>
+                                Repasses Financeiros
+                            </h4>
+                            <div id="payouts-summary" class="text-sm">
+                                <p class="text-gray-500 italic">Nenhum valor informado</p>
+                            </div>
+                        </div>
+
+                        <!-- Observações Administrativas -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-bold text-gray-700 mb-3">
+                                <i class="fas fa-comment-dots text-gray-600 mr-2"></i>
+                                Observações Administrativas (opcional)
+                            </label>
+                            <textarea name="admin_notes" rows="5"
+                                      placeholder="Adicione observações sobre a análise desta viagem..."
+                                      class="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-purple-900 focus:border-purple-900 transition-all"></textarea>
+                            <p class="mt-2 text-xs text-gray-500">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Estas observações ficarão registradas internamente no sistema
+                            </p>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-start">
+                    <button type="button" onclick="previousStep()" class="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-all inline-flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Voltar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Alerta (Veículo não selecionado) -->
+<div id="modal-alert" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full animate-fade-in">
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Atenção</h3>
+                </div>
+            </div>
+            <p id="modal-alert-message" class="text-gray-700 mb-6 leading-relaxed"></p>
+            <div class="flex justify-end">
+                <button onclick="closeModal('modal-alert')" class="px-5 py-2.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-semibold transition-all">
+                    Entendi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Aprovação -->
+<div id="modal-approve" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full animate-fade-in">
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                    <i class="fas fa-check-circle text-purple-900 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Confirmar Aprovação</h3>
+                </div>
+            </div>
+            <p class="text-gray-700 mb-4 leading-relaxed">
+                Confirma a aprovação desta viagem? O solicitante será notificado automaticamente.
+            </p>
+            <div id="modal-approve-warning" class="hidden mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-triangle text-yellow-600 mt-0.5 mr-3"></i>
+                    <div>
+                        <p class="text-sm font-semibold text-yellow-800 mb-1">Atenção</p>
+                        <p class="text-sm text-yellow-700">Há participantes que não possuem valor de repasse informado.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeModal('modal-approve')" class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-all">
+                    Cancelar
+                </button>
+                <button onclick="confirmApprove()" class="px-5 py-2.5 bg-purple-900 hover:bg-purple-800 text-white rounded-lg font-semibold transition-all">
+                    Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Rejeição -->
+<div id="modal-reject" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full animate-fade-in">
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                    <i class="fas fa-times-circle text-red-600 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Confirmar Rejeição</h3>
+                </div>
+            </div>
+            <p class="text-gray-700 mb-6 leading-relaxed">
+                Tem certeza que deseja rejeitar esta viagem? O solicitante será notificado.
+            </p>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeModal('modal-reject')" class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-all">
+                    Cancelar
+                </button>
+                <button onclick="confirmReject()" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-all">
+                    Rejeitar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    const needsVehicle = {{ 'true' if travel.needs_vehicle else 'false' }};
+    const totalSteps = needsVehicle ? 4 : 3;
+    const financialStep = needsVehicle ? 3 : 2;
+    let currentStep = 1;
+    let selectedVehicleId = null;
+    let selectedVehicleInfo = null;
+    let payoutsData = [];
+
+    // Carregar veículos se necessário
+    if (needsVehicle) {
+        loadVehicles();
+    }
+
+    // Inicializar máscara monetária nos inputs financeiros
+    $('.financial-input').mask('#.##0,00', {
+        reverse: true,
+        placeholder: '0,00'
+    });
+
+    let allVehicles = [];
+
+    function loadVehicles() {
+        $.get('{{ url_for("admin.get_available_vehicles_api") }}', function(response) {
+            if (response.success && response.vehicles && response.vehicles.length > 0) {
+                allVehicles = response.vehicles;
+                renderVehicles(allVehicles);
+                updateVehicleCount(allVehicles.length, allVehicles.length);
+            } else {
+                $('#vehicles-list').html(`
+                    <div class="text-center py-12">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-car text-gray-400 text-2xl"></i>
+                        </div>
+                        <p class="text-gray-600 font-medium">Nenhum veículo disponível no momento</p>
+                    </div>
+                `);
+                updateVehicleCount(0, 0);
+            }
+        }).fail(function() {
+            $('#vehicles-list').html(`
+                <div class="text-center py-12">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-4"></i>
+                    <p class="text-red-600 font-medium">Erro ao carregar veículos</p>
+                </div>
+            `);
+        });
+    }
+
+    function renderVehicles(vehicles) {
+        const container = $('#vehicles-list');
+
+        if (vehicles.length === 0) {
+            container.html(`
+                <div class="text-center py-8">
+                    <i class="fas fa-search text-gray-300 text-3xl mb-2"></i>
+                    <p class="text-gray-500">Nenhum veículo encontrado com os critérios de busca</p>
+                </div>
+            `);
+            return;
+        }
+
+        let table = `
+            <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Veículo</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Placa</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Ano</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-20">Seleção</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+        `;
+
+        vehicles.forEach(function(vehicle) {
+            table += `
+                <tr class="vehicle-row cursor-pointer hover:bg-purple-50 transition-colors" data-vehicle-id="${vehicle.id}" data-vehicle-info="${vehicle.brand} ${vehicle.model} (${vehicle.plate})">
+                    <td class="px-4 py-4">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                                <i class="fas fa-car text-purple-900"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-900">${vehicle.brand} ${vehicle.model}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-4">
+                        <span class="text-sm text-gray-900 font-medium">${vehicle.plate}</span>
+                    </td>
+                    <td class="px-4 py-4">
+                        <span class="text-sm text-gray-600">${vehicle.year}</span>
+                    </td>
+                    <td class="px-4 py-4 text-center">
+                        <input type="radio" name="vehicle_radio" value="${vehicle.id}" class="w-5 h-5 text-purple-900 focus:ring-purple-500">
+                    </td>
+                </tr>
+            `;
+        });
+
+        table += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        container.html(table);
+
+        // Event listener para seleção
+        $('.vehicle-row').on('click', function() {
+            // Remover seleção anterior
+            $('.vehicle-row').removeClass('bg-purple-100 border-l-4 border-purple-600');
+            $('input[name="vehicle_radio"]').prop('checked', false);
+
+            // Adicionar seleção atual
+            $(this).addClass('bg-purple-100');
+            $(this).find('input[name="vehicle_radio"]').prop('checked', true);
+
+            selectedVehicleId = $(this).data('vehicle-id');
+            selectedVehicleInfo = $(this).data('vehicle-info');
+            $('#vehicle_id_field').val(selectedVehicleId);
+
+            // Atualizar resumo
+            $('#selected-vehicle-summary').html(`
+                <i class="fas fa-check-circle mr-1"></i>
+                ${selectedVehicleInfo}
+            `);
+        });
+    }
+
+    function updateVehicleCount(showing, total) {
+        if (showing === total) {
+            $('#vehicle-count').text(`${total} veículo${total !== 1 ? 's' : ''} disponível${total !== 1 ? 'eis' : ''}`);
+        } else {
+            $('#vehicle-count').text(`Mostrando ${showing} de ${total} veículo${total !== 1 ? 's' : ''}`);
+        }
+    }
+
+    // Busca de veículos
+    $('#vehicle-search').on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+
+        if (searchTerm === '') {
+            renderVehicles(allVehicles);
+            updateVehicleCount(allVehicles.length, allVehicles.length);
+        } else {
+            const filtered = allVehicles.filter(function(vehicle) {
+                return vehicle.brand.toLowerCase().includes(searchTerm) ||
+                       vehicle.model.toLowerCase().includes(searchTerm) ||
+                       vehicle.plate.toLowerCase().includes(searchTerm);
+            });
+            renderVehicles(filtered);
+            updateVehicleCount(filtered.length, allVehicles.length);
+        }
+    });
+
+    // Função para converter valor monetário para número
+    function parseMoneyValue(value) {
+        // Remove R$, pontos de milhar e substitui vírgula por ponto
+        return parseFloat(value.replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
+    }
+
+    // Função para coletar dados financeiros
+    function collectFinancialData() {
+        payoutsData = [];
+        let totalAmount = 0;
+
+        // Limpar campos hidden anteriores
+        $('#financial-hidden-fields').empty();
+
+        // Buscar todos os inputs de valor financeiro
+        $('input[name^="financial_amount_user_"]').each(function() {
+            const input = $(this);
+            const userId = input.attr('id').replace('financial_amount_user_', '');
+            const rawValue = input.val(); // Valor formatado com máscara
+            const amount = parseMoneyValue(rawValue);
+
+            // Encontrar o nome e email do usuário na mesma linha da tabela
+            const row = input.closest('tr');
+            const userName = row.find('p.text-sm.font-semibold.text-gray-900').text().trim();
+            const userType = row.find('span.inline-flex').text().trim();
+
+            // Adicionar todos os participantes, mesmo com valor zerado
+            payoutsData.push({
+                userId: userId,
+                userName: userName,
+                userType: userType,
+                amount: amount
+            });
+
+            totalAmount += amount;
+
+            // Criar campo hidden no formulário para enviar o valor
+            // Converter o valor para formato esperado pelo backend (substituir vírgula por ponto)
+            const backendValue = rawValue.replace(/\./g, '').replace(',', '.');
+            $('#financial-hidden-fields').append(
+                `<input type="hidden" name="financial_amount_user_${userId}" value="${backendValue}">`
+            );
+        });
+
+        renderPayoutsSummary(totalAmount);
+    }
+
+    // Função para renderizar resumo dos payouts
+    function renderPayoutsSummary(totalAmount) {
+        const container = $('#payouts-summary');
+
+        let html = '<div class="space-y-2">';
+
+        payoutsData.forEach(function(payout) {
+            const textColor = payout.userType === 'Solicitante'
+                ? 'text-purple-800'
+                : 'text-purple-700';
+
+            const hoverValueColor = payout.userType === 'Solicitante'
+                ? 'group-hover:text-purple-800'
+                : 'group-hover:text-purple-700';
+
+            html += `
+                <div class="group flex items-center justify-between py-2 px-3 -mx-3 rounded-lg hover:bg-purple-50 transition-all duration-200">
+                    <div class="flex items-center gap-3">
+                        <span class="font-medium">${payout.userName}</span>
+                        <span class="text-xs font-semibold ${textColor}">
+                            ${payout.userType}
+                        </span>
+                    </div>
+                    <p class="font-semibold text-gray-900 ${hoverValueColor} transition-colors duration-200">R$ ${payout.amount.toFixed(2).replace('.', ',')}</p>
+                </div>
+            `;
+        });
+
+        html += '</div>';
+
+        // Adicionar total
+        html += `
+            <div class="mt-4 pt-4 border-t-2 border-purple-200">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold">Total de Repasses:</span>
+                    <p class="font-bold text-purple-900 text-xl">R$ ${totalAmount.toFixed(2).replace('.', ',')}</p>
+                </div>
+            </div>
+        `;
+
+        container.html(html);
+    }
+
+    window.nextStep = function() {
+        if (currentStep < totalSteps) {
+            // Se estiver saindo do passo financeiro, coletar os dados
+            if (currentStep === financialStep) {
+                collectFinancialData();
+            }
+
+            // Esconder passo atual
+            $(`#wizard-step-${currentStep}`).addClass('hidden');
+
+            // Avançar para próximo passo
+            currentStep++;
+
+            // Mostrar próximo passo
+            $(`#wizard-step-${currentStep}`).removeClass('hidden');
+
+            // Scroll suave para o topo
+            $('html, body').animate({ scrollTop: 0 }, 400);
+        }
+    };
+
+    window.previousStep = function() {
+        if (currentStep > 1) {
+            // Se estiver voltando do passo final para o financeiro, pode editar os valores
+            if (currentStep === totalSteps && currentStep - 1 === financialStep) {
+                // Limpar o resumo para permitir nova edição
+                payoutsData = [];
+            }
+
+            // Esconder passo atual
+            $(`#wizard-step-${currentStep}`).addClass('hidden');
+
+            // Voltar para passo anterior
+            currentStep--;
+
+            // Mostrar passo anterior
+            $(`#wizard-step-${currentStep}`).removeClass('hidden');
+
+            // Scroll suave para o topo
+            $('html, body').animate({ scrollTop: 0 }, 400);
+        }
+    };
+
+    // Funções de Modal
+    window.openModal = function(modalId) {
+        $('#' + modalId).removeClass('hidden');
+    };
+
+    window.closeModal = function(modalId) {
+        $('#' + modalId).addClass('hidden');
+    };
+
+    window.showAlert = function(message) {
+        $('#modal-alert-message').text(message);
+        openModal('modal-alert');
+    };
+
+    window.approveTravel = function() {
+        // Validar se precisa de veículo e se foi selecionado
+        if (needsVehicle && !selectedVehicleId) {
+            showAlert('Não é possível aprovar a viagem sem selecionar um veículo. Por favor, volte ao passo anterior e selecione um veículo.');
+            return;
+        }
+
+        // Verificar se há participantes com valor zerado
+        const hasZeroValues = payoutsData.some(function(payout) {
+            return payout.amount === 0;
+        });
+
+        // Mostrar ou ocultar aviso no modal
+        if (hasZeroValues) {
+            $('#modal-approve-warning').removeClass('hidden');
+        } else {
+            $('#modal-approve-warning').addClass('hidden');
+        }
+
+        openModal('modal-approve');
+    };
+
+    window.confirmApprove = function() {
+        $('#action-field').val('approve');
+        $('#analyze-form').submit();
+    };
+
+    window.rejectTravel = function() {
+        openModal('modal-reject');
+    };
+
+    window.confirmReject = function() {
+        $('#action-field').val('reject');
+        $('#analyze-form').submit();
+    };
+
+    // Fechar modal ao clicar fora
+    $(document).on('click', function(event) {
+        if ($(event.target).hasClass('bg-opacity-50')) {
+            closeModal('modal-alert');
+            closeModal('modal-approve');
+            closeModal('modal-reject');
+        }
+    });
+});
+</script>
+{% endblock %}

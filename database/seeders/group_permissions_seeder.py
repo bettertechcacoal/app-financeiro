@@ -15,7 +15,7 @@ from app.models.group import Group
 from app.models.permission import Permission
 
 
-def assign_group_permissions():
+def seed_group_permissions():
     """Atribui permissões padrão aos grupos do sistema"""
     db = SessionLocal()
 
@@ -29,9 +29,9 @@ def assign_group_permissions():
             # Administradores têm TODAS as permissões
             all_permissions = db.query(Permission).all()
             admin_group.permissions_rel = all_permissions
-            print(f"  ✓ {len(all_permissions)} permissões atribuídas aos Administradores")
+            print(f"  [OK] {len(all_permissions)} permissoes atribuidas aos Administradores")
         else:
-            print("  ✗ Grupo 'administradores' não encontrado!")
+            print("  [X] Grupo 'administradores' nao encontrado!")
 
         # ========== GRUPO: GESTORES ==========
         print("\n[INFO] Configurando grupo: Gestores...")
@@ -114,9 +114,9 @@ def assign_group_permissions():
                 Permission.slug.in_(manager_permission_slugs)
             ).all()
             manager_group.permissions_rel = manager_permissions
-            print(f"  ✓ {len(manager_permissions)} permissões atribuídas aos Gestores")
+            print(f"  [OK] {len(manager_permissions)} permissoes atribuidas aos Gestores")
         else:
-            print("  ✗ Grupo 'gestores' não encontrado!")
+            print("  [X] Grupo 'gestores' nao encontrado!")
 
         # ========== GRUPO: COLABORADORES ==========
         print("\n[INFO] Configurando grupo: Colaboradores...")
@@ -167,9 +167,9 @@ def assign_group_permissions():
                 Permission.slug.in_(collab_permission_slugs)
             ).all()
             collab_group.permissions_rel = collab_permissions
-            print(f"  ✓ {len(collab_permissions)} permissões atribuídas aos Colaboradores")
+            print(f"  [OK] {len(collab_permissions)} permissoes atribuidas aos Colaboradores")
         else:
-            print("  ✗ Grupo 'colaboradores' não encontrado!")
+            print("  [X] Grupo 'colaboradores' nao encontrado!")
 
         # ========== GRUPO: VISITANTES ==========
         print("\n[INFO] Configurando grupo: Visitantes...")
@@ -190,9 +190,9 @@ def assign_group_permissions():
                 Permission.slug.in_(visitor_permission_slugs)
             ).all()
             visitor_group.permissions_rel = visitor_permissions
-            print(f"  ✓ {len(visitor_permissions)} permissões atribuídas aos Visitantes")
+            print(f"  [OK] {len(visitor_permissions)} permissoes atribuidas aos Visitantes")
         else:
-            print("  ✗ Grupo 'visitantes' não encontrado!")
+            print("  [X] Grupo 'visitantes' nao encontrado!")
 
         db.commit()
         print("\n[SUCCESS] Permissões atribuídas aos grupos com sucesso!\n")
@@ -218,4 +218,4 @@ def assign_group_permissions():
 
 
 if __name__ == '__main__':
-    assign_group_permissions()
+    seed_group_permissions()

@@ -12,6 +12,7 @@ from app.models.state import State
 from app.models.city import City
 from app.models.travel import Travel
 from app.models.travel_passenger import TravelPassenger
+from app.models.vehicle_travel_history import VehicleTravelHistory
 from app.models.notification import Notification
 from app.models.parameter_group import ParameterGroup
 from app.models.parameter import Parameter
@@ -20,6 +21,12 @@ from app.models.application import Application
 from app.models.client_application import ClientApplication
 from app.models.permission import Permission
 from app.models.group_permission import group_permissions
+from app.models.vehicle import Vehicle
+from app.models.maintenance_type import MaintenanceType
+from app.models.vehicle_km_log import VehicleKmLog
+from app.models.vehicle_issue import VehicleIssue
+from app.models.vehicle_maintenance_history import VehicleMaintenanceHistory
+from app.models.vehicle_maintenance_config import VehicleMaintenanceConfig
 
 __all__ = [
     'Base',
@@ -33,6 +40,7 @@ __all__ = [
     'City',
     'Travel',
     'TravelPassenger',
+    'VehicleTravelHistory',
     'Notification',
     'ParameterGroup',
     'Parameter',
@@ -40,5 +48,11 @@ __all__ = [
     'Application',
     'ClientApplication',
     'Permission',
-    'group_permissions'
+    'group_permissions',
+    'Vehicle',
+    'MaintenanceType',
+    'VehicleKmLog',
+    'VehicleIssue',
+    'VehicleMaintenanceHistory',
+    'VehicleMaintenanceConfig'
 ]

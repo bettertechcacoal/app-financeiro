@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}Veículos{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Veículos'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            <div class="flex items-center">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+                    <i class="fas fa-car text-white text-2xl sm:text-3xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Gerenciamento de Veículos</h1>
+                    <p class="text-sm sm:text-base text-gray-600">Gestão de frota e manutenções</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                {% if 'veiculos_create' in user_permissions %}
+                <a href="{{ url_for('admin.vehicles_create') }}" class="btn-primary text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all inline-flex items-center">
+                    <i class="fas fa-plus-circle mr-2"></i>
+                    Novo Veículo
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Layout com Sidebar -->
+    <div class="flex flex-col lg:flex-row gap-6">
+        <!-- Conteúdo Principal -->
+        <div class="flex-1 min-w-0">
+            {% if vehicles %}
+                <!-- Barra de Pesquisa -->
+                <div class="card p-6 mb-6 animate-fade-in">
+                    <div class="flex items-center gap-4">
+                        <div class="flex-1">
+                            <div class="relative">
+                                <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                <input type="text" id="searchInput" placeholder="Pesquisar por placa, modelo ou marca..."
+                                       class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200 transition-all">
+                            </div>
+                        </div>
+                        <button onclick="clearSearch()" class="px-6 py-3 text-gray-600 hover:text-gray-800 font-semibold">
+                            <i class="fas fa-times mr-2"></i>
+                            Limpar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista de Veículos em Cards -->
+                <div class="space-y-3 animate-fade-in">
+                    {% for vehicle in vehicles %}
+                    <div class="card vehicle-row"
+                         data-search="{{ vehicle.plate|lower }} {{ vehicle.brand|lower }} {{ vehicle.model|lower }} {{ vehicle.year }} {{ 'ativo' if vehicle.is_active else 'inativo' }}">
+
+                        <!-- Header do Card -->
+                        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between flex-wrap gap-2">
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs font-bold text-cyan-600">#{{ vehicle.id }}</span>
+                                <div class="flex items-center text-xs text-gray-600">
+                                    <i class="fas fa-car text-cyan-600 mr-1"></i>
+                                    <span class="font-medium">{{ vehicle.plate }}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <!-- Status -->
+                                {% if vehicle.is_active %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-700">
+                                        <i class="fas fa-check-circle mr-1 text-xs"></i>
+                                        Ativo
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-600">
+                                        <i class="fas fa-times-circle mr-1 text-xs"></i>
+                                        Inativo
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Corpo do Card -->
+                        <div class="px-4 py-3">
+                            <div class="mb-3">
+                                <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-sm font-semibold text-gray-900 leading-snug mb-1">
+                                            {{ vehicle.brand }} {{ vehicle.model }}
+                                        </h3>
+                                        <p class="text-xs text-gray-600">
+                                            <i class="fas fa-calendar text-cyan-600 mr-1"></i>
+                                            Ano: {{ vehicle.year }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Botões de Ação -->
+                                    <div class="flex flex-wrap gap-2 lg:flex-shrink-0">
+                                        {% if 'veiculos_edit' in user_permissions %}
+                                        <a href="{{ url_for('admin.vehicles_edit', vehicle_id=vehicle.id) }}"
+                                           class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
+                                            <i class="fas fa-edit mr-1.5"></i>
+                                            Editar
+                                        </a>
+                                        {% endif %}
+                                        {% if 'veiculos_delete' in user_permissions %}
+                                        <button onclick="toggleVehicleStatus({{ vehicle.id }}, '{{ vehicle.plate }}', {{ 'true' if vehicle.is_active else 'false' }})"
+                                                class="inline-flex items-center px-3 py-2 {% if vehicle.is_active %}bg-orange-600 hover:bg-orange-700{% else %}bg-green-600 hover:bg-green-700{% endif %} text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
+                                            <i class="fas {% if vehicle.is_active %}fa-ban{% else %}fa-check-circle{% endif %} mr-1.5"></i>
+                                            {% if vehicle.is_active %}Inativar{% else %}Ativar{% endif %}
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs mt-3">
+                                <div>
+                                    <span class="text-gray-500">Placa:</span>
+                                    <p class="font-medium text-gray-900 mt-0.5">{{ vehicle.plate }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Marca:</span>
+                                    <p class="font-medium text-gray-900 mt-0.5">{{ vehicle.brand }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Cadastrado em:</span>
+                                    <p class="font-medium text-gray-900 mt-0.5">
+                                        {% if vehicle.created_at %}
+                                            {{ vehicle.created_at.strftime('%d/%m/%Y') }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <!-- Rodapé da Lista -->
+                    <div class="card px-4 py-3 bg-gray-50">
+                        <div class="flex items-center justify-between text-xs sm:text-sm">
+                            <div class="text-gray-600">
+                                Total: <span class="font-bold text-gray-900" id="totalCount">{{ vehicles|length }}</span> veículo{% if vehicles|length != 1 %}s{% endif %}
+                            </div>
+                            <div class="text-gray-600">
+                                Mostrando: <span class="font-bold text-gray-900" id="visibleCount">{{ vehicles|length }}</span> registro{% if vehicles|length != 1 %}s{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card animate-fade-in">
+                    <div class="text-center py-16">
+                        <div class="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-car text-4xl text-gray-400"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Nenhum veículo cadastrado</h3>
+                        <p class="text-gray-600">Comece criando seu primeiro veículo</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar de Métricas -->
+        <div class="w-full lg:w-80 flex-shrink-0">
+            <div class="sticky top-6 space-y-4 animate-fade-in">
+                <!-- Total de Veículos -->
+                <div class="card p-4">
+                    <div class="text-sm text-gray-600 mb-1">Total de Veículos</div>
+                    <div class="text-2xl font-bold text-cyan-600">{{ vehicles|length if vehicles else 0 }}</div>
+                </div>
+
+                <!-- Veículos por Status -->
+                <div class="card p-4">
+                    <h3 class="text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider">Status</h3>
+                    <div class="space-y-2 text-xs">
+                        {% set active = vehicles|selectattr('is_active')|list|length if vehicles else 0 %}
+                        {% set inactive = vehicles|rejectattr('is_active')|list|length if vehicles else 0 %}
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Ativos</span>
+                            <span class="font-bold text-green-600">{{ active }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Inativos</span>
+                            <span class="font-bold text-gray-600">{{ inactive }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botão Voltar -->
+    <div class="mt-6 animate-fade-in">
+        <a href="{{ url_for('admin.dashboard') }}" class="text-cyan-600 hover:text-cyan-700 font-semibold">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Voltar para Dashboard
+        </a>
+    </div>
+</div>
+
+<script>
+    // Função de pesquisa
+    const searchInput = document.getElementById('searchInput');
+    const vehicleRows = document.querySelectorAll('.vehicle-row');
+    const visibleCountEl = document.getElementById('visibleCount');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            let visibleCount = 0;
+
+            vehicleRows.forEach(row => {
+                const searchData = row.getAttribute('data-search');
+
+                if (searchData.includes(searchTerm)) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (visibleCountEl) {
+                visibleCountEl.textContent = visibleCount;
+            }
+        });
+    }
+
+    function clearSearch() {
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.dispatchEvent(new Event('input'));
+            searchInput.focus();
+        }
+    }
+
+    function toggleVehicleStatus(vehicleId, plate, isActive) {
+        const action = isActive ? 'inativar' : 'ativar';
+        const message = isActive
+            ? `Tem certeza que deseja inativar o veículo ${plate}?\n\nVeículos inativos não aparecem nas listagens principais.`
+            : `Deseja reativar o veículo ${plate}?`;
+
+        if (confirm(message)) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/admin/vehicles/${vehicleId}/toggle-status`;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+</script>
+{% endblock %}

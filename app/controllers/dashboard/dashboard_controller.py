@@ -2,6 +2,7 @@
 from flask import render_template, session
 from app.models.database import get_db
 from app.models.travel import Travel, TravelStatus
+from app.models.travel_payout import TravelPayout, PayoutStatus
 from app.models.note import Note
 from sqlalchemy import desc
 
@@ -16,6 +17,14 @@ def dashboard():
     # Contar viagens pendentes
     pending_travels_count = db.query(Travel).filter_by(status=TravelStatus.PENDING).count()
 
+    # Contar travel_payouts pendentes do usuário logado
+    pending_payouts_count = 0
+    if user_id:
+        pending_payouts_count = db.query(TravelPayout).filter_by(
+            member_id=user_id,
+            status=PayoutStatus.PENDING
+        ).count()
+
     # Buscar notes do usuário (limite de 5 para dashboard)
     notes = []
     total_notes = 0
@@ -27,6 +36,7 @@ def dashboard():
         'pages/dashboard.html',
         user_name=user_name,
         pending_travels_count=pending_travels_count,
+        pending_payouts_count=pending_payouts_count,
         notes=notes,
         total_notes=total_notes
     )

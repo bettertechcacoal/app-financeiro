@@ -21,7 +21,7 @@
                 </div>
                 <div>
                     <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Análise de Viagem</h1>
-                    <p class="text-sm sm:text-base text-gray-600">Viagem #{{ travel.id }} - {{ travel.user.name if travel.user else 'N/A' }}</p>
+                    <p class="text-sm sm:text-base text-gray-600">Viagem #{{ travel.id }} - {{ travel.driver_user.name if travel.driver_user else 'N/A' }}</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
@@ -122,8 +122,8 @@
                                     <span class="text-base text-gray-600 font-medium">Solicitante:</span>
                                 </div>
                                 <div class="flex-1">
-                                    <p class="text-base font-semibold text-gray-900 leading-relaxed">{{ travel.user.name if travel.user else 'N/A' }}</p>
-                                    <p class="text-sm text-gray-500 mt-1">{{ travel.user.email if travel.user else '' }}</p>
+                                    <p class="text-base font-semibold text-gray-900 leading-relaxed">{{ travel.driver_user.name if travel.driver_user else 'N/A' }}</p>
+                                    <p class="text-sm text-gray-500 mt-1">{{ travel.driver_user.email if travel.driver_user else '' }}</p>
                                 </div>
                             </div>
 
@@ -470,8 +470,8 @@
                                                 <i class="fas fa-user text-purple-900"></i>
                                             </div>
                                             <div>
-                                                <p class="text-sm font-semibold text-gray-900">{{ travel.user.name if travel.user else 'N/A' }}</p>
-                                                <p class="text-xs text-gray-500">{{ travel.user.email if travel.user else '' }}</p>
+                                                <p class="text-sm font-semibold text-gray-900">{{ travel.driver_user.name if travel.driver_user else 'N/A' }}</p>
+                                                <p class="text-xs text-gray-500">{{ travel.driver_user.email if travel.driver_user else '' }}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -484,8 +484,8 @@
                                         <div class="relative">
                                             <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
                                             <input type="text"
-                                                   name="financial_amount_user_{{ travel.user_id }}"
-                                                   id="financial_amount_user_{{ travel.user_id }}"
+                                                   name="financial_amount_user_{{ travel.driver_user_id }}"
+                                                   id="financial_amount_user_{{ travel.driver_user_id }}"
                                                    value="0,00"
                                                    class="financial-input w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                                         </div>
@@ -648,9 +648,9 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                 <div>
                                     <span class="text-gray-600">Solicitante:</span>
-                                    <p class="font-semibold text-gray-900">{{ travel.user.name if travel.user else 'N/A' }}</p>
-                                    {% if travel.user and travel.user.email %}
-                                    <p class="text-xs text-gray-500 mt-0.5">{{ travel.user.email }}</p>
+                                    <p class="font-semibold text-gray-900">{{ travel.driver_user.name if travel.driver_user else 'N/A' }}</p>
+                                    {% if travel.driver_user and travel.driver_user.email %}
+                                    <p class="text-xs text-gray-500 mt-0.5">{{ travel.driver_user.email }}</p>
                                     {% endif %}
                                 </div>
                                 <div>

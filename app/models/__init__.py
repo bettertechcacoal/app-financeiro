@@ -12,6 +12,7 @@ from app.models.state import State
 from app.models.city import City
 from app.models.travel import Travel
 from app.models.travel_passenger import TravelPassenger
+from app.models.travel_payout import TravelPayout
 from app.models.vehicle_travel_history import VehicleTravelHistory
 from app.models.notification import Notification
 from app.models.parameter_group import ParameterGroup
@@ -27,6 +28,8 @@ from app.models.vehicle_km_log import VehicleKmLog
 from app.models.vehicle_issue import VehicleIssue
 from app.models.vehicle_maintenance_history import VehicleMaintenanceHistory
 from app.models.vehicle_maintenance_config import VehicleMaintenanceConfig
+from app.models.accountability import Accountability
+from app.models.accountability_history import AccountabilityHistory
 
 __all__ = [
     'Base',
@@ -40,6 +43,7 @@ __all__ = [
     'City',
     'Travel',
     'TravelPassenger',
+    'TravelPayout',
     'VehicleTravelHistory',
     'Notification',
     'ParameterGroup',
@@ -54,5 +58,7 @@ __all__ = [
     'VehicleKmLog',
     'VehicleIssue',
     'VehicleMaintenanceHistory',
-    'VehicleMaintenanceConfig'
+    'VehicleMaintenanceConfig',
+    'Accountability',
+    'AccountabilityHistory'
 ]

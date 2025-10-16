@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import render_template, request, redirect, url_for, flash, session
+from flask import render_template, request, redirect, url_for, flash, session, jsonify
 from app.models.parameter import Parameter, ParameterType
 from app.models.parameter_group import ParameterGroup
 from app.models.database import get_db
@@ -110,3 +110,79 @@ def settings_update(parameter_id):
         flash(f'Erro ao atualizar parâmetro: {str(e)}', 'error')
 
     return redirect(url_for('admin.settings_list'))
+
+
+def get_parameter_api(parameter_name):
+    """API para buscar parâmetro por nome"""
+    try:
+        db = get_db()
+        parameter = db.query(Parameter).filter_by(parameter=parameter_name.upper()).first()
+
+        if parameter:
+            return jsonify({
+                'success': True,
+                'value': parameter.value,
+                'description': parameter.description
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Parâmetro não encontrado'
+            }), 404
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+def update_parameter_api(parameter_name):
+    """API para atualizar parâmetro por nome"""
+    try:
+        db = get_db()
+        parameter = db.query(Parameter).filter_by(parameter=parameter_name.upper()).first()
+
+        if not parameter:
+            # Criar parâmetro se não existir
+            data = request.get_json()
+
+            # Buscar grupo de Integrações para parâmetros do Movidesk
+            group_id = None
+            if 'MOVIDESK' in parameter_name.upper():
+                integrations_group = db.query(ParameterGroup).filter_by(name='Integrações').first()
+                if integrations_group:
+                    group_id = integrations_group.id
+
+            parameter = Parameter(
+                parameter=parameter_name.upper(),
+                type=ParameterType.TEXT,
+                description=f'Configuração automática: {parameter_name}',
+                value=data.get('value', ''),
+                group_id=group_id
+            )
+            db.add(parameter)
+        else:
+            # Atualizar valor
+            data = request.get_json()
+            parameter.value = data.get('value', '')
+
+        db.commit()
+
+        # Se for parâmetro de sincronização do Movidesk, recarregar scheduler imediatamente
+        if parameter_name.upper() == 'MOVIDESK_SYNC_SCHEDULES':
+            from app.services.scheduler_service import load_sync_schedules
+            load_sync_schedules()
+            print("[SCHEDULER] Horários recarregados imediatamente após alteração")
+
+        return jsonify({
+            'success': True,
+            'message': 'Parâmetro atualizado com sucesso'
+        })
+
+    except Exception as e:
+        db.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500

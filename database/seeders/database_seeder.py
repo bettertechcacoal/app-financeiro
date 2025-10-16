@@ -3,8 +3,8 @@
 Seeder Master - Executa todos os seeders na ordem correta
 
 Modos de execução:
-  - production: Apenas dados essenciais (grupos, cidades, parâmetros)
-  - development: Dados essenciais + dados de teste (usuários, clientes, viagens, etc)
+  - production: Apenas dados essenciais (grupos, cidades, clientes reais, parâmetros)
+  - development: Dados essenciais + dados de teste (usuários, viagens, etc)
 
 Uso:
   python database_seeder.py production
@@ -45,31 +45,35 @@ def seed_production():
 
     try:
         # 1. Seeder de Grupos (ESSENCIAL)
-        print("[1/7] Executando seeder de Groups...")
+        print("[1/8] Executando seeder de Groups...")
         seed_groups()
 
         # 2. Seeder de Permissões (ESSENCIAL)
-        print("[2/7] Executando seeder de Permissions...")
+        print("[2/8] Executando seeder de Permissions...")
         seed_permissions()
 
         # 3. Seeder de Atribuição de Permissões aos Grupos (ESSENCIAL)
-        print("[3/7] Executando atribuição de permissões aos grupos...")
+        print("[3/8] Executando atribuição de permissões aos grupos...")
         seed_group_permissions()
 
         # 4. Seeder de Cidades de Rondonia (ESSENCIAL)
-        print("[4/7] Executando seeder de Cities (Rondonia)...")
+        print("[4/8] Executando seeder de Cities (Rondonia)...")
         seed_rondonia_cities()
 
-        # 5. Seeder de Tipos de Manutenção (ESSENCIAL)
-        print("[5/7] Executando seeder de Maintenance Types...")
+        # 5. Seeder de Clientes Reais (ESSENCIAL - PRODUÇÃO)
+        print("[5/8] Executando seeder de Clients (PRODUÇÃO)...")
+        seed_clients()
+
+        # 6. Seeder de Tipos de Manutenção (ESSENCIAL)
+        print("[6/8] Executando seeder de Maintenance Types...")
         seed_maintenance_types()
 
-        # 6. Seeder de Grupos de Parâmetros (ESSENCIAL)
-        print("[6/7] Executando seeder de Parameter Groups...")
+        # 7. Seeder de Grupos de Parâmetros (ESSENCIAL)
+        print("[7/8] Executando seeder de Parameter Groups...")
         seed_parameter_groups()
 
-        # 7. Seeder de Parâmetros (ESSENCIAL)
-        print("[7/7] Executando seeder de Parameters...")
+        # 8. Seeder de Parâmetros (ESSENCIAL)
+        print("[8/8] Executando seeder de Parameters...")
         seed_parameters()
 
         print("\n" + "="*60)
@@ -86,13 +90,14 @@ def seed_production():
         print("       - Visitantes: Somente visualização")
         print("  [OK] States: 1 estado (Rondonia)")
         print("  [OK] Cities: 52 cidades de Rondonia")
+        print("  [OK] Clients: 33 clientes municipais de Rondônia")
+        print("       - Prefeituras, Câmaras, SAAE, Institutos de Previdência")
         print("  [OK] Maintenance Types: 15 tipos de manutenção criados")
         print("  [OK] Parameter Groups: 4 grupos criados")
         print("  [OK] Parameters: 12 parâmetros criados")
         print()
         print("IMPORTANTE: Em produção, você deve criar manualmente:")
         print("  - Usuários administrativos (via interface ou Auth-Service)")
-        print("  - Clientes reais")
         print("  - Aplicações do sistema")
         print("  - Veículos da frota")
         print("  - Configurações específicas da empresa")

@@ -124,14 +124,9 @@ def user_delete(user_id):
 def get_users_api():
     """API para buscar todos os usuários"""
     try:
-        from flask import session
         users = user_service.get_all_users()
 
-        # Remover o usuário logado da lista
-        current_user_id = session.get('user_id')
-        if current_user_id:
-            users = [u for u in users if u.get('id') != current_user_id]
-
+        # Retornar todos os usuários - o filtro do solicitante é feito no frontend
         return jsonify({'success': True, 'clients': users})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500

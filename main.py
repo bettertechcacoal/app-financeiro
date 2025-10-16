@@ -146,5 +146,10 @@ if __name__ == '__main__':
     with app.app_context():
         init_db()
 
+        # Inicializar scheduler de tarefas automáticas
+        from app.services.scheduler_service import init_scheduler
+        init_scheduler(app)
+        print("[SCHEDULER] Sistema de sincronização automática inicializado")
+
     debug_mode = args.debug or config.DEBUG
     socketio.run(app, debug=debug_mode, host=args.host, port=args.port)

@@ -179,7 +179,7 @@
                                 <select name="user_id" id="user_id" required style="display: none;">
                                     <option value="">Selecione o solicitante</option>
                                     {% for user in users %}
-                                        <option value="{{ user.id }}" {{ 'selected' if travel and travel.user_id == user.id else '' }}>{{ user.name }} - {{ user.email }}</option>
+                                        <option value="{{ user.id }}" {{ 'selected' if travel and travel.driver_user_id == user.id else '' }}>{{ user.name }} - {{ user.email }}</option>
                                     {% endfor %}
                                 </select>
                                 <!-- Dropdown de resultados -->
@@ -333,8 +333,8 @@
                                 0
                             </span>
                         </h3>
-                        <button type="button" id="btn-add-passenger" class="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all shadow-md" title="Adicionar Passageiro">
-                            <i class="fas fa-plus"></i>
+                        <button type="button" id="btn-add-passenger" class="w-10 h-10 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:hover:bg-gray-400 flex items-center justify-center" title="Adicionar Passageiro" disabled>
+                            <i class="fas fa-plus text-base"></i>
                         </button>
                     </div>
                 </div>
@@ -696,11 +696,26 @@ $(document).ready(function() {
                     $('#user_id').val(user.id);
                     $('#user_search').val(user.text);
                     dropdown.addClass('hidden');
+                    toggleAddPassengerButton();
                 });
             dropdown.append(item);
         });
 
         dropdown.removeClass('hidden');
+    }
+
+    // Função para controlar o estado do botão de adicionar passageiro
+    function toggleAddPassengerButton() {
+        const userId = $('#user_id').val();
+        const btnAddPassenger = $('#btn-add-passenger');
+
+        if (userId) {
+            btnAddPassenger.prop('disabled', false);
+            btnAddPassenger.attr('title', 'Adicionar Passageiro');
+        } else {
+            btnAddPassenger.prop('disabled', true);
+            btnAddPassenger.attr('title', 'Selecione um solicitante primeiro');
+        }
     }
 
     // Pesquisa ao digitar
@@ -710,6 +725,7 @@ $(document).ready(function() {
         if (searchTerm.length === 0) {
             $('#user-dropdown').addClass('hidden');
             $('#user_id').val('');
+            toggleAddPassengerButton();
             return;
         }
 
@@ -785,13 +801,19 @@ $(document).ready(function() {
         const dropdown = $('#passenger-dropdown');
         dropdown.empty();
 
-        if (users.length === 0) {
-            dropdown.html('<div class="p-4 text-center text-sm text-gray-500">Nenhum usuário encontrado</div>');
+        // Filtrar o solicitante da lista
+        const driverUserId = $('#user_id').val();
+        const filteredUsers = users.filter(function(user) {
+            return user.id != driverUserId;
+        });
+
+        if (filteredUsers.length === 0) {
+            dropdown.html('<div class="p-4 text-center text-sm text-gray-500">Nenhum usuário disponível</div>');
             dropdown.removeClass('hidden');
             return;
         }
 
-        users.forEach(function(user) {
+        filteredUsers.forEach(function(user) {
             const item = $('<div>')
                 .addClass('p-3 hover:bg-blue-50 cursor-pointer transition-all border-b border-gray-100 last:border-0')
                 .html(`
@@ -819,6 +841,7 @@ $(document).ready(function() {
             return;
         }
 
+        // Filtrar por termo de pesquisa (o filtro do solicitante é aplicado dentro de renderPassengerDropdown)
         const filteredUsers = availableUsers.filter(function(user) {
             return user.name.toLowerCase().includes(searchTerm) ||
                    (user.email && user.email.toLowerCase().includes(searchTerm));
@@ -954,6 +977,9 @@ $(document).ready(function() {
 
     // Inicializar
     renderPassengers();
+
+    // Verificar estado inicial do botão de adicionar passageiro
+    toggleAddPassengerButton();
 });
 </script>
 {% endblock %}

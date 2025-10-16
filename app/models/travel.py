@@ -21,19 +21,23 @@ class Travel(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
 
-    # Relacionamento com usuário
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    user = relationship('User', foreign_keys=[user_id], back_populates='travels')
+    # Relacionamento com usuário motorista/viajante
+    driver_user_id = Column(Integer, ForeignKey('users.id'), nullable=False, comment='ID do usuário motorista/viajante')
+    driver_user = relationship('User', foreign_keys=[driver_user_id], back_populates='travels')
 
     # Relacionamento com cidade de destino
-    city_id = Column(Integer, ForeignKey('cities.id'), nullable=False)
+    city_id = Column(Integer, ForeignKey('cities.id'), nullable=False, comment='ID da cidade de destino')
     city = relationship('City', back_populates='travels')
 
     # Detalhes da viagem
-    purpose = Column(String(255), nullable=False)  # Motivo da viagem
-    departure_date = Column(DateTime(timezone=True), nullable=False)  # Data/hora de saída
-    return_date = Column(DateTime(timezone=True), nullable=False)  # Data/hora de retorno
-    needs_vehicle = Column(Boolean, default=False, nullable=False)  # Necessita reserva de veículo
+    purpose = Column(String(255), nullable=False, comment='Motivo/propósito da viagem')
+    departure_date = Column(DateTime(timezone=True), nullable=False, comment='Data e hora de saída')
+    return_date = Column(DateTime(timezone=True), nullable=False, comment='Data e hora de retorno')
+    needs_vehicle = Column(Boolean, default=False, nullable=False, comment='Indica se necessita reserva de veículo da frota')
+
+    # Relacionamento com usuário que criou o registro
+    record_user_id = Column(Integer, ForeignKey('users.id'), nullable=False, comment='ID do usuário que criou o registro')
+    record_user = relationship('User', foreign_keys=[record_user_id])
 
     # Status e controle
     status = Column(Enum(TravelStatus), default=TravelStatus.PENDING, nullable=False)
@@ -69,8 +73,10 @@ class Travel(Base):
 
         return {
             'id': self.id,
-            'user_id': self.user_id,
-            'user': self.user.to_dict() if self.user else None,
+            'driver_user_id': self.driver_user_id,
+            'driver_user': self.driver_user.to_dict() if self.driver_user else None,
+            'record_user_id': self.record_user_id,
+            'record_user': self.record_user.to_dict() if self.record_user else None,
             'city_id': self.city_id,
             'city': self.city.to_dict() if self.city else None,
             'purpose': self.purpose,

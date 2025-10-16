@@ -70,6 +70,7 @@
                             <div class="w-6 h-0.5 bg-gray-300"></div>
 
                             <!-- Step 2: Veículo -->
+                            {% if payout.travel_info and payout.travel_info.driver_user and payout.travel_info.driver_user.id == session.get('user_id') %}
                             <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(2)">
                                 <div id="step-indicator-2" class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
                                     <i class="fas fa-car"></i>
@@ -79,6 +80,7 @@
                                 </div>
                             </div>
                             <div class="w-6 h-0.5 bg-gray-300"></div>
+                            {% endif %}
 
                             <!-- Step 3: Hospedagem -->
                             <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(3)">
@@ -175,6 +177,7 @@
         </div>
 
         <!-- Passo 2: Veículo -->
+        {% if payout.travel_info and payout.travel_info.driver_user and payout.travel_info.driver_user.id == session.get('user_id') %}
         <div id="wizard-step-2" class="wizard-step-content hidden">
             <div class="card">
                 <div class="p-6 border-b border-gray-200">
@@ -303,6 +306,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
         <!-- Passo 3: Hospedagem -->
         <div id="wizard-step-3" class="wizard-step-content hidden">
@@ -934,6 +938,13 @@ $(document).ready(function() {
     let currentStep = 1;
     const totalSteps = 5;
 
+    // Verificar se o usuário logado é o solicitante (motorista)
+    {% if payout.travel_info and payout.travel_info.driver_user and payout.travel_info.driver_user.id == session.get('user_id') %}
+        const IS_DRIVER = true;
+    {% else %}
+        const IS_DRIVER = false;
+    {% endif %}
+
     // Datas da viagem (vêm do backend via travel_info)
     {% if payout.travel_info and payout.travel_info.departure_date and payout.travel_info.return_date %}
         const TRIP_START_DATE = '{{ payout.travel_info.departure_date[:10] }}'; // Formato: YYYY-MM-DD
@@ -942,6 +953,21 @@ $(document).ready(function() {
         // Fallback para data atual se não houver informações da viagem
         const TRIP_START_DATE = new Date().toISOString().split('T')[0];
         const TRIP_END_DATE = new Date().toISOString().split('T')[0];
+    {% endif %}
+
+    // Informações da viagem
+    {% if payout.travel_info %}
+        const TRIP_DESTINATION = '{{ payout.travel_info.city.name if payout.travel_info.city else "Não informado" }}{% if payout.travel_info.city and payout.travel_info.city.state %} - {{ payout.travel_info.city.state.uf }}{% endif %}';
+        const TRIP_PURPOSE = '{{ payout.travel_info.purpose if payout.travel_info.purpose else "Não informado" }}';
+        {% if payout.travel_info.vehicle %}
+            const TRIP_VEHICLE = '{{ payout.travel_info.vehicle.brand }} {{ payout.travel_info.vehicle.model }} - {{ payout.travel_info.vehicle.plate }}';
+        {% else %}
+            const TRIP_VEHICLE = 'Próprio';
+        {% endif %}
+    {% else %}
+        const TRIP_DESTINATION = 'Não informado';
+        const TRIP_PURPOSE = 'Não informado';
+        const TRIP_VEHICLE = 'Próprio';
     {% endif %}
 
     // Debug: Verificar datas recebidas do backend
@@ -981,7 +1007,10 @@ $(document).ready(function() {
         vehicle: {
             amount: 0.00,
             expenses_count: 0,
-            expenses: []
+            expenses: [],
+            km_start: 0,
+            km_end: 0,
+            km_traveled: 0
         },
         lodging: {
             amount: 0.00,
@@ -1421,6 +1450,13 @@ $(document).ready(function() {
     window.calculateVehicleTotal = function() {
         let total = 0;
         accountabilityData.vehicle.expenses = [];
+
+        // Capturar valores de quilometragem
+        const kmDeparture = $('#km-departure').val() || '0';
+        const kmArrival = $('#km-arrival').val() || '0';
+        accountabilityData.vehicle.km_start = parseInt(kmDeparture) || 0;
+        accountabilityData.vehicle.km_end = parseInt(kmArrival) || 0;
+        accountabilityData.vehicle.km_traveled = accountabilityData.vehicle.km_end - accountabilityData.vehicle.km_start;
 
         $('.vehicle-expense-item').each(function() {
             const expenseId = $(this).data('expense-id');
@@ -1868,7 +1904,7 @@ $(document).ready(function() {
     function collectCurrentStepData() {
         if (currentStep === 1) {
             calculateFoodTotal();
-        } else if (currentStep === 2) {
+        } else if (currentStep === 2 && IS_DRIVER) {
             calculateVehicleTotal();
         } else if (currentStep === 3) {
             calculateLodgingTotal();
@@ -1885,16 +1921,64 @@ $(document).ready(function() {
                      accountabilityData.lodging.amount +
                      accountabilityData.other.amount;
 
+        // Formatar datas para exibição
+        const formatDate = (dateStr) => {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr + 'T00:00:00');
+            return date.toLocaleDateString('pt-BR');
+        };
+
         let html = `
-            <div class="py-2 border-b border-purple-200">
-                <div class="mb-2">
-                    <span class="text-base font-medium">Alimentação:</span>
+            <!-- Informações da Viagem -->
+            <div class="pt-6 pb-12 border-b border-gray-200">
+                <div class="mb-4">
+                    <span class="text-xs font-semibold text-gray-500 uppercase">Colaborador</span>
+                    <p class="text-sm font-medium text-gray-700 mt-1 ml-4">
+                        <i class="fas fa-user text-purple-900 mr-2"></i>
+                        {% if session.get('user_name') %}{{ session.get('user_name') }}{% else %}Nome não informado{% endif %}
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <span class="text-xs font-semibold text-gray-500 uppercase">Destino</span>
+                        <p class="text-sm font-medium text-gray-900 mt-1 ml-4">
+                            <i class="fas fa-map-marker-alt text-purple-900 mr-1"></i>
+                            ${TRIP_DESTINATION}
+                        </p>
+                    </div>
+                    <div>
+                        <span class="text-xs font-semibold text-gray-500 uppercase">Veículo</span>
+                        <p class="text-sm font-medium text-gray-900 mt-1 ml-4">
+                            <i class="fas fa-car text-purple-900 mr-1"></i>
+                            ${TRIP_VEHICLE}
+                        </p>
+                    </div>
+                    <div>
+                        <span class="text-xs font-semibold text-gray-500 uppercase">Data de Saída</span>
+                        <p class="text-sm font-medium text-gray-900 mt-1 ml-4">
+                            <i class="fas fa-calendar-day text-purple-900 mr-1"></i>
+                            ${formatDate(TRIP_START_DATE)}
+                        </p>
+                    </div>
+                    <div>
+                        <span class="text-xs font-semibold text-gray-500 uppercase">Data de Chegada</span>
+                        <p class="text-sm font-medium text-gray-900 mt-1 ml-4">
+                            <i class="fas fa-calendar-check text-purple-900 mr-1"></i>
+                            ${formatDate(TRIP_END_DATE)}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="py-2 border-b border-gray-200">
+                <div class="mb-4">
+                    <span class="text-xs font-semibold text-gray-500 uppercase">Alimentação:</span>
                 </div>
         `;
 
         // Adicionar detalhes dos dias de alimentação
         if (accountabilityData.food.days && accountabilityData.food.days.length > 0) {
-            html += '<div class="ml-4 space-y-2 mb-3">';
+            html += '<div class="ml-4 space-y-2 mb-4">';
             accountabilityData.food.days.forEach(day => {
                 // Criar objeto com todas as refeições (valor 0 se não existir)
                 const mealsMap = {
@@ -1940,8 +2024,7 @@ $(document).ready(function() {
 
                         <!-- Total do Dia -->
                         <div class="flex-1 text-right">
-                            <span class="text-gray-600">Total:</span>
-                            <span class="ml-2 font-bold text-purple-900">R$ ${day.amount.toFixed(2).replace('.', ',')}</span>
+                            <span class="font-bold text-purple-900">R$ ${day.amount.toFixed(2).replace('.', ',')}</span>
                         </div>
                     </div>
                 `;
@@ -1951,18 +2034,39 @@ $(document).ready(function() {
 
         html += `
                 <div class="flex justify-end">
-                    <span class="font-bold text-purple-900">R$ ${accountabilityData.food.amount.toFixed(2).replace('.', ',')}</span>
+                    <span class="text-gray-600">Total:</span>
+                    <span class="ml-2 font-bold text-purple-900">R$ ${accountabilityData.food.amount.toFixed(2).replace('.', ',')}</span>
                 </div>
             </div>
-            <div class="py-2 border-b border-purple-200">
-                <div class="mb-2">
-                    <span class="text-base font-medium">Veículo:</span>
+            <div class="py-2 border-b border-gray-200">
+                <div class="mb-4">
+                    <span class="text-xs font-semibold text-gray-500 uppercase">Veículo:</span>
                 </div>
         `;
 
+        // Adicionar quilometragem
+        if (accountabilityData.vehicle.km_start > 0 || accountabilityData.vehicle.km_end > 0) {
+            html += `
+                <div class="ml-4 mb-4 flex gap-6 text-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-600">Km (Saída):</span>
+                        <span class="font-bold text-purple-900">${accountabilityData.vehicle.km_start.toLocaleString('pt-BR')}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-600">Km (Chegada):</span>
+                        <span class="font-bold text-purple-900">${accountabilityData.vehicle.km_end.toLocaleString('pt-BR')}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-600">Total Percorrido:</span>
+                        <span class="font-bold text-purple-900">${(accountabilityData.vehicle.km_end - accountabilityData.vehicle.km_start).toLocaleString('pt-BR')} km</span>
+                    </div>
+                </div>
+            `;
+        }
+
         // Adicionar detalhes das despesas de veículo
         if (accountabilityData.vehicle.expenses && accountabilityData.vehicle.expenses.length > 0) {
-            html += '<div class="ml-4 space-y-2 mb-3">';
+            html += '<div class="ml-4 space-y-2 mb-4">';
             accountabilityData.vehicle.expenses.forEach(expense => {
                 html += `
                     <div class="flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
@@ -1984,18 +2088,19 @@ $(document).ready(function() {
 
         html += `
                 <div class="flex justify-end">
-                    <span class="font-bold text-purple-900">R$ ${accountabilityData.vehicle.amount.toFixed(2).replace('.', ',')}</span>
+                    <span class="text-gray-600">Total:</span>
+                    <span class="ml-2 font-bold text-purple-900">R$ ${accountabilityData.vehicle.amount.toFixed(2).replace('.', ',')}</span>
                 </div>
             </div>
-            <div class="py-2 border-b border-purple-200">
-                <div class="mb-2">
-                    <span class="text-base font-medium">Hospedagem:</span>
+            <div class="py-2 border-b border-gray-200">
+                <div class="mb-4">
+                    <span class="text-xs font-semibold text-gray-500 uppercase">Hospedagem:</span>
                 </div>
         `;
 
         // Adicionar detalhes das despesas de hospedagem
         if (accountabilityData.lodging.expenses && accountabilityData.lodging.expenses.length > 0) {
-            html += '<div class="ml-4 space-y-2 mb-3">';
+            html += '<div class="ml-4 space-y-2 mb-4">';
             accountabilityData.lodging.expenses.forEach(expense => {
                 html += `
                     <div class="flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
@@ -2017,18 +2122,19 @@ $(document).ready(function() {
 
         html += `
                 <div class="flex justify-end">
-                    <span class="font-bold text-purple-900">R$ ${accountabilityData.lodging.amount.toFixed(2).replace('.', ',')}</span>
+                    <span class="text-gray-600">Total:</span>
+                    <span class="ml-2 font-bold text-purple-900">R$ ${accountabilityData.lodging.amount.toFixed(2).replace('.', ',')}</span>
                 </div>
             </div>
-            <div class="py-2 border-b border-purple-200">
-                <div class="mb-2">
-                    <span class="text-base font-medium">Outras Despesas:</span>
+            <div class="py-2 border-b border-gray-200">
+                <div class="mb-4">
+                    <span class="text-xs font-semibold text-gray-500 uppercase">Outras Despesas:</span>
                 </div>
         `;
 
         // Adicionar detalhes das outras despesas
         if (accountabilityData.other.expenses && accountabilityData.other.expenses.length > 0) {
-            html += '<div class="ml-4 space-y-2 mb-3">';
+            html += '<div class="ml-4 space-y-2 mb-4">';
             accountabilityData.other.expenses.forEach(expense => {
                 html += `
                     <div class="flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
@@ -2050,7 +2156,8 @@ $(document).ready(function() {
 
         html += `
                 <div class="flex justify-end">
-                    <span class="font-bold text-purple-900">R$ ${accountabilityData.other.amount.toFixed(2).replace('.', ',')}</span>
+                    <span class="text-gray-600">Total:</span>
+                    <span class="ml-2 font-bold text-purple-900">R$ ${accountabilityData.other.amount.toFixed(2).replace('.', ',')}</span>
                 </div>
             </div>
             <div class="flex justify-between py-3 mt-3">
@@ -2081,6 +2188,11 @@ $(document).ready(function() {
             // Avançar para próximo passo
             currentStep++;
 
+            // Pular step 2 (Veículo) se o usuário não for o motorista
+            if (currentStep === 2 && !IS_DRIVER) {
+                currentStep = 3;
+            }
+
             // Se for o último passo, renderizar resumo
             if (currentStep === totalSteps) {
                 renderSummary();
@@ -2104,6 +2216,11 @@ $(document).ready(function() {
             // Voltar para passo anterior
             currentStep--;
 
+            // Pular step 2 (Veículo) se o usuário não for o motorista
+            if (currentStep === 2 && !IS_DRIVER) {
+                currentStep = 1;
+            }
+
             // Mostrar passo anterior
             $(`#wizard-step-${currentStep}`).removeClass('hidden');
 
@@ -2114,6 +2231,11 @@ $(document).ready(function() {
 
     // Função para ir diretamente para um passo específico
     window.goToStep = function(targetStep) {
+        // Impedir navegação para step 2 (Veículo) se o usuário não for o motorista
+        if (targetStep === 2 && !IS_DRIVER) {
+            return;
+        }
+
         if (targetStep >= 1 && targetStep <= totalSteps && targetStep !== currentStep) {
             collectCurrentStepData();
 
@@ -2140,6 +2262,8 @@ $(document).ready(function() {
     $('#km-departure, #km-arrival').on('input', function() {
         // Remove tudo que não seja dígito
         this.value = this.value.replace(/[^0-9]/g, '');
+        // Atualizar JSON quando alterar os valores de km
+        calculateVehicleTotal();
     });
 
     // Inicializar JSON

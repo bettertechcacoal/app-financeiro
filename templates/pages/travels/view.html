@@ -16,7 +16,7 @@
     <div class="mb-8 animate-fade-in">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
             <div class="flex items-center">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-900 to-purple-900 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gray-600 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
                     <i class="fas fa-clipboard-list text-white text-2xl sm:text-3xl"></i>
                 </div>
                 <div>
@@ -40,7 +40,7 @@
             <div class="p-6 border-b border-gray-200">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
-                        <div class="w-10 h-10 bg-purple-900 rounded-lg flex items-center justify-center mr-3">
+                        <div class="w-10 h-10 bg-gray-600 rounded-lg flex items-center justify-center mr-3">
                             <i class="fas fa-info-circle text-white"></i>
                         </div>
                         <div>
@@ -81,132 +81,101 @@
 
             <div class="p-6">
                 <!-- Dados da Solicitação -->
-                <div class="mb-8">
-                    <h3 class="text-xs font-bold text-gray-500 uppercase mb-5 tracking-wide">Dados da Solicitação</h3>
-                    <div class="space-y-5">
-                        <div class="flex items-center">
-                            <div class="w-44 flex-shrink-0">
-                                <span class="text-base text-gray-600 font-medium">Solicitante:</span>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-base font-semibold text-gray-900 leading-relaxed">{{ travel.user.name if travel.user else 'N/A' }}</p>
-                                <p class="text-sm text-gray-500 mt-1">{{ travel.user.email if travel.user else '' }}</p>
-                            </div>
+                <div class="pt-6 pb-12 border-b border-gray-200">
+                    <div class="mb-4">
+                        <span class="text-xs font-semibold text-gray-500 uppercase">Colaborador</span>
+                        <p class="text-sm font-medium text-gray-700 mt-1 ml-4">
+                            <i class="fas fa-user text-gray-600 mr-2"></i>
+                            {{ travel.driver_user.name if travel.driver_user else 'N/A' }}
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase">Destino</span>
+                            <p class="text-sm font-medium text-gray-900 mt-1 ml-4">
+                                <i class="fas fa-map-marker-alt text-gray-600 mr-1"></i>
+                                {{ travel.city.name if travel.city else 'N/A' }}{% if travel.city and travel.city.state %} - {{ travel.city.state.uf }}{% endif %}
+                            </p>
                         </div>
-
-                        <div class="flex items-center">
-                            <div class="w-44 flex-shrink-0">
-                                <span class="text-base text-gray-600 font-medium">Destino:</span>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-base font-semibold text-gray-900 leading-relaxed">
-                                    {{ travel.city.name if travel.city else 'N/A' }}
-                                    {% if travel.city and travel.city.state %}
-                                        <span class="text-gray-600 font-normal">/ {{ travel.city.state.uf }}</span>
-                                    {% endif %}
-                                </p>
-                            </div>
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase">Veículo</span>
+                            <p class="text-sm font-medium text-gray-900 mt-1 ml-4">
+                                <i class="fas fa-car text-gray-600 mr-1"></i>
+                                {% if travel.vehicle %}{{ travel.vehicle.brand }} {{ travel.vehicle.model }} - {{ travel.vehicle.plate }}{% else %}Próprio{% endif %}
+                            </p>
                         </div>
-
-                        <div class="flex items-center">
-                            <div class="w-44 flex-shrink-0">
-                                <span class="text-base text-gray-600 font-medium">Período:</span>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-base font-semibold text-gray-900 leading-relaxed">
-                                    {% if travel.departure_date %}
-                                        {{ travel.departure_date[8:10] }}/{{ travel.departure_date[5:7] }}/{{ travel.departure_date[:4] }}
-                                    {% else %}
-                                        N/A
-                                    {% endif %}
-                                    <span class="text-gray-600 font-normal">até</span>
-                                    {% if travel.return_date %}
-                                        {{ travel.return_date[8:10] }}/{{ travel.return_date[5:7] }}/{{ travel.return_date[:4] }}
-                                    {% else %}
-                                        N/A
-                                    {% endif %}
-                                </p>
-                                <p class="text-sm text-gray-500 mt-1.5 leading-relaxed">
-                                    {% if travel.departure_date %}
-                                        Saída às {{ travel.departure_date[11:16] }}
-                                    {% endif %}
-                                    {% if travel.return_date %}
-                                        • Retorno às {{ travel.return_date[11:16] }}
-                                    {% endif %}
-                                </p>
-                                {% if travel.days and travel.days > 0 %}
-                                <p class="text-xs text-gray-600 mt-1.5 leading-relaxed">
-                                    <span class="font-semibold text-gray-700">{{ travel.days }} {{ 'dia' if travel.days == 1 else 'dias' }} de viagem</span>
-                                </p>
-                                {% endif %}
-                            </div>
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase">Data de Saída</span>
+                            <p class="text-sm font-medium text-gray-900 mt-1 ml-4">
+                                <i class="fas fa-calendar-day text-gray-600 mr-1"></i>
+                                {% if travel.departure_date %}{{ travel.departure_date[8:10] }}/{{ travel.departure_date[5:7] }}/{{ travel.departure_date[:4] }}{% else %}N/A{% endif %}
+                            </p>
                         </div>
-
-                        <div class="flex items-center">
-                            <div class="w-44 flex-shrink-0">
-                                <span class="text-base text-gray-600 font-medium">Motivo:</span>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-base text-gray-900 leading-relaxed">{{ travel.purpose }}</p>
-                            </div>
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase">Data de Retorno</span>
+                            <p class="text-sm font-medium text-gray-900 mt-1 ml-4">
+                                <i class="fas fa-calendar-check text-gray-600 mr-1"></i>
+                                {% if travel.return_date %}{{ travel.return_date[8:10] }}/{{ travel.return_date[5:7] }}/{{ travel.return_date[:4] }}{% else %}N/A{% endif %}
+                            </p>
                         </div>
-
-                        {% if travel.notes %}
-                        <div class="flex items-start">
-                            <div class="w-44 flex-shrink-0">
-                                <span class="text-base text-gray-600 font-medium">Observações:</span>
-                            </div>
-                            <div class="flex-1">
-                                <p class="text-base text-gray-700 leading-relaxed">{{ travel.notes }}</p>
-                            </div>
-                        </div>
-                        {% endif %}
                     </div>
                 </div>
 
                 <!-- Detalhes da Aprovação -->
                 {% if travel.status == 'approved' and travel.approved_by %}
-                <div class="pt-7 border-t border-gray-200 mb-8">
+                <div class="pt-7 mb-8">
                     <div class="flex items-center mb-3">
-                        <span class="text-base text-gray-600 font-medium">Autorizado por:</span>
+                        <span class="text-xs font-bold text-gray-500 uppercase">Autorizado por:</span>
                     </div>
-                    <div class="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                        <div class="flex items-start">
-                            <div class="w-12 h-12 bg-purple-900 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
-                                <i class="fas fa-user text-white text-lg"></i>
+                    <div class="space-y-2">
+                        <div class="flex items-center p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                            <div class="w-8 h-8 bg-gray-600 rounded-lg flex items-center justify-center text-white mr-3">
+                                <i class="fas fa-user text-sm"></i>
                             </div>
                             <div class="flex-1">
-                                <p class="text-base font-bold text-gray-900">{{ travel.approved_by_user.name if travel.approved_by_user else 'N/A' }}</p>
-                                <p class="text-sm text-gray-600">Email: <span class="font-semibold">{{ travel.approved_by_user.email if travel.approved_by_user else '' }}</span></p>
-                                {% if travel.approved_at %}
-                                <p class="text-sm text-gray-600">Data: <span class="font-semibold">{{ travel.approved_at[8:10] }}/{{ travel.approved_at[5:7] }}/{{ travel.approved_at[:4] }} às {{ travel.approved_at[11:16] }}</span></p>
-                                {% endif %}
-                                {% if travel.admin_notes %}
-                                <p class="text-sm text-gray-700 mt-2">
-                                    <span class="font-semibold">Observações:</span> {{ travel.admin_notes }}
-                                </p>
+                                <p class="text-sm font-semibold text-gray-900">{{ travel.approved_by_user.name if travel.approved_by_user else 'N/A' }}</p>
+                                {% if travel.approved_by_user and travel.approved_by_user.email %}
+                                <p class="text-xs text-gray-500">{{ travel.approved_by_user.email }}</p>
                                 {% endif %}
                             </div>
                         </div>
+                        {% if travel.approved_at %}
+                        <div class="flex items-center p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                            <div class="w-8 h-8 bg-gray-600 rounded-lg flex items-center justify-center text-white mr-3">
+                                <i class="fas fa-calendar text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-semibold text-gray-900">Data</p>
+                                <p class="text-xs text-gray-500">{{ travel.approved_at[8:10] }}/{{ travel.approved_at[5:7] }}/{{ travel.approved_at[:4] }} às {{ travel.approved_at[11:16] }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if travel.admin_notes %}
+                        <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                            <p class="text-xs text-gray-600">
+                                <span class="font-semibold">Obs:</span> {{ travel.admin_notes }}
+                            </p>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
                 {% endif %}
 
                 <!-- Veículo -->
-                <div class="pt-7 border-t border-gray-200">
+                <div class="mb-8">
                     <div>
                         <div class="flex items-center mb-3">
-                            <span class="text-base text-gray-600 font-medium">Veículo Reservado:</span>
+                            <span class="text-xs font-bold text-gray-500 uppercase">Veículo Reservado:</span>
                         </div>
                         {% if travel.needs_vehicle %}
                             {% if travel.vehicle %}
-                            <div class="flex items-center p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                                <div class="w-12 h-12 bg-purple-900 rounded-lg flex items-center justify-center mr-3">
-                                    <i class="fas fa-car text-white text-lg"></i>
+                            <div class="flex items-center p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                <div class="w-8 h-8 bg-gray-600 rounded-lg flex items-center justify-center text-white mr-3">
+                                    <i class="fas fa-car text-sm"></i>
                                 </div>
                                 <div class="flex-1">
-                                    <p class="text-base font-bold text-gray-900">{{ travel.vehicle.brand }} {{ travel.vehicle.model }}</p>
-                                    <p class="text-sm text-gray-600">Placa: <span class="font-semibold">{{ travel.vehicle.plate }}</span> • Ano: <span class="font-semibold">{{ travel.vehicle.year }}</span></p>
+                                    <p class="text-sm font-semibold text-gray-900">{{ travel.vehicle.brand }} {{ travel.vehicle.model }}</p>
+                                    <p class="text-xs text-gray-500">Placa: {{ travel.vehicle.plate }} • Ano: {{ travel.vehicle.year }}</p>
                                 </div>
                             </div>
                             {% else %}
@@ -229,15 +198,10 @@
                 </div>
 
                 <!-- Passageiros -->
-                <div class="pt-7 border-t border-gray-200">
+                <div class="mb-8">
                     <div>
                         <div class="flex items-center mb-3">
-                            <span class="text-base text-gray-600 font-medium">Passageiros Adicionais:</span>
-                            {% if travel.passengers and travel.passengers|length > 0 %}
-                            <span class="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-white bg-purple-900 rounded">
-                                {{ travel.passengers|length }}
-                            </span>
-                            {% endif %}
+                            <span class="text-xs font-bold text-gray-500 uppercase">Passageiros:</span>
                         </div>
                         {% if travel.passengers and travel.passengers|length > 0 %}
                         <div class="space-y-2">
@@ -267,7 +231,7 @@
                 </div>
 
                 <!-- Datas do Sistema -->
-                <div class="pt-7 border-t border-gray-200 mt-8">
+                <div class="mb-8">
                     <h3 class="text-xs font-bold text-gray-500 uppercase mb-5 tracking-wide">Informações do Sistema</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="p-4 bg-gray-50 rounded-lg">

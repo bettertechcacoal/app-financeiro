@@ -58,7 +58,7 @@
                 <div class="space-y-3 animate-fade-in">
                     {% for travel in travels %}
                     <div class="card travel-row"
-                         data-search="{{ travel.city.name|lower if travel.city else '' }} {{ travel.user.name|lower if travel.user else '' }} {{ travel.purpose|lower if travel.purpose else '' }} {{ travel.status|lower if travel.status else '' }}">
+                         data-search="{{ travel.city.name|lower if travel.city else '' }} {{ travel.driver_user.name|lower if travel.driver_user else '' }} {{ travel.purpose|lower if travel.purpose else '' }} {{ travel.status|lower if travel.status else '' }}">
 
                         <!-- Header do Card -->
                         <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between flex-wrap gap-2">
@@ -66,7 +66,7 @@
                                 <span class="text-xs font-bold text-blue-600">#{{ travel.id }}</span>
                                 <div class="flex items-center text-xs text-gray-600">
                                     <i class="fas fa-user text-blue-600 mr-1"></i>
-                                    <span class="font-medium">{{ travel.user.name if travel.user else '-' }}</span>
+                                    <span class="font-medium">{{ travel.driver_user.name if travel.driver_user else '-' }}</span>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">

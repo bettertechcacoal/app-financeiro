@@ -131,6 +131,10 @@ def register_routes(app: Flask):
     admin_bp.add_url_rule('/settings', view_func=settings_controller.settings_list, methods=['GET'])
     admin_bp.add_url_rule('/settings/<int:parameter_id>/update', view_func=settings_controller.settings_update, methods=['POST'])
 
+    # API de Parâmetros
+    admin_bp.add_url_rule('/api/parameters/<parameter_name>', view_func=settings_controller.get_parameter_api, methods=['GET'])
+    admin_bp.add_url_rule('/api/parameters/<parameter_name>/update', view_func=settings_controller.update_parameter_api, methods=['POST'])
+
     # Rotas de Notes (Sticky Notes)
     admin_bp.add_url_rule('/notes', view_func=notes_controller.notes_list, methods=['GET'])
     admin_bp.add_url_rule('/notes/create', view_func=notes_controller.notes_create, methods=['POST'])

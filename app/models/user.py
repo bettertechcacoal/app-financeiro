@@ -22,8 +22,8 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
-    # Relacionamento com viagens
-    travels = relationship('Travel', foreign_keys='Travel.user_id', back_populates='user')
+    # Relacionamento com viagens (como motorista/viajante)
+    travels = relationship('Travel', foreign_keys='Travel.driver_user_id', back_populates='driver_user')
 
     # Relacionamento many-to-many com Group através de user_groups
     groups = relationship('Group', secondary='user_groups', backref='users')

@@ -22,12 +22,16 @@ def financial_accountability(payout_id):
             return redirect(url_for('auth.login'))
 
         # Buscar o payout do usuário logado
+        from app.models.vehicle_travel_history import VehicleTravelHistory
+        from app.models.vehicle import Vehicle
+
         payout = db.query(TravelPayout)\
             .filter_by(id=payout_id, member_id=user_id)\
             .join(Travel)\
             .options(
                 joinedload(TravelPayout.travel).joinedload(Travel.city).joinedload(City.state),
-                joinedload(TravelPayout.travel).joinedload(Travel.user)
+                joinedload(TravelPayout.travel).joinedload(Travel.driver_user),
+                joinedload(TravelPayout.travel).joinedload(Travel.vehicle_history).joinedload(VehicleTravelHistory.vehicle)
             )\
             .first()
 
@@ -44,6 +48,14 @@ def financial_accountability(payout_id):
 
         # Adicionar informações da viagem
         if payout.travel:
+            # Pegar o veículo alocado (se houver) do histórico
+            allocated_vehicle = None
+            if payout.travel.vehicle_history:
+                # Pegar o último registro de veículo para esta viagem
+                last_vehicle_history = payout.travel.vehicle_history[-1] if payout.travel.vehicle_history else None
+                if last_vehicle_history and last_vehicle_history.vehicle:
+                    allocated_vehicle = last_vehicle_history.vehicle.to_dict()
+
             payout_data['travel_info'] = {
                 'id': payout.travel.id,
                 'purpose': payout.travel.purpose,
@@ -51,7 +63,8 @@ def financial_accountability(payout_id):
                 'return_date': payout.travel.return_date.isoformat() if payout.travel.return_date else None,
                 'status': payout.travel.status.value if payout.travel.status else None,
                 'city': payout.travel.city.to_dict() if payout.travel.city else None,
-                'user': payout.travel.user.to_dict() if payout.travel.user else None
+                'driver_user': payout.travel.driver_user.to_dict() if payout.travel.driver_user else None,
+                'vehicle': allocated_vehicle
             }
 
         db.close()
@@ -85,7 +98,7 @@ def financial_payouts_list():
             .join(Travel)\
             .options(
                 joinedload(TravelPayout.travel).joinedload(Travel.city).joinedload(City.state),
-                joinedload(TravelPayout.travel).joinedload(Travel.user)
+                joinedload(TravelPayout.travel).joinedload(Travel.driver_user)
             )\
             .order_by(TravelPayout.created_at.desc())\
             .all()
@@ -103,7 +116,7 @@ def financial_payouts_list():
                     'return_date': payout.travel.return_date.isoformat() if payout.travel.return_date else None,
                     'status': payout.travel.status.value if payout.travel.status else None,
                     'city': payout.travel.city.to_dict() if payout.travel.city else None,
-                    'user': payout.travel.user.to_dict() if payout.travel.user else None
+                    'driver_user': payout.travel.driver_user.to_dict() if payout.travel.driver_user else None
                 }
             payouts_data.append(payout_dict)
 

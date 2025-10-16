@@ -95,7 +95,8 @@ def travels_store():
 
         # Criar nova viagem
         new_travel = Travel(
-            user_id=int(user_id),
+            driver_user_id=int(user_id),
+            record_user_id=session.get('user_id'),
             city_id=int(city_id),
             purpose=purpose,
             departure_date=departure_datetime,
@@ -205,7 +206,7 @@ def travels_update(travel_id):
             return redirect(url_for('admin.travels_edit', travel_id=travel_id))
 
         # Atualizar viagem
-        travel.user_id = int(user_id)
+        travel.driver_user_id = int(user_id)
         travel.city_id = int(city_id)
         travel.purpose = purpose
         travel.departure_date = departure_datetime
@@ -393,12 +394,12 @@ def travels_analyze_process(travel_id):
                     member_id = int(key.replace('financial_amount_user_', ''))
                     amount_str = request.form.get(key, '0').strip()
 
-                    if amount_str and amount_str != '0' and amount_str != '':
+                    if amount_str and amount_str != '':
                         try:
                             amount = Decimal(amount_str)
 
-                            if amount > 0:
-                                # Criar registro de payout
+                            if amount >= 0:
+                                # Criar registro de payout (mesmo com valor 0 para prestação de contas)
                                 payout = TravelPayout(
                                     travel_id=travel.id,
                                     member_id=member_id,

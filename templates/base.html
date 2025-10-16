@@ -16,8 +16,53 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     {% block extra_css %}{% endblock %}
+
+    <style>
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .animate-slide-in-right {
+            animation: slideInRight 0.4s ease-out;
+        }
+
+        .animate-slide-out-right {
+            animation: slideOutRight 0.3s ease-in forwards;
+        }
+
+        .toast-notification {
+            transition: all 0.3s ease;
+        }
+
+        .toast-notification:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+    </style>
 </head>
 <body>
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-24 right-6 z-50 space-y-3">
+        <!-- Toasts serão inseridos aqui dinamicamente -->
+    </div>
 
     <!-- Top Navigation -->
     <nav class="bg-gradient-to-r from-blue-600 via-blue-600 to-blue-700 text-white navbar-shadow sticky top-0 z-50">
@@ -337,6 +382,77 @@
         document.addEventListener('DOMContentLoaded', function() {
             initSocket();
         });
+
+        // ===== SISTEMA DE TOAST =====
+        function showToast(message, type = 'success', title = null) {
+            const container = document.getElementById('toast-container');
+
+            // Configurações por tipo
+            const config = {
+                'success': {
+                    title: title || 'Sucesso',
+                    borderColor: 'border-green-500'
+                },
+                'error': {
+                    title: title || 'Erro',
+                    borderColor: 'border-red-500'
+                },
+                'warning': {
+                    title: title || 'Atenção',
+                    borderColor: 'border-yellow-500'
+                },
+                'info': {
+                    title: title || 'Informação',
+                    borderColor: 'border-blue-500'
+                }
+            };
+
+            const toastConfig = config[type] || config['info'];
+
+            // Criar elemento do toast
+            const toast = document.createElement('div');
+            toast.className = `toast-notification bg-white shadow-2xl border-l-4 ${toastConfig.borderColor} overflow-hidden min-w-[320px] max-w-[400px] animate-slide-in-right`;
+
+            toast.innerHTML = `
+                <!-- Header -->
+                <div class="flex items-center justify-between px-4 py-1 border-b border-gray-100">
+                    <h4 class="text-sm font-bold text-gray-900">${toastConfig.title}</h4>
+                    <button onclick="closeToast(this)" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </div>
+                <!-- Content -->
+                <div class="px-4 py-3">
+                    <p class="text-sm text-gray-600">${message}</p>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            // Auto-fechar após 5 segundos
+            setTimeout(() => {
+                closeToast(toast.querySelector('button'));
+            }, 5000);
+        }
+
+        function closeToast(button) {
+            const toast = button.closest('.toast-notification');
+            toast.classList.add('animate-slide-out-right');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }
+
+        // Processar flash messages do Flask
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                document.addEventListener('DOMContentLoaded', function() {
+                    {% for category, message in messages %}
+                        showToast('{{ message }}', '{{ category }}');
+                    {% endfor %}
+                });
+            {% endif %}
+        {% endwith %}
     </script>
 
     {% block extra_js %}{% endblock %}

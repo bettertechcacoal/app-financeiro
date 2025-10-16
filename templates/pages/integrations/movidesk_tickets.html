@@ -35,18 +35,6 @@
         </div>
     </div>
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="mb-6 p-4 rounded-xl {% if category == 'success' %}bg-green-100 text-green-700{% elif category == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %} animate-fade-in">
-                    <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} mr-2"></i>
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
     <!-- Layout com Sidebar -->
     <div class="flex flex-col lg:flex-row gap-6">
         <!-- Conteúdo Principal -->
@@ -105,6 +93,33 @@
                     </ul>
                 </div>
             </div>
+
+            <!-- Card de Sincronização Automática -->
+            <div class="card p-6 animate-fade-in">
+                <!-- Header -->
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-clock text-green-600 mr-2 text-lg"></i>
+                    <h3 class="text-lg font-bold text-gray-900">Sincronização Automática</h3>
+                </div>
+
+                <p class="text-sm text-gray-600 mb-4">Configure horários fixos para sincronização automática durante o dia</p>
+
+                <!-- Lista de Horários -->
+                <div id="schedules-container" class="space-y-2 mb-4">
+                    <!-- Horários serão inseridos aqui -->
+                </div>
+
+                <!-- Adicionar Novo Horário -->
+                <div class="flex gap-2">
+                    <input type="time" id="newScheduleTime"
+                           class="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all">
+                    <button onclick="addSchedule()"
+                            class="px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all shadow-md">
+                        <i class="fas fa-plus mr-2"></i>
+                        Adicionar
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Sidebar de Métricas -->
@@ -159,6 +174,9 @@
 </div>
 
 <script>
+    // Array de horários configurados
+    let schedules = [];
+
     // Definir data padrão (hoje)
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
@@ -169,6 +187,9 @@
     fiveDaysAgo.setDate(today.getDate() - 5);
     const fiveDaysAgoStr = fiveDaysAgo.toISOString().split('T')[0];
     document.getElementById('startDate').value = fiveDaysAgoStr;
+
+    // Carregar horários salvos ao iniciar
+    loadSchedules();
 
     // Validação de período
     function validateDateRange() {
@@ -205,6 +226,113 @@
     // Adicionar listeners de validação
     document.getElementById('startDate').addEventListener('change', validateDateRange);
     document.getElementById('endDate').addEventListener('change', validateDateRange);
+
+    // ===== FUNÇÕES DE GERENCIAMENTO DE HORÁRIOS =====
+
+    // Carregar horários salvos do backend
+    async function loadSchedules() {
+        try {
+            const response = await fetch('/admin/api/parameters/MOVIDESK_SYNC_SCHEDULES');
+            const result = await response.json();
+
+            if (result.success && result.value) {
+                schedules = JSON.parse(result.value);
+                renderSchedules();
+            }
+        } catch (error) {
+            console.error('Erro ao carregar horários:', error);
+        }
+    }
+
+    // Renderizar lista de horários
+    function renderSchedules() {
+        const container = document.getElementById('schedules-container');
+
+        if (schedules.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-4 text-gray-500 text-sm">
+                    <i class="fas fa-clock text-2xl mb-2"></i>
+                    <p>Nenhum horário configurado</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Ordenar horários
+        schedules.sort();
+
+        container.innerHTML = schedules.map(time => `
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-clock text-green-600"></i>
+                    <span class="font-semibold text-gray-900">${time}</span>
+                </div>
+                <button onclick="removeSchedule('${time}')"
+                        class="text-red-600 hover:text-red-700 transition-colors">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `).join('');
+    }
+
+    // Adicionar novo horário
+    async function addSchedule() {
+        const timeInput = document.getElementById('newScheduleTime');
+        const time = timeInput.value;
+
+        if (!time) {
+            showToast('Selecione um horário', 'warning');
+            return;
+        }
+
+        // Verificar duplicado
+        if (schedules.includes(time)) {
+            showToast('Este horário já está configurado', 'warning');
+            return;
+        }
+
+        schedules.push(time);
+        renderSchedules();
+        timeInput.value = '';
+
+        // Salvar automaticamente
+        await saveSchedules(`Sincronização automática adicionada para ${time}`);
+    }
+
+    // Remover horário
+    async function removeSchedule(time) {
+        schedules = schedules.filter(t => t !== time);
+        renderSchedules();
+
+        // Salvar automaticamente
+        await saveSchedules(`Horário ${time} removido com sucesso`);
+    }
+
+    // Salvar horários no backend
+    async function saveSchedules(customMessage = null) {
+        try {
+            const response = await fetch('/admin/api/parameters/MOVIDESK_SYNC_SCHEDULES/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    value: JSON.stringify(schedules)
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(customMessage || 'Horários salvos automaticamente!', 'success');
+            } else {
+                showToast('Erro ao salvar horários', 'error');
+            }
+        } catch (error) {
+            console.error('Erro ao salvar:', error);
+            showToast('Erro ao salvar horários', 'error');
+        }
+    }
 
     async function syncTickets() {
         if (!validateDateRange()) {

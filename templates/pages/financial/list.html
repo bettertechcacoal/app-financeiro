@@ -52,7 +52,7 @@
                 <div class="space-y-3 animate-fade-in">
                     {% for payout in payouts %}
                     <div class="card payout-row"
-                         data-search="{{ payout.travel_info.city.name|lower if payout.travel_info and payout.travel_info.city else '' }} {{ payout.travel_info.purpose|lower if payout.travel_info else '' }} {{ payout.status|lower if payout.status else '' }}">
+                         data-search="{{ payout.travel_info.city.name|lower if payout.travel_info and payout.travel_info.city else '' }} {{ payout.travel_info.purpose|lower if payout.travel_info else '' }} {{ payout.accountability_status|lower if payout.accountability_status else '' }}">
 
                         <!-- Header do Card -->
                         <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between flex-wrap gap-2">
@@ -64,21 +64,26 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
-                                <!-- Status -->
-                                {% if payout.status == 'pending' %}
+                                <!-- Status da Prestação de Contas -->
+                                {% if payout.accountability_status == 'draft' %}
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-yellow-100 text-yellow-700">
                                         <i class="fas fa-clock mr-1 text-xs"></i>
                                         Pendente
                                     </span>
-                                {% elif payout.status == 'paid' %}
+                                {% elif payout.accountability_status == 'submitted' %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-700">
+                                        <i class="fas fa-paper-plane mr-1 text-xs"></i>
+                                        Enviado
+                                    </span>
+                                {% elif payout.accountability_status == 'returned' %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-orange-100 text-orange-700">
+                                        <i class="fas fa-undo mr-1 text-xs"></i>
+                                        Em Revisão
+                                    </span>
+                                {% elif payout.accountability_status == 'approved' %}
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-700">
                                         <i class="fas fa-check-circle mr-1 text-xs"></i>
-                                        Pago
-                                    </span>
-                                {% elif payout.status == 'cancelled' %}
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700">
-                                        <i class="fas fa-times-circle mr-1 text-xs"></i>
-                                        Cancelado
+                                        Aprovado
                                     </span>
                                 {% endif %}
                             </div>
@@ -90,10 +95,18 @@
                                 <!-- Coluna Right: Botão e Valor (escrita primeiro, aparece no topo em mobile) -->
                                 <div class="lg:w-1/2">
                                     <div class="flex flex-col items-end justify-center h-full space-y-2">
-                                        <a href="{{ url_for('admin.financial_accountability', payout_id=payout.id) }}" class="px-4 py-2 bg-purple-900 hover:bg-purple-800 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md inline-flex items-center">
-                                            <i class="fas fa-file-invoice-dollar mr-1.5"></i>
-                                            Prestar Conta
-                                        </a>
+                                        <div class="flex gap-2">
+                                            <a href="{{ url_for('admin.financial_accountability', payout_id=payout.id) }}" class="px-4 py-2 bg-purple-900 hover:bg-purple-800 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md inline-flex items-center">
+                                                <i class="fas fa-file-invoice-dollar mr-1.5"></i>
+                                                Prestar Conta
+                                            </a>
+                                            {% if payout.accountability_status != 'draft' %}
+                                            <a href="{{ url_for('admin.financial_review_accountability', payout_id=payout.id) }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md inline-flex items-center">
+                                                <i class="fas fa-search mr-1.5"></i>
+                                                Analisar
+                                            </a>
+                                            {% endif %}
+                                        </div>
                                         <!-- Valor visível apenas em desktop -->
                                         <div class="hidden lg:block text-right">
                                             <span class="text-xs text-gray-500 font-semibold uppercase">Valor</span>
@@ -219,31 +232,6 @@
         <!-- Sidebar de Métricas -->
         <div class="w-full lg:w-80 flex-shrink-0">
             <div class="sticky top-6 space-y-4 animate-fade-in">
-                <!-- Total de Repasses -->
-                <div class="card p-4">
-                    <div class="text-sm text-gray-600 mb-1">Total de Repasses</div>
-                    <div class="text-2xl font-bold text-purple-900">{{ total_payouts }}</div>
-                </div>
-
-                <!-- Valores -->
-                <div class="card p-4">
-                    <h3 class="text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider">Valores</h3>
-                    <div class="space-y-3">
-                        <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                            <div class="text-xs text-yellow-700 font-semibold uppercase mb-1">Pendente</div>
-                            <div class="text-xl font-bold text-yellow-700">R$ {{ "%.2f"|format(total_pending)|replace('.', ',') }}</div>
-                        </div>
-                        <div class="p-3 bg-green-50 rounded-lg border border-green-200">
-                            <div class="text-xs text-green-700 font-semibold uppercase mb-1">Pago</div>
-                            <div class="text-xl font-bold text-green-700">R$ {{ "%.2f"|format(total_paid)|replace('.', ',') }}</div>
-                        </div>
-                        <div class="p-3 bg-purple-50 rounded-lg border border-purple-200">
-                            <div class="text-xs text-purple-900 font-semibold uppercase mb-1">Total</div>
-                            <div class="text-xl font-bold text-purple-900">R$ {{ "%.2f"|format(total_all)|replace('.', ',') }}</div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Repasses por Status -->
                 <div class="card p-4">
                     <h3 class="text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider">Status</h3>

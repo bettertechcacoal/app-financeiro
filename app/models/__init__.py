@@ -28,8 +28,7 @@ from app.models.vehicle_km_log import VehicleKmLog
 from app.models.vehicle_issue import VehicleIssue
 from app.models.vehicle_maintenance_history import VehicleMaintenanceHistory
 from app.models.vehicle_maintenance_config import VehicleMaintenanceConfig
-from app.models.accountability import Accountability
-from app.models.accountability_history import AccountabilityHistory
+from app.models.travel_statement import TravelStatement
 
 __all__ = [
     'Base',
@@ -44,6 +43,7 @@ __all__ = [
     'Travel',
     'TravelPassenger',
     'TravelPayout',
+    'TravelStatement',
     'VehicleTravelHistory',
     'Notification',
     'ParameterGroup',
@@ -58,7 +58,5 @@ __all__ = [
     'VehicleKmLog',
     'VehicleIssue',
     'VehicleMaintenanceHistory',
-    'VehicleMaintenanceConfig',
-    'Accountability',
-    'AccountabilityHistory'
+    'VehicleMaintenanceConfig'
 ]

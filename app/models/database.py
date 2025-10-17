@@ -19,8 +19,8 @@ DB_HOST = os.getenv('DB_HOST', 'localhost')
 DB_PORT = os.getenv('DB_PORT', '5432')
 DB_NAME = os.getenv('DB_NAME', 'app_financeiro')
 
-# String de conexão
-DATABASE_URL = f"postgresql://{quote_plus(DB_USER)}:{quote_plus(DB_PASSWORD)}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+# String de conexão (usando psycopg3)
+DATABASE_URL = f"postgresql+psycopg://{quote_plus(DB_USER)}:{quote_plus(DB_PASSWORD)}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 # Engine do SQLAlchemy
 engine = create_engine(DATABASE_URL, echo=False)

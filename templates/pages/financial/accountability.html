@@ -29,10 +29,29 @@
                     <i class="fas fa-arrow-left mr-2"></i>
                     Voltar
                 </a>
-                <button type="button" onclick="alert('Os dados foram salvos automaticamente')" class="px-6 py-3 border border-purple-900 text-purple-900 rounded-xl font-semibold hover:bg-purple-100 transition-all inline-flex items-center">
-                    <i class="fas fa-save mr-2"></i>
-                    Terminar depois
-                </button>
+
+                <!-- Dropdown Salvar -->
+                <div class="relative" id="saveDropdown">
+                    <button id="saveButton" type="button" class="px-6 py-3 bg-purple-900 hover:bg-purple-800 text-white font-semibold rounded-xl transition-all inline-flex items-center shadow-md hover:shadow-lg">
+                        <i class="fas fa-save mr-2"></i>
+                        Salvar
+                        <i class="fas fa-chevron-down ml-2 text-sm"></i>
+                    </button>
+
+                    <!-- Menu Dropdown -->
+                    <div id="saveMenu" class="hidden absolute right-0 w-64 bg-white rounded-lg shadow-lg border border-gray-200">
+                        <div class="py-2">
+                            <button type="button" onclick="saveAccountability('draft'); $('#saveMenu').addClass('hidden');" class="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-all flex items-center">
+                                <i class="fas fa-clock text-yellow-600 mr-3"></i>
+                                <span class="font-medium">Terminar depois</span>
+                            </button>
+                            <button type="button" onclick="saveAccountability('submitted'); $('#saveMenu').addClass('hidden');" class="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-all flex items-center border-t border-gray-100">
+                                <i class="fas fa-paper-plane text-purple-900 mr-3"></i>
+                                <span class="font-medium">Enviar</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -638,15 +657,22 @@
                     </div>
                 </div>
 
-                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between">
-                    <button type="button" onclick="previousStep()" class="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-100 transition-all inline-flex items-center">
-                        <i class="fas fa-arrow-left mr-2"></i>
-                        Voltar
-                    </button>
-                    <button type="button" onclick="alert('Funcionalidade de envio será implementada em breve')" class="px-8 py-3 bg-purple-900 hover:bg-purple-800 text-white rounded-lg font-semibold transition-all inline-flex items-center">
-                        Enviar
-                        <i class="fas fa-arrow-right ml-2"></i>
-                    </button>
+                <!-- Rodapé com Totais -->
+                <div class="px-6 py-6 bg-gray-50 border-t border-gray-200">
+                    <div class="space-y-1">
+                        <div class="flex justify-between py-1">
+                            <span class="font-semibold text-sm text-gray-600 uppercase">Repasse:</span>
+                            <span class="font-bold text-lg text-purple-900">R$ {{ "%.2f"|format(payout.amount)|replace('.', ',') }}</span>
+                        </div>
+                        <div class="flex justify-between py-1" id="summary-total-despesa">
+                            <span class="font-semibold text-sm text-gray-600 uppercase">Despesa:</span>
+                            <span class="font-bold text-lg text-purple-900">R$ 0,00</span>
+                        </div>
+                        <div class="flex justify-between py-3 border-t border-gray-300 mt-2 pt-3" id="summary-saldo-final">
+                            <span class="font-bold text-base text-gray-800 uppercase">Saldo Final:</span>
+                            <span class="font-bold text-xl text-purple-900">R$ {{ "%.2f"|format(payout.amount)|replace('.', ',') }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -991,6 +1017,19 @@ $(document).ready(function() {
     };
 
     // Dados da prestação de contas
+    {% if payout.existing_statement and payout.existing_statement.statement_content %}
+    // Carregar dados existentes
+    let accountabilityData = {{ payout.existing_statement.statement_content | tojson | safe }};
+    // Garantir que os valores de referência estejam atualizados
+    if (!accountabilityData.food.reference_values) {
+        accountabilityData.food.reference_values = {
+            breakfast: MEAL_PRICES.breakfast,
+            lunch: MEAL_PRICES.lunch,
+            dinner: MEAL_PRICES.dinner
+        };
+    }
+    {% else %}
+    // Inicializar dados vazios
     let accountabilityData = {
         payout_id: {{ payout.id }},
         amount: {{ payout.amount }},
@@ -1023,6 +1062,7 @@ $(document).ready(function() {
             expenses: []
         }
     };
+    {% endif %}
 
     let foodDayCounter = 0;
     let vehicleExpenseCounter = 0;
@@ -1970,7 +2010,7 @@ $(document).ready(function() {
                 </div>
             </div>
 
-            <div class="py-2 border-b border-gray-200">
+            <div class="py-2">
                 <div class="mb-4">
                     <span class="text-xs font-semibold text-gray-500 uppercase">Alimentação:</span>
                 </div>
@@ -1982,7 +2022,7 @@ $(document).ready(function() {
             accountabilityData.food.days.forEach(day => {
                 // Criar objeto com todas as refeições (valor 0 se não existir)
                 const mealsMap = {
-                    breakfast: { name: 'Café', value: 0, icon: 'fa-coffee' },
+                    breakfast: { name: 'Café da Manhã', value: 0, icon: 'fa-coffee' },
                     lunch: { name: 'Almoço', value: 0, icon: 'fa-utensils' },
                     dinner: { name: 'Janta', value: 0, icon: 'fa-moon' }
                 };
@@ -1995,50 +2035,64 @@ $(document).ready(function() {
                 });
 
                 html += `
-                    <div class="flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
+                    <div class="flex flex-col md:flex-row md:items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
                         <!-- Data -->
-                        <div class="w-24">
+                        <div class="md:w-24 flex items-center gap-2">
+                            <i class="fas fa-calendar-alt text-purple-900 text-sm"></i>
                             <span class="font-medium text-gray-700">${day.date_formatted}</span>
                         </div>
 
-                        <!-- Café -->
-                        <div class="flex items-center gap-1.5">
-                            <i class="fas ${mealsMap.breakfast.icon} text-purple-900 text-sm"></i>
-                            <span class="text-gray-700">${mealsMap.breakfast.name}</span>
-                            <span class="ml-1 px-2 py-0.5 bg-purple-100 text-purple-900 font-bold rounded-full text-sm">R$ ${mealsMap.breakfast.value.toFixed(2).replace('.', ',')}</span>
-                        </div>
+                        <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 flex-1">
+                            <!-- Café -->
+                            <div class="flex items-center gap-1.5">
+                                <i class="fas ${mealsMap.breakfast.icon} text-purple-900 text-sm"></i>
+                                <span class="text-gray-700">${mealsMap.breakfast.name}</span>
+                                <span class="ml-1 px-2 py-0.5 bg-purple-100 text-purple-900 font-bold rounded-full text-sm">R$ ${mealsMap.breakfast.value.toFixed(2).replace('.', ',')}</span>
+                            </div>
 
-                        <!-- Almoço -->
-                        <div class="flex items-center gap-1.5">
-                            <i class="fas ${mealsMap.lunch.icon} text-purple-900 text-sm"></i>
-                            <span class="text-gray-700">${mealsMap.lunch.name}</span>
-                            <span class="ml-1 px-2 py-0.5 bg-purple-100 text-purple-900 font-bold rounded-full text-sm">R$ ${mealsMap.lunch.value.toFixed(2).replace('.', ',')}</span>
-                        </div>
+                            <!-- Almoço -->
+                            <div class="flex items-center gap-1.5">
+                                <i class="fas ${mealsMap.lunch.icon} text-purple-900 text-sm"></i>
+                                <span class="text-gray-700">${mealsMap.lunch.name}</span>
+                                <span class="ml-1 px-2 py-0.5 bg-purple-100 text-purple-900 font-bold rounded-full text-sm">R$ ${mealsMap.lunch.value.toFixed(2).replace('.', ',')}</span>
+                            </div>
 
-                        <!-- Janta -->
-                        <div class="flex items-center gap-1.5">
-                            <i class="fas ${mealsMap.dinner.icon} text-purple-900 text-sm"></i>
-                            <span class="text-gray-700">${mealsMap.dinner.name}</span>
-                            <span class="ml-1 px-2 py-0.5 bg-purple-100 text-purple-900 font-bold rounded-full text-sm">R$ ${mealsMap.dinner.value.toFixed(2).replace('.', ',')}</span>
+                            <!-- Janta -->
+                            <div class="flex items-center gap-1.5">
+                                <i class="fas ${mealsMap.dinner.icon} text-purple-900 text-sm"></i>
+                                <span class="text-gray-700">${mealsMap.dinner.name}</span>
+                                <span class="ml-1 px-2 py-0.5 bg-purple-100 text-purple-900 font-bold rounded-full text-sm">R$ ${mealsMap.dinner.value.toFixed(2).replace('.', ',')}</span>
+                            </div>
                         </div>
 
                         <!-- Total do Dia -->
-                        <div class="flex-1 text-right">
+                        <div class="text-right md:text-right">
                             <span class="font-bold text-purple-900">R$ ${day.amount.toFixed(2).replace('.', ',')}</span>
                         </div>
                     </div>
                 `;
             });
             html += '</div>';
+        } else {
+            html += `
+                <div class="ml-4 mb-4">
+                    <div class="flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
+                        <div class="flex items-center gap-2 flex-1">
+                            <i class="fas fa-info-circle text-gray-400"></i>
+                            <span class="text-gray-500">Não há despesas registradas</span>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         html += `
-                <div class="flex justify-end">
+                <div class="flex items-center justify-end pe-1 bg-white rounded text-sm">
                     <span class="text-gray-600">Total:</span>
                     <span class="ml-2 font-bold text-purple-900">R$ ${accountabilityData.food.amount.toFixed(2).replace('.', ',')}</span>
                 </div>
             </div>
-            <div class="py-2 border-b border-gray-200">
+            <div class="py-2">
                 <div class="mb-4">
                     <span class="text-xs font-semibold text-gray-500 uppercase">Veículo:</span>
                 </div>
@@ -2070,7 +2124,8 @@ $(document).ready(function() {
             accountabilityData.vehicle.expenses.forEach(expense => {
                 html += `
                     <div class="flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
-                        <div class="w-24">
+                        <div class="w-24 flex items-center gap-2">
+                            <i class="fas fa-calendar-alt text-purple-900 text-sm"></i>
                             <span class="font-medium text-gray-700">${expense.date_formatted}</span>
                         </div>
                         <div class="flex items-center gap-2 flex-1">
@@ -2084,15 +2139,26 @@ $(document).ready(function() {
                 `;
             });
             html += '</div>';
+        } else {
+            html += `
+                <div class="ml-4 mb-4">
+                    <div class="flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
+                        <div class="flex items-center gap-2 flex-1">
+                            <i class="fas fa-info-circle text-gray-400"></i>
+                            <span class="text-gray-500">Não há despesas registradas</span>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         html += `
-                <div class="flex justify-end">
+                <div class="flex items-center justify-end pe-1 bg-white rounded text-sm">
                     <span class="text-gray-600">Total:</span>
                     <span class="ml-2 font-bold text-purple-900">R$ ${accountabilityData.vehicle.amount.toFixed(2).replace('.', ',')}</span>
                 </div>
             </div>
-            <div class="py-2 border-b border-gray-200">
+            <div class="py-2">
                 <div class="mb-4">
                     <span class="text-xs font-semibold text-gray-500 uppercase">Hospedagem:</span>
                 </div>
@@ -2104,7 +2170,8 @@ $(document).ready(function() {
             accountabilityData.lodging.expenses.forEach(expense => {
                 html += `
                     <div class="flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
-                        <div class="w-24">
+                        <div class="w-24 flex items-center gap-2">
+                            <i class="fas fa-calendar-alt text-purple-900 text-sm"></i>
                             <span class="font-medium text-gray-700">${expense.date_formatted}</span>
                         </div>
                         <div class="flex items-center gap-2 flex-1">
@@ -2118,15 +2185,26 @@ $(document).ready(function() {
                 `;
             });
             html += '</div>';
+        } else {
+            html += `
+                <div class="ml-4 mb-4">
+                    <div class="flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
+                        <div class="flex items-center gap-2 flex-1">
+                            <i class="fas fa-info-circle text-gray-400"></i>
+                            <span class="text-gray-500">Não há despesas registradas</span>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         html += `
-                <div class="flex justify-end">
+                <div class="flex items-center justify-end pe-1 bg-white rounded text-sm">
                     <span class="text-gray-600">Total:</span>
                     <span class="ml-2 font-bold text-purple-900">R$ ${accountabilityData.lodging.amount.toFixed(2).replace('.', ',')}</span>
                 </div>
             </div>
-            <div class="py-2 border-b border-gray-200">
+            <div class="py-2">
                 <div class="mb-4">
                     <span class="text-xs font-semibold text-gray-500 uppercase">Outras Despesas:</span>
                 </div>
@@ -2138,7 +2216,8 @@ $(document).ready(function() {
             accountabilityData.other.expenses.forEach(expense => {
                 html += `
                     <div class="flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
-                        <div class="w-24">
+                        <div class="w-24 flex items-center gap-2">
+                            <i class="fas fa-calendar-alt text-purple-900 text-sm"></i>
                             <span class="font-medium text-gray-700">${expense.date_formatted}</span>
                         </div>
                         <div class="flex items-center gap-2 flex-1">
@@ -2152,25 +2231,43 @@ $(document).ready(function() {
                 `;
             });
             html += '</div>';
+        } else {
+            html += `
+                <div class="ml-4 mb-4">
+                    <div class="flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
+                        <div class="flex items-center gap-2 flex-1">
+                            <i class="fas fa-info-circle text-gray-400"></i>
+                            <span class="text-gray-500">Não há despesas registradas</span>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         html += `
-                <div class="flex justify-end">
+                <div class="flex items-center justify-end pe-1 bg-white rounded text-sm">
                     <span class="text-gray-600">Total:</span>
                     <span class="ml-2 font-bold text-purple-900">R$ ${accountabilityData.other.amount.toFixed(2).replace('.', ',')}</span>
                 </div>
             </div>
-            <div class="flex justify-between py-3 mt-3">
-                <span class="font-bold text-lg">Total:</span>
-                <span class="font-bold text-xl text-purple-900">R$ ${total.toFixed(2).replace('.', ',')}</span>
-            </div>
-            <div class="flex justify-between py-2 mt-2 bg-gray-100 rounded-lg px-3">
-                <span class="font-medium">Valor do Repasse:</span>
-                <span class="font-bold">R$ ${accountabilityData.amount.toFixed(2).replace('.', ',')}</span>
-            </div>
         `;
 
         $('#summary-content').html(html);
+
+        // Atualizar rodapé com totais
+        const totalDespesa = total;
+        const valorRepasse = {{ payout.amount }};
+        const saldoFinal = valorRepasse - totalDespesa;
+
+        $('#summary-total-despesa').html(`
+            <span class="font-semibold text-sm text-gray-600 uppercase">Despesa:</span>
+            <span class="font-bold text-lg text-purple-900">R$ ${totalDespesa.toFixed(2).replace('.', ',')}</span>
+        `);
+
+        $('#summary-saldo-final').html(`
+            <span class="font-bold text-base text-gray-800 uppercase">Saldo Final:</span>
+            <span class="font-bold text-xl ${saldoFinal < 0 ? 'text-red-900' : 'text-purple-900'}">R$ ${saldoFinal.toFixed(2).replace('.', ',')}</span>
+        `);
     }
 
     // Atualizar JSON em tempo real
@@ -2258,6 +2355,36 @@ $(document).ready(function() {
         }
     };
 
+    // Função para salvar prestação de contas (rascunho ou enviar)
+    window.saveAccountability = function(status = 'draft') {
+        // Coletar dados do passo atual antes de salvar
+        collectCurrentStepData();
+
+        // Fazer requisição para salvar
+        fetch('/admin/financial/{{ payout.id }}/accountability', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                statement_content: accountabilityData,
+                status: status
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message, 'success');
+            } else {
+                showToast(data.error || 'Erro ao salvar prestação de contas', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showToast('Erro ao salvar prestação de contas', 'error');
+        });
+    };
+
     // Permitir apenas números nos campos de quilometragem
     $('#km-departure, #km-arrival').on('input', function() {
         // Remove tudo que não seja dígito
@@ -2271,6 +2398,163 @@ $(document).ready(function() {
 
     // Inicializar estado do botão de adicionar alimentação
     updateAddFoodDayButton();
+
+    // Renderizar dados salvos (se houver)
+    {% if payout.existing_statement and payout.existing_statement.statement_content %}
+    function renderSavedData() {
+        console.log('Carregando dados salvos...', accountabilityData);
+
+        // Renderizar dias de alimentação
+        if (accountabilityData.food && accountabilityData.food.days && accountabilityData.food.days.length > 0) {
+            accountabilityData.food.days.forEach((day, index) => {
+                // Adicionar dia usando a função existente
+                addFoodDay();
+
+                // Configurar a data do dia
+                setTimeout(() => {
+                    $(`#food-day-date-${foodDayCounter}`).val(day.date);
+
+                    // Configurar checkboxes das refeições
+                    day.meals.forEach(meal => {
+                        const checkbox = $(`.food-meal-checkbox[data-day-id="${foodDayCounter}"][data-meal="${meal.type}"]`);
+                        // Verificar se a refeição foi marcada (se o valor for maior que 0)
+                        if (meal.value > 0) {
+                            checkbox.prop('checked', true);
+                        } else {
+                            checkbox.prop('checked', false);
+                        }
+                    });
+
+                    calculateFoodTotal();
+                }, 50 * (index + 1));
+            });
+        }
+
+        // Renderizar despesas de veículo
+        if (IS_DRIVER && accountabilityData.vehicle) {
+            // Configurar quilometragem
+            if (accountabilityData.vehicle.km_start) {
+                $('#km-departure').val(accountabilityData.vehicle.km_start);
+            }
+            if (accountabilityData.vehicle.km_end) {
+                $('#km-arrival').val(accountabilityData.vehicle.km_end);
+            }
+
+            // Adicionar despesas de veículo
+            if (accountabilityData.vehicle.expenses && accountabilityData.vehicle.expenses.length > 0) {
+                accountabilityData.vehicle.expenses.forEach((expense, index) => {
+                    setTimeout(() => {
+                        addVehicleExpenseRow(
+                            expense.date || TRIP_START_DATE,
+                            expense.type || 'fuel',
+                            parseFloat(expense.value) || 0,
+                            expense.description || ''
+                        );
+                    }, 50 * (index + 1));
+                });
+            }
+        }
+
+        // Renderizar despesas de hospedagem
+        if (accountabilityData.lodging && accountabilityData.lodging.expenses && accountabilityData.lodging.expenses.length > 0) {
+            accountabilityData.lodging.expenses.forEach((expense, index) => {
+                setTimeout(() => {
+                    addLodgingExpenseRow(
+                        expense.date || TRIP_START_DATE,
+                        parseFloat(expense.value) || 0
+                    );
+                }, 50 * (index + 1));
+            });
+        }
+
+        // Renderizar outras despesas
+        if (accountabilityData.other && accountabilityData.other.expenses && accountabilityData.other.expenses.length > 0) {
+            accountabilityData.other.expenses.forEach((expense, index) => {
+                setTimeout(() => {
+                    addOtherExpenseRow(
+                        expense.description || 'Despesa',
+                        expense.date || TRIP_START_DATE,
+                        parseFloat(expense.value) || 0
+                    );
+                }, 50 * (index + 1));
+            });
+        }
+
+        console.log('Dados salvos carregados com sucesso!');
+    }
+
+    // Chamar função para renderizar dados salvos com delay para garantir que DOM está pronto
+    setTimeout(renderSavedData, 100);
+    {% endif %}
+
+    // Controle do dropdown de salvar
+    const $saveButton = $('#saveButton');
+    const $saveMenu = $('#saveMenu');
+    const $saveContainer = $('#saveDropdown');
+    let isSaveFixed = false;
+
+    function openSaveDropdown() {
+        // Mover para o body com position fixed para evitar problemas de z-index
+        const rect = $saveButton[0].getBoundingClientRect();
+
+        $saveMenu.removeClass('hidden');
+        $saveMenu.css({
+            position: 'fixed',
+            zIndex: 9999,
+            top: (rect.bottom + 8) + 'px',
+            left: (rect.right - $saveMenu.outerWidth()) + 'px'
+        });
+
+        $('body').append($saveMenu);
+        isSaveFixed = true;
+    }
+
+    function closeSaveDropdown() {
+        $saveMenu.addClass('hidden');
+        $saveMenu.css({
+            position: '',
+            zIndex: '',
+            top: '',
+            left: ''
+        });
+
+        // Retornar para o container original
+        $saveContainer.append($saveMenu);
+        isSaveFixed = false;
+    }
+
+    // Toggle dropdown
+    $saveButton.on('click', function(e) {
+        e.stopPropagation();
+
+        if ($saveMenu.hasClass('hidden')) {
+            openSaveDropdown();
+        } else {
+            closeSaveDropdown();
+        }
+    });
+
+    // Fechar dropdown ao clicar fora
+    $(document).on('click', function(e) {
+        if (!$saveMenu.is(e.target) && $saveMenu.has(e.target).length === 0 &&
+            !$saveButton.is(e.target) && !$saveMenu.hasClass('hidden')) {
+            closeSaveDropdown();
+        }
+    });
+
+    // Reposicionar ao redimensionar a janela ou scroll
+    function updateSavePosition() {
+        if (!$saveMenu.hasClass('hidden') && isSaveFixed) {
+            const rect = $saveButton[0].getBoundingClientRect();
+            $saveMenu.css({
+                top: (rect.bottom + 8) + 'px',
+                left: (rect.right - $saveMenu.outerWidth()) + 'px'
+            });
+        }
+    }
+
+    $(window).on('resize', updateSavePosition);
+    $(window).on('scroll', updateSavePosition);
 });
 </script>
 {% endblock %}

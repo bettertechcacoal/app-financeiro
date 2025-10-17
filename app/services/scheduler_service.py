@@ -16,6 +16,9 @@ from app.services.movidesk_service import MovideskService
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Reduzir verbosidade do APScheduler
+logging.getLogger('apscheduler').setLevel(logging.WARNING)
+
 # Instância global do scheduler
 scheduler = None
 
@@ -36,15 +39,8 @@ def init_scheduler(app):
     # Carregar e configurar horários de sincronização
     load_sync_schedules()
 
-    # Atualizar horários a cada 5 minutos (caso sejam alterados via interface)
-    scheduler.add_job(
-        func=load_sync_schedules,
-        trigger='interval',
-        minutes=5,
-        id='reload_schedules',
-        name='Recarregar horários de sincronização',
-        replace_existing=True
-    )
+    # Nota: Os horários são recarregados automaticamente quando salvos via interface
+    # Não é necessário verificar periodicamente
 
     return scheduler
 
@@ -60,7 +56,7 @@ def load_sync_schedules():
         ).first()
 
         if not parameter or not parameter.value:
-            logger.info("[SCHEDULER] Nenhum horário de sincronização configurado")
+            # Não logar quando não há configuração (evita poluição de logs)
             db.close()
             return
 
@@ -69,7 +65,7 @@ def load_sync_schedules():
         db.close()
 
         if not schedules or len(schedules) == 0:
-            logger.info("[SCHEDULER] Lista de horários vazia")
+            # Não logar quando lista está vazia (evita poluição de logs)
             return
 
         # Remover jobs antigos de sincronização

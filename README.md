@@ -384,12 +384,12 @@ O sistema estará disponível em `http://localhost:5000`
 ## Tecnologias Utilizadas
 
 ### Backend
-- **Flask** 3.0.0 - Framework web
-- **SQLAlchemy** 2.0.25 - ORM
-- **Alembic** - Sistema de migrations
-- **psycopg2-binary** - Driver PostgreSQL
-- **python-dotenv** - Gerenciamento de variáveis de ambiente
-- **requests** - Cliente HTTP
+- **Flask** 3.1.2 - Framework web
+- **SQLAlchemy** 2.0.44 - ORM
+- **Alembic** 1.17.0 - Sistema de migrations
+- **psycopg** 3.2.3 - Driver PostgreSQL (versão 3)
+- **python-dotenv** 1.1.1 - Gerenciamento de variáveis de ambiente
+- **requests** 2.32.5 - Cliente HTTP
 
 ### Frontend
 - **TailwindCSS** - Framework CSS
@@ -455,7 +455,7 @@ Erro: 401 Unauthorized
 ### Erro de Coluna Inexistente
 
 ```
-psycopg2.errors.UndefinedColumn: column does not exist
+psycopg.errors.UndefinedColumn: column does not exist
 ```
 
 **Solução**:

@@ -27,6 +27,10 @@ def from_json_filter(value):
 
 register_routes(app)
 
+# Registrar error handlers personalizados
+from app.error_handlers import register_error_handlers
+register_error_handlers(app)
+
 # Registrar eventos Socket.IO
 from app.socketio_events import register_socketio_events
 register_socketio_events(socketio)

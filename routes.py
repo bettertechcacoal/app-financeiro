@@ -104,6 +104,8 @@ def register_routes(app: Flask):
     # Rotas de Financeiro
     admin_bp.add_url_rule('/financial', view_func=financial_controller.financial_payouts_list, methods=['GET'])
     admin_bp.add_url_rule('/financial/<int:payout_id>/accountability', view_func=financial_controller.financial_accountability, methods=['GET'])
+    admin_bp.add_url_rule('/financial/<int:payout_id>/accountability', view_func=financial_controller.save_accountability, methods=['POST'])
+    admin_bp.add_url_rule('/financial/<int:payout_id>/review', view_func=financial_controller.financial_review_accountability, methods=['GET'])
 
     # Rotas de Perfil
     admin_bp.add_url_rule('/profile', view_func=profile_controller.profile_view, methods=['GET'])

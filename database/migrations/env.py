@@ -36,7 +36,7 @@ from app.models.client import Client
 from app.models.organization import Organization
 from app.models.client_organization import ClientOrganization
 from app.models.ticket import Ticket
-from app.models.sync_log import SyncLog
+from app.models.ticket_sync_log import TicketSyncLog
 
 # add your model's MetaData object here
 target_metadata = Base.metadata

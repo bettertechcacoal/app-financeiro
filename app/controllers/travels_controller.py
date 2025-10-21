@@ -9,6 +9,7 @@ from app.models.city import City
 from app.models.state import State
 from app.models.vehicle import Vehicle
 from app.models.vehicle_travel_history import VehicleTravelHistory
+from app.utils.permissions_helper import permission_required
 from datetime import datetime
 from decimal import Decimal
 from sqlalchemy import case
@@ -62,7 +63,7 @@ def travels_create():
 
         # Buscar todas as cidades e usuários para os selects
         cities = db.query(City).join(State).order_by(State.name, City.name).all()
-        users = db.query(User).filter_by(is_active=True).order_by(User.name).all()
+        users = db.query(User).filter_by(active=True).order_by(User.name).all()
 
         cities_data = [city.to_dict() for city in cities]
         users_data = [user.to_dict() for user in users]
@@ -109,6 +110,13 @@ def travels_store():
         if return_datetime <= departure_datetime:
             flash('A data de retorno deve ser posterior à data de saída', 'error')
             return redirect(url_for('admin.travels_create'))
+
+        # Validar data retroativa (apenas se não tiver permissão)
+        from app.utils.permissions_helper import user_has_permission
+        if departure_datetime.date() < datetime.now().date():
+            if not user_has_permission('travels_create_retroactive'):
+                flash('Você não tem permissão para lançar viagens com datas retroativas', 'error')
+                return redirect(url_for('admin.travels_create'))
 
         # Criar nova viagem
         new_travel = Travel(
@@ -163,9 +171,14 @@ def travels_edit(travel_id):
             flash('Viagem não encontrada', 'error')
             return redirect(url_for('admin.travels_list'))
 
+        # Verificar se a viagem está pendente
+        if travel.status != TravelStatus.PENDING:
+            flash('Apenas viagens pendentes podem ser editadas', 'error')
+            return redirect(url_for('admin.travels_list'))
+
         # Buscar cidades e usuários para os selects
         cities = db.query(City).join(State).order_by(State.name, City.name).all()
-        users = db.query(User).filter_by(is_active=True).order_by(User.name).all()
+        users = db.query(User).filter_by(active=True).order_by(User.name).all()
 
         travel_data = travel.to_dict()
         cities_data = [city.to_dict() for city in cities]
@@ -198,6 +211,11 @@ def travels_update(travel_id):
             flash('Viagem não encontrada', 'error')
             return redirect(url_for('admin.travels_list'))
 
+        # Verificar se a viagem está pendente
+        if travel.status != TravelStatus.PENDING:
+            flash('Apenas viagens pendentes podem ser editadas', 'error')
+            return redirect(url_for('admin.travels_list'))
+
         # Obter dados do formulário
         user_id = request.form.get('user_id')
         city_id = request.form.get('city_id')
@@ -221,6 +239,13 @@ def travels_update(travel_id):
         if return_datetime <= departure_datetime:
             flash('A data de retorno deve ser posterior à data de saída', 'error')
             return redirect(url_for('admin.travels_edit', travel_id=travel_id))
+
+        # Validar data retroativa (apenas se não tiver permissão)
+        from app.utils.permissions_helper import user_has_permission
+        if departure_datetime.date() < datetime.now().date():
+            if not user_has_permission('travels_create_retroactive'):
+                flash('Você não tem permissão para lançar viagens com datas retroativas', 'error')
+                return redirect(url_for('admin.travels_edit', travel_id=travel_id))
 
         # Atualizar viagem
         travel.driver_user_id = int(user_id)
@@ -303,6 +328,12 @@ def travels_cancel(travel_id):
             flash('Viagem não encontrada', 'error')
             return redirect(url_for('admin.travels_list'))
 
+        # Verificar se o usuário pode cancelar (apenas motorista ou quem registrou)
+        current_user_id = session.get('user_id')
+        if travel.driver_user_id != current_user_id and travel.record_user_id != current_user_id:
+            flash('Você não tem permissão para cancelar esta viagem', 'error')
+            return redirect(url_for('admin.travels_list'))
+
         # Verificar se a viagem pode ser cancelada
         if travel.status == TravelStatus.COMPLETED:
             flash('Não é possível cancelar uma viagem já concluída', 'error')
@@ -325,6 +356,7 @@ def travels_cancel(travel_id):
         return redirect(url_for('admin.travels_list'))
 
 
+@permission_required('travels_approve')
 def travels_analyze(travel_id):
     """Exibe tela de análise de viagem (wizard)"""
     db = SessionLocal()
@@ -358,6 +390,7 @@ def travels_analyze(travel_id):
     )
 
 
+@permission_required('travels_approve')
 def travels_analyze_process(travel_id):
     """Processa a análise da viagem"""
     try:

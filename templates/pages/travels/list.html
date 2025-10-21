@@ -125,21 +125,22 @@
                                             <i class="fas fa-eye mr-1.5"></i>
                                             Ver Resumo
                                         </a>
-                                        {% else %}
+                                        {% endif %}
+                                        {% if travel.status == 'pending' %}
                                         <a href="{{ url_for('admin.travels_edit', travel_id=travel.id) }}"
                                            class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
                                             <i class="fas fa-edit mr-1.5"></i>
                                             Editar
                                         </a>
                                         {% endif %}
-                                        {% if travel.status in ['pending', 'approved'] %}
+                                        {% if travel.status in ['pending', 'approved'] and (travel.driver_user_id == current_user.id or travel.record_user_id == current_user.id) %}
                                         <button onclick="cancelTravel({{ travel.id }})"
                                                 class="inline-flex items-center px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
                                             <i class="fas fa-ban mr-1.5"></i>
                                             Cancelar
                                         </button>
                                         {% endif %}
-                                        {% if travel.status == 'pending' %}
+                                        {% if travel.status == 'pending' and 'travels_approve' in user_permissions %}
                                         <a href="{{ url_for('admin.travels_analyze', travel_id=travel.id) }}"
                                            class="inline-flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
                                             <i class="fas fa-search mr-1.5"></i>

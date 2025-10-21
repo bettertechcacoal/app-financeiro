@@ -47,7 +47,7 @@ def user_create():
             'email': email,
             'phone': request.form.get('phone'),
             'avatar': request.form.get('avatar'),
-            'active': request.form.get('is_active', 'on') == 'on',
+            'active': request.form.get('active', 'on') == 'on',
             'groups': request.form.getlist('groups[]')  # Capturar grupos selecionados
         }
 
@@ -105,7 +105,7 @@ def user_update(user_id):
             'email': email,
             'phone': request.form.get('phone'),
             'avatar': request.form.get('avatar'),
-            'active': request.form.get('is_active', 'off') == 'on',
+            'active': request.form.get('active', 'off') == 'on',
             'groups': request.form.getlist('groups[]')  # Capturar grupos selecionados
         }
 

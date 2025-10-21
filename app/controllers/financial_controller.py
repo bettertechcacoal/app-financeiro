@@ -7,11 +7,13 @@ from app.models.travel import Travel
 from app.models.user import User
 from app.models.city import City
 from app.models.state import State
+from app.utils.permissions_helper import permission_required
 from sqlalchemy.orm import joinedload
 from sqlalchemy import case, func
 import json
 
 
+@permission_required('financial_accountability')
 def financial_accountability(payout_id):
     """Exibe tela de prestação de contas (wizard)"""
     try:
@@ -155,6 +157,7 @@ def financial_payouts_list():
         return redirect(url_for('admin.dashboard'))
 
 
+@permission_required('financial_review_accountability')
 def financial_review_accountability(payout_id):
     """Exibe tela de análise/revisão da prestação de contas"""
     db = SessionLocal()

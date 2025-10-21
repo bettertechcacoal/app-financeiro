@@ -30,15 +30,18 @@
                     Voltar
                 </a>
 
-                <!-- Dropdown Salvar -->
+                <!-- Dropdown Salvar - Desabilitado se já foi enviado ou aprovado -->
                 <div class="relative" id="saveDropdown">
-                    <button id="saveButton" type="button" class="px-6 py-3 bg-purple-900 hover:bg-purple-800 text-white font-semibold rounded-xl transition-all inline-flex items-center shadow-md hover:shadow-lg">
+                    <button id="saveButton" type="button" class="px-6 py-3 {% if payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved'] %}bg-gray-400 cursor-not-allowed{% else %}bg-purple-900 hover:bg-purple-800{% endif %} text-white font-semibold rounded-xl transition-all inline-flex items-center shadow-md {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}hover:shadow-lg{% endif %}" {% if payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved'] %}disabled{% endif %}>
                         <i class="fas fa-save mr-2"></i>
                         Salvar
+                        {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}
                         <i class="fas fa-chevron-down ml-2 text-sm"></i>
+                        {% endif %}
                     </button>
 
                     <!-- Menu Dropdown -->
+                    {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}
                     <div id="saveMenu" class="hidden absolute right-0 w-64 bg-white rounded-lg shadow-lg border border-gray-200">
                         <div class="py-2">
                             <button type="button" onclick="saveAccountability('draft'); $('#saveMenu').addClass('hidden');" class="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-all flex items-center">
@@ -51,6 +54,7 @@
                             </button>
                         </div>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -78,7 +82,7 @@
                     <div class="flex items-center justify-center overflow-x-auto">
                         <div class="flex items-center space-x-2">
                             <!-- Step 1: Alimentação -->
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(1)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(1)"{% endif %}>
                                 <div id="step-indicator-1" class="wizard-step-active flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-utensils"></i>
                                 </div>
@@ -90,7 +94,7 @@
 
                             <!-- Step 2: Veículo -->
                             {% if payout.travel_info and payout.travel_info.driver_user and payout.travel_info.driver_user.id == session.get('user_id') %}
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(2)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(2)"{% endif %}>
                                 <div id="step-indicator-2" class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
                                     <i class="fas fa-car"></i>
                                 </div>
@@ -102,7 +106,7 @@
                             {% endif %}
 
                             <!-- Step 3: Hospedagem -->
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(3)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(3)"{% endif %}>
                                 <div id="step-indicator-3" class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
                                     <i class="fas fa-bed"></i>
                                 </div>
@@ -113,7 +117,7 @@
                             <div class="w-6 h-0.5 bg-gray-300"></div>
 
                             <!-- Step 4: Outras Despesas -->
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(4)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(4)"{% endif %}>
                                 <div id="step-indicator-4" class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
                                     <i class="fas fa-receipt"></i>
                                 </div>
@@ -124,7 +128,7 @@
                             <div class="w-6 h-0.5 bg-gray-300"></div>
 
                             <!-- Step 5: Finalizar -->
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(5)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(5)"{% endif %}>
                                 <div id="step-indicator-5" class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
                                     <i class="fas fa-check-circle"></i>
                                 </div>
@@ -215,7 +219,7 @@
                 <div class="px-6 py-5 bg-gray-50 border-b border-gray-200">
                     <div class="flex items-center justify-center overflow-x-auto">
                         <div class="flex items-center space-x-2">
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(1)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(1)"{% endif %}>
                                 <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-check"></i>
                                 </div>
@@ -225,7 +229,7 @@
                             </div>
                             <div class="w-6 h-0.5 bg-purple-900"></div>
 
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(2)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(2)"{% endif %}>
                                 <div class="wizard-step-active flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-car"></i>
                                 </div>
@@ -235,7 +239,7 @@
                             </div>
                             <div class="w-6 h-0.5 bg-gray-300"></div>
 
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(3)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(3)"{% endif %}>
                                 <div class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
                                     <i class="fas fa-bed"></i>
                                 </div>
@@ -245,7 +249,7 @@
                             </div>
                             <div class="w-6 h-0.5 bg-gray-300"></div>
 
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(4)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(4)"{% endif %}>
                                 <div class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
                                     <i class="fas fa-receipt"></i>
                                 </div>
@@ -255,7 +259,7 @@
                             </div>
                             <div class="w-6 h-0.5 bg-gray-300"></div>
 
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(5)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(5)"{% endif %}>
                                 <div class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
                                     <i class="fas fa-check-circle"></i>
                                 </div>
@@ -346,7 +350,7 @@
                 <div class="px-6 py-5 bg-gray-50 border-b border-gray-200">
                     <div class="flex items-center justify-center overflow-x-auto">
                         <div class="flex items-center space-x-2">
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(1)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(1)"{% endif %}>
                                 <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-check"></i>
                                 </div>
@@ -356,7 +360,7 @@
                             </div>
                             <div class="w-6 h-0.5 bg-purple-900"></div>
 
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(2)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(2)"{% endif %}>
                                 <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-check"></i>
                                 </div>
@@ -366,7 +370,7 @@
                             </div>
                             <div class="w-6 h-0.5 bg-purple-900"></div>
 
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(3)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(3)"{% endif %}>
                                 <div class="wizard-step-active flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-bed"></i>
                                 </div>
@@ -376,7 +380,7 @@
                             </div>
                             <div class="w-6 h-0.5 bg-gray-300"></div>
 
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(4)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(4)"{% endif %}>
                                 <div class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
                                     <i class="fas fa-receipt"></i>
                                 </div>
@@ -386,7 +390,7 @@
                             </div>
                             <div class="w-6 h-0.5 bg-gray-300"></div>
 
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(5)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(5)"{% endif %}>
                                 <div class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
                                     <i class="fas fa-check-circle"></i>
                                 </div>
@@ -466,7 +470,7 @@
                 <div class="px-6 py-5 bg-gray-50 border-b border-gray-200">
                     <div class="flex items-center justify-center overflow-x-auto">
                         <div class="flex items-center space-x-2">
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(1)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(1)"{% endif %}>
                                 <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-check"></i>
                                 </div>
@@ -476,7 +480,7 @@
                             </div>
                             <div class="w-6 h-0.5 bg-purple-900"></div>
 
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(2)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(2)"{% endif %}>
                                 <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-check"></i>
                                 </div>
@@ -486,7 +490,7 @@
                             </div>
                             <div class="w-6 h-0.5 bg-purple-900"></div>
 
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(3)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(3)"{% endif %}>
                                 <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-check"></i>
                                 </div>
@@ -496,7 +500,7 @@
                             </div>
                             <div class="w-6 h-0.5 bg-purple-900"></div>
 
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(4)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(4)"{% endif %}>
                                 <div class="wizard-step-active flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-receipt"></i>
                                 </div>
@@ -506,7 +510,7 @@
                             </div>
                             <div class="w-6 h-0.5 bg-gray-300"></div>
 
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(5)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(5)"{% endif %}>
                                 <div class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
                                     <i class="fas fa-check-circle"></i>
                                 </div>
@@ -586,7 +590,7 @@
                 <div class="px-6 py-5 bg-gray-50 border-b border-gray-200">
                     <div class="flex items-center justify-center overflow-x-auto">
                         <div class="flex items-center space-x-2">
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(1)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(1)"{% endif %}>
                                 <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-check"></i>
                                 </div>
@@ -596,7 +600,7 @@
                             </div>
                             <div class="w-6 h-0.5 bg-purple-900"></div>
 
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(2)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(2)"{% endif %}>
                                 <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-check"></i>
                                 </div>
@@ -606,7 +610,7 @@
                             </div>
                             <div class="w-6 h-0.5 bg-purple-900"></div>
 
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(3)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(3)"{% endif %}>
                                 <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-check"></i>
                                 </div>
@@ -616,7 +620,7 @@
                             </div>
                             <div class="w-6 h-0.5 bg-purple-900"></div>
 
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(4)">
+                            <div class="flex items-center {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}cursor-pointer hover:opacity-80 transition-opacity{% else %}cursor-not-allowed opacity-50{% endif %}" {% if not (payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved']) %}onclick="goToStep(4)"{% endif %}>
                                 <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-check"></i>
                                 </div>
@@ -626,7 +630,7 @@
                             </div>
                             <div class="w-6 h-0.5 bg-purple-900"></div>
 
-                            <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(5)">
+                            <div class="flex items-center">
                                 <div class="wizard-step-active flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-check-circle"></i>
                                 </div>
@@ -964,6 +968,13 @@ $(document).ready(function() {
     let currentStep = 1;
     const totalSteps = 5;
 
+    // Verificar se a prestação de contas já foi enviada ou aprovada (bloqueio de edição)
+    {% if payout.existing_statement and payout.existing_statement.status in ['submitted', 'approved'] %}
+        const IS_LOCKED = true;
+    {% else %}
+        const IS_LOCKED = false;
+    {% endif %}
+
     // Verificar se o usuário logado é o solicitante (motorista)
     {% if payout.travel_info and payout.travel_info.driver_user and payout.travel_info.driver_user.id == session.get('user_id') %}
         const IS_DRIVER = true;
@@ -1074,6 +1085,21 @@ $(document).ready(function() {
         reverse: true,
         placeholder: '0,00'
     });
+
+    // Se já foi enviada ou aprovada, forçar ir para o step 5 (Finalizar) e bloquear navegação
+    if (IS_LOCKED) {
+        // Esconder todos os steps
+        for (let i = 1; i <= totalSteps; i++) {
+            $(`#wizard-step-${i}`).addClass('hidden');
+        }
+        // Mostrar apenas o step 5 (Finalizar)
+        $('#wizard-step-5').removeClass('hidden');
+        currentStep = 5;
+        // Renderizar o resumo
+        setTimeout(function() {
+            renderSummary();
+        }, 100);
+    }
 
     // Função para converter valor monetário para número
     function parseMoneyValue(value) {
@@ -2328,6 +2354,11 @@ $(document).ready(function() {
 
     // Função para ir diretamente para um passo específico
     window.goToStep = function(targetStep) {
+        // Impedir navegação se já foi enviada ou aprovada
+        if (IS_LOCKED) {
+            return;
+        }
+
         // Impedir navegação para step 2 (Veículo) se o usuário não for o motorista
         if (targetStep === 2 && !IS_DRIVER) {
             return;
@@ -2357,6 +2388,12 @@ $(document).ready(function() {
 
     // Função para salvar prestação de contas (rascunho ou enviar)
     window.saveAccountability = function(status = 'draft') {
+        // Impedir salvar se já foi enviada ou aprovada
+        if (IS_LOCKED) {
+            showToast('Esta prestação de contas já foi enviada e não pode ser modificada', 'warning');
+            return;
+        }
+
         // Coletar dados do passo atual antes de salvar
         collectCurrentStepData();
 
@@ -2375,6 +2412,10 @@ $(document).ready(function() {
         .then(data => {
             if (data.success) {
                 showToast(data.message, 'success');
+                // Recarregar a página após 1 segundo
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1000);
             } else {
                 showToast(data.error || 'Erro ao salvar prestação de contas', 'error');
             }

@@ -4,9 +4,9 @@ from sqlalchemy.sql import func
 from app.models.database import Base
 
 
-class SyncLog(Base):
-    """Modelo de Log de Sincronização"""
-    __tablename__ = 'sync_logs'
+class TicketSyncLog(Base):
+    """Modelo de Log de Sincronização de Tickets"""
+    __tablename__ = 'ticket_sync_logs'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     sync_type = Column(String(50), nullable=False)  # 'organizations', 'tickets', etc

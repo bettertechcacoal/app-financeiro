@@ -41,11 +41,11 @@
                     <!-- Menu Dropdown -->
                     <div id="conclusionMenu" class="hidden absolute right-0 w-64 bg-white rounded-lg shadow-lg border border-gray-200">
                         <div class="py-2">
-                            <button class="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-all flex items-center">
+                            <button onclick="processReview('returned')" class="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-all flex items-center">
                                 <i class="fas fa-undo text-orange-600 mr-3"></i>
                                 <span class="font-medium">Devolver para correção</span>
                             </button>
-                            <button class="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-all flex items-center border-t border-gray-100">
+                            <button onclick="processReview('approved')" class="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-all flex items-center border-t border-gray-100">
                                 <i class="fas fa-check text-green-600 mr-3"></i>
                                 <span class="font-medium">Aprovar</span>
                             </button>
@@ -448,6 +448,56 @@ $(document).ready(function() {
 
     $(window).on('resize', updatePosition);
     $(window).on('scroll', updatePosition);
+
+    // Função para processar a revisão (aprovar ou devolver)
+    window.processReview = function(status) {
+        // Fechar o dropdown
+        closeDropdown();
+
+        // Confirmação
+        let confirmMessage = '';
+        if (status === 'returned') {
+            confirmMessage = 'Tem certeza que deseja devolver esta prestação de contas para correção?';
+        } else if (status === 'approved') {
+            confirmMessage = 'Tem certeza que deseja aprovar esta prestação de contas?';
+        }
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        // Pegar os dados da prestação
+        const statementData = {{ payout.statement.statement_content | tojson | safe }};
+
+        // Fazer requisição para atualizar o status
+        fetch('/admin/financial/{{ payout.id }}/accountability', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                statement_content: statementData,
+                status: status
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Mostrar mensagem de sucesso
+                showToast(data.message, 'success');
+                // Redirecionar para a lista de repasses após 1 segundo
+                setTimeout(function() {
+                    window.location.href = '{{ url_for("admin.financial_payouts_list") }}';
+                }, 1500);
+            } else {
+                showToast(data.error || 'Erro ao processar a revisão', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showToast('Erro ao processar a revisão', 'error');
+        });
+    };
 });
 </script>
 {% endblock %}

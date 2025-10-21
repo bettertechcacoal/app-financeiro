@@ -144,6 +144,12 @@ def seed_permissions():
                 'module': 'travels'
             },
             {
+                'name': 'Lançar Viagem Retroativa',
+                'slug': 'travels_create_retroactive',
+                'description': 'Permite criar viagens com datas retroativas (passadas)',
+                'module': 'travels'
+            },
+            {
                 'name': 'Visualizar Todas Viagens',
                 'slug': 'travels_view_all',
                 'description': 'Permite visualizar viagens de todos os usuários',

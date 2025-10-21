@@ -118,7 +118,7 @@ app-financeiro/
 │   │   ├── parameter.py
 │   │   ├── permission.py
 │   │   ├── state.py
-│   │   ├── sync_log.py
+│   │   ├── ticket_sync_log.py
 │   │   ├── ticket.py
 │   │   ├── travel.py
 │   │   ├── user.py

@@ -15,7 +15,7 @@ from app.models.vehicle import Vehicle
 from datetime import datetime
 
 
-def seed():
+def seed_vehicles():
     """Popula a tabela vehicles com dados de teste"""
     db = SessionLocal()
 
@@ -115,4 +115,4 @@ def seed():
 
 
 if __name__ == "__main__":
-    seed()
+    seed_vehicles()

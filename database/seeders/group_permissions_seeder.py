@@ -58,6 +58,7 @@ def seed_group_permissions():
                 'travels_view',
                 'travels_view_all',
                 'travels_create',
+                'travels_create_retroactive',
                 'travels_approve',
                 'travels_cancel',
 

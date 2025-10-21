@@ -23,7 +23,7 @@ def seed_travels():
 
     try:
         # Buscar usuários
-        users = db.query(User).filter_by(is_active=True).all()
+        users = db.query(User).filter_by(active=True).all()
 
         if not users or len(users) == 0:
             print("\n[ERRO] Nenhum usuário encontrado!")

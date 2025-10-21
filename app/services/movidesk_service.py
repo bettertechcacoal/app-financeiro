@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from app.models.database import SessionLocal
 from app.models.organization import Organization
 from app.models.ticket import Ticket
-from app.models.sync_log import SyncLog
+from app.models.ticket_sync_log import TicketSyncLog
 
 
 class MovideskService:
@@ -76,7 +76,7 @@ class MovideskService:
                     errors.append(f"Organização {org_data.get('id')}: {str(e)}")
 
             # Salvar log de sincronização
-            sync_log = SyncLog(
+            sync_log = TicketSyncLog(
                 sync_type='organizations',
                 total=len(organizations_data),
                 synced=synced_count,
@@ -128,7 +128,7 @@ class MovideskService:
             total = db.query(Organization).filter_by(is_active=True).count()
 
             # Buscar última sincronização
-            last_sync = db.query(SyncLog).filter_by(sync_type='organizations').order_by(SyncLog.synced_at.desc()).first()
+            last_sync = db.query(TicketSyncLog).filter_by(sync_type='organizations').order_by(TicketSyncLog.synced_at.desc()).first()
 
             return {
                 'total': total,
@@ -236,7 +236,7 @@ class MovideskService:
                     errors.append(f"Ticket {ticket_data.get('id')}: {str(e)}")
 
             # Salvar log de sincronização
-            sync_log = SyncLog(
+            sync_log = TicketSyncLog(
                 sync_type='tickets',
                 total=len(tickets_data),
                 synced=synced_count,
@@ -339,7 +339,7 @@ class MovideskService:
             total = db.query(Ticket).count()
 
             # Buscar última sincronização
-            last_sync = db.query(SyncLog).filter_by(sync_type='tickets').order_by(SyncLog.synced_at.desc()).first()
+            last_sync = db.query(TicketSyncLog).filter_by(sync_type='tickets').order_by(TicketSyncLog.synced_at.desc()).first()
 
             return {
                 'total': total,

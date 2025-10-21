@@ -1,4 +1,4 @@
-"""create sync_logs table
+"""create ticket_sync_logs table
 
 Revision ID: 010
 Revises: 009
@@ -19,9 +19,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    """Cria tabela sync_logs"""
+    """Cria tabela ticket_sync_logs"""
     op.create_table(
-        'sync_logs',
+        'ticket_sync_logs',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('sync_type', sa.String(length=50), nullable=False),
         sa.Column('total', sa.Integer(), nullable=False, server_default='0'),
@@ -34,5 +34,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Remove tabela sync_logs"""
-    op.drop_table('sync_logs')
+    """Remove tabela ticket_sync_logs"""
+    op.drop_table('ticket_sync_logs')

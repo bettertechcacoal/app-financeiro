@@ -5,10 +5,10 @@ Configura permissões adequadas para cada grupo do sistema
 """
 
 import sys
-import os
+from config import ROOT_DIR
 
 # Adicionar o diretório raiz ao path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+sys.path.insert(0, ROOT_DIR)
 
 from app.models.database import SessionLocal
 from app.models.group import Group
@@ -55,22 +55,22 @@ def seed_group_permissions():
                 'tickets_manage_all',
 
                 # Viagens - Gerente pode visualizar todas e aprovar
-                'viagens_view',
-                'viagens_view_all',
-                'viagens_create',
-                'viagens_approve',
-                'viagens_cancel',
+                'travels_view',
+                'travels_view_all',
+                'travels_create',
+                'travels_approve',
+                'travels_cancel',
 
                 # Financeiro
-                'financeiro_view',
-                'financeiro_prestacao_contas',
+                'financial_view',
+                'financial_accountability',
 
                 # Veículos
-                'veiculos_view',
-                'veiculos_create',
-                'veiculos_edit',
-                'veiculos_delete',
-                'veiculos_manage_maintenance',
+                'vehicles_view',
+                'vehicles_create',
+                'vehicles_edit',
+                'vehicles_delete',
+                'vehicles_manage_maintenance',
 
                 # Integrações
                 'integrations_view',
@@ -135,15 +135,15 @@ def seed_group_permissions():
                 'tickets_create',
 
                 # Viagens - Apenas as suas próprias
-                'viagens_view',
-                'viagens_create',
-                'viagens_edit',
+                'travels_view',
+                'travels_create',
+                'travels_edit',
 
                 # Financeiro - Apenas visualizar
-                'financeiro_view',
+                'financial_view',
 
                 # Veículos - Apenas visualizar
-                'veiculos_view',
+                'vehicles_view',
 
                 # Perfil
                 'profile_view',

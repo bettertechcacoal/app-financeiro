@@ -15,10 +15,8 @@ def register_socketio_events(socketio):
         if user_id:
             # Adicionar o usuário a uma sala específica (room) baseada em seu ID
             join_room(f'user_{user_id}')
-            print(f'[SOCKETIO] Usuário {user_id} conectado')
             emit('connected', {'message': 'Conectado ao servidor de notificações'})
         else:
-            print('[SOCKETIO] Tentativa de conexão sem autenticação')
             return False  # Rejeitar conexão não autenticada
 
     @socketio.on('disconnect')
@@ -27,7 +25,6 @@ def register_socketio_events(socketio):
         user_id = session.get('user_id')
         if user_id:
             leave_room(f'user_{user_id}')
-            print(f'[SOCKETIO] Usuário {user_id} desconectado')
 
     @socketio.on('request_notifications')
     def handle_request_notifications(data):
@@ -112,6 +109,5 @@ def send_notification_to_user(socketio, user_id, notification):
             notification.to_dict(),
             room=f'user_{user_id}'
         )
-        print(f'[SOCKETIO] Notificação enviada para usuário {user_id}')
     except Exception as e:
-        print(f'[SOCKETIO ERROR] Erro ao enviar notificação: {str(e)}')
+        pass  # Silenciar erros de notificação em tempo real

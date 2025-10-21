@@ -16,7 +16,8 @@ class User(Base):
     avatar = Column(String(255))
 
     # Status e controle
-    is_active = Column(Boolean, default=True, nullable=False)
+    active = Column(Boolean, default=True, nullable=False)
+    sid_uuid = Column(String(36), unique=True, nullable=True, index=True)
     email_verified_at = Column(DateTime(timezone=True))
     last_login_at = Column(DateTime(timezone=True))
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
@@ -36,7 +37,8 @@ class User(Base):
             'email': self.email,
             'phone': self.phone,
             'avatar': self.avatar,
-            'is_active': self.is_active,
+            'active': self.active,
+            'sid_uuid': self.sid_uuid,
             'email_verified_at': self.email_verified_at.isoformat() if self.email_verified_at else None,
             'last_login_at': self.last_login_at.isoformat() if self.last_login_at else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,

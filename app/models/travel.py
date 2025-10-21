@@ -40,7 +40,7 @@ class Travel(Base):
     record_user = relationship('User', foreign_keys=[record_user_id])
 
     # Status e controle
-    status = Column(Enum(TravelStatus), default=TravelStatus.PENDING, nullable=False)
+    status = Column(Enum(TravelStatus, name='travelstatus', values_callable=lambda x: [e.value for e in x]), default=TravelStatus.PENDING, nullable=False)
     approved_by = Column(Integer, ForeignKey('users.id'))  # ID do usuário que aprovou
     approved_at = Column(DateTime(timezone=True))  # Data/hora da aprovação
 

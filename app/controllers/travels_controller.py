@@ -3,7 +3,7 @@ from flask import render_template, request, redirect, url_for, flash, session, j
 from app.models.database import SessionLocal
 from app.models.travel import Travel, TravelStatus
 from app.models.travel_passenger import TravelPassenger
-from app.models.travel_payout import TravelPayout, PayoutStatus
+from app.models.travel_payout import TravelPayout
 from app.models.user import User
 from app.models.city import City
 from app.models.state import State
@@ -11,6 +11,7 @@ from app.models.vehicle import Vehicle
 from app.models.vehicle_travel_history import VehicleTravelHistory
 from datetime import datetime
 from decimal import Decimal
+from sqlalchemy import case
 
 
 def travels_list():
@@ -18,11 +19,27 @@ def travels_list():
     try:
         db = SessionLocal()
 
-        # Buscar todas as viagens ordenadas por data de criação (mais recentes primeiro)
-        travels = db.query(Travel).order_by(Travel.created_at.desc()).all()
+        # Criar expressão CASE para traduzir os status no SQL
+        status_label = case(
+            (Travel.status == TravelStatus.PENDING, 'Aguardando aprovação'),
+            (Travel.status == TravelStatus.APPROVED, 'Aprovada'),
+            (Travel.status == TravelStatus.IN_PROGRESS, 'Em andamento'),
+            (Travel.status == TravelStatus.COMPLETED, 'Concluída'),
+            (Travel.status == TravelStatus.CANCELLED, 'Cancelada'),
+            else_='Desconhecido'
+        ).label('status_label')
 
-        # Converter para dicionários
-        travels_data = [travel.to_dict() for travel in travels]
+        # Buscar todas as viagens com o status traduzido
+        results = db.query(Travel, status_label)\
+            .order_by(Travel.created_at.desc())\
+            .all()
+
+        # Converter para dicionários e adicionar o status traduzido
+        travels_data = []
+        for travel, status_text in results:
+            travel_dict = travel.to_dict()
+            travel_dict['status_label'] = status_text
+            travels_data.append(travel_dict)
 
         db.close()
 
@@ -403,8 +420,7 @@ def travels_analyze_process(travel_id):
                                 payout = TravelPayout(
                                     travel_id=travel.id,
                                     member_id=member_id,
-                                    amount=amount,
-                                    status=PayoutStatus.PENDING
+                                    amount=amount
                                 )
                                 db.add(payout)
                         except (ValueError, TypeError):

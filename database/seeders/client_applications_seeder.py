@@ -4,10 +4,10 @@ Seeder para popular o banco de dados com associações cliente-aplicação
 Usa IDs fixos para cliente e aplicação
 """
 import sys
-import os
+from config import ROOT_DIR
 
 # Adicionar o diretorio raiz ao path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+sys.path.insert(0, ROOT_DIR)
 
 from app.models.database import SessionLocal
 from app.models.client_application import ClientApplication

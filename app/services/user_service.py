@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import uuid
 from app.models.database import SessionLocal
 from app.models.user import User
 
@@ -56,12 +57,16 @@ class UserService:
         """Cria um novo usuário"""
         db = SessionLocal()
         try:
+            # Gerar UUID para sincronização com auth-service
+            sid_uuid = str(uuid.uuid4())
+
             user = User(
+                sid_uuid=sid_uuid,
                 name=user_data.get('name'),
                 email=user_data.get('email'),
                 phone=user_data.get('phone'),
                 avatar=user_data.get('avatar'),
-                is_active=user_data.get('is_active', True)
+                active=user_data.get('active', True)
             )
             db.add(user)
             db.flush()  # Obter o ID do usuário antes de vincular grupos
@@ -94,7 +99,7 @@ class UserService:
             user.email = user_data.get('email', user.email)
             user.phone = user_data.get('phone', user.phone)
             user.avatar = user_data.get('avatar', user.avatar)
-            user.is_active = user_data.get('is_active', user.is_active)
+            user.active = user_data.get('active', user.active)
 
             # Atualizar grupos se fornecidos
             if 'groups' in user_data:

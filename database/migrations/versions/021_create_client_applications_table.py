@@ -1,7 +1,7 @@
 """create client_applications table
 
-Revision ID: 022
-Revises: 021
+Revision ID: 021
+Revises: 020
 Create Date: 2025-10-13
 
 """
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '022'
-down_revision: Union[str, None] = '021'
+revision: str = '021'
+down_revision: Union[str, None] = '020'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

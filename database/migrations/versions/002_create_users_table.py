@@ -27,7 +27,8 @@ def upgrade() -> None:
         sa.Column('email', sa.String(length=100), nullable=False),
         sa.Column('phone', sa.String(length=20), nullable=True),
         sa.Column('avatar', sa.String(length=255), nullable=True),
-        sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.text('true')),
+        sa.Column('active', sa.Boolean(), nullable=False, server_default=sa.text('true')),
+        sa.Column('sid_uuid', sa.String(length=36), nullable=True),
         sa.Column('email_verified_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('last_login_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
@@ -37,9 +38,11 @@ def upgrade() -> None:
 
     # Criar índices
     op.create_index('ix_users_email', 'users', ['email'], unique=True)
+    op.create_index('ix_users_sid_uuid', 'users', ['sid_uuid'], unique=True)
 
 
 def downgrade() -> None:
     """Remove tabela users"""
+    op.drop_index('ix_users_sid_uuid', table_name='users')
     op.drop_index('ix_users_email', table_name='users')
     op.drop_table('users')

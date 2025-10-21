@@ -3,13 +3,14 @@
 Seeder para popular o banco de dados com grupos
 """
 import sys
-import os
+from config import ROOT_DIR
 
 # Adicionar o diretorio raiz ao path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+sys.path.insert(0, ROOT_DIR)
 
 from app.models.database import SessionLocal
 from app.models.group import Group
+from sqlalchemy import text
 
 
 def seed_groups():
@@ -18,9 +19,10 @@ def seed_groups():
     db = SessionLocal()
 
     try:
-        # Definir grupos padrao
+        # Definir grupos padrao com IDs fixos
         groups_data = [
             {
+                'id': 1,
                 'name': 'Administradores',
                 'slug': 'administradores',
                 'description': 'Acesso total ao sistema',
@@ -28,6 +30,7 @@ def seed_groups():
                 'icon': 'fa-shield-alt'
             },
             {
+                'id': 2,
                 'name': 'Gestores',
                 'slug': 'gestores',
                 'description': 'Gerenciamento de equipes e aprovacao de viagens',
@@ -35,6 +38,7 @@ def seed_groups():
                 'icon': 'fa-user-tie'
             },
             {
+                'id': 3,
                 'name': 'Colaboradores',
                 'slug': 'colaboradores',
                 'description': 'Usuarios padrao do sistema',
@@ -42,6 +46,7 @@ def seed_groups():
                 'icon': 'fa-users'
             },
             {
+                'id': 4,
                 'name': 'Visitantes',
                 'slug': 'visitantes',
                 'description': 'Acesso somente leitura',
@@ -55,23 +60,30 @@ def seed_groups():
 
         for group_data in groups_data:
             # Verifica se o grupo ja existe
-            existing_group = db.query(Group).filter_by(slug=group_data['slug']).first()
+            existing_group = db.query(Group).filter_by(id=group_data['id']).first()
 
             if not existing_group:
-                group = Group(
-                    name=group_data['name'],
-                    slug=group_data['slug'],
-                    description=group_data['description'],
-                    color=group_data['color'],
-                    icon=group_data['icon'],
-                    is_active=True
+                # Inserir com ID fixo usando SQL direto
+                db.execute(
+                    text("""
+                        INSERT INTO groups (id, name, slug, description, color, icon, is_active, created_at, updated_at)
+                        VALUES (:id, :name, :slug, :description, :color, :icon, :is_active, NOW(), NOW())
+                    """),
+                    {
+                        "id": group_data['id'],
+                        "name": group_data['name'],
+                        "slug": group_data['slug'],
+                        "description": group_data['description'],
+                        "color": group_data['color'],
+                        "icon": group_data['icon'],
+                        "is_active": True
+                    }
                 )
-                db.add(group)
                 created_count += 1
-                print(f"  [OK] Grupo criado: {group_data['name']}")
+                print(f"  [OK] Grupo criado: {group_data['name']} (ID: {group_data['id']})")
             else:
                 existing_count += 1
-                print(f"  [OK] Grupo ja existe: {group_data['name']}")
+                print(f"  [OK] Grupo ja existe: {group_data['name']} (ID: {group_data['id']})")
 
         db.commit()
 

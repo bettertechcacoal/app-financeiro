@@ -9,10 +9,9 @@ import sqlalchemy as sa
 import os
 
 
-# revision identifiers - auto-extraído do nome do arquivo
-_filename = os.path.basename(__file__)
-revision = _filename.split('_')[0]  # Pega '032' de '032_create_vehicle_meta_table.py'
-down_revision = f"{int(revision) - 1:03d}"  # Calcula automaticamente: 032 -> 031
+# revision identifiers
+revision = '030'
+down_revision = '029'
 branch_labels = None
 depends_on = None
 

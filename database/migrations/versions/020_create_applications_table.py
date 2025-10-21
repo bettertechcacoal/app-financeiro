@@ -1,7 +1,7 @@
 """create applications table
 
-Revision ID: 021
-Revises: 020
+Revision ID: 020
+Revises: 019
 Create Date: 2025-10-13
 
 """
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '021'
-down_revision: Union[str, None] = '020'
+revision: str = '020'
+down_revision: Union[str, None] = '019'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

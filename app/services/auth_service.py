@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 import requests
 from typing import Optional, Dict, Any
-from config import config
+from config import AUTH_SERVICE_URL, AUTH_SERVICE_TIMEOUT
 
 
 class AuthService:
     """Serviço para comunicação com o Auth Service"""
 
     def __init__(self):
-        self.base_url = config.AUTH_SERVICE_URL
-        self.timeout = config.AUTH_SERVICE_TIMEOUT
+        self.base_url = AUTH_SERVICE_URL
+        self.timeout = AUTH_SERVICE_TIMEOUT
 
     def login(self, email: str, password: str) -> Optional[Dict[str, Any]]:
         """
@@ -84,6 +84,43 @@ class AuthService:
             if response.status_code == 200:
                 return response.json()
             else:
+                return None
+
+        except requests.exceptions.RequestException as e:
+            print(f"Erro ao comunicar com auth-service: {e}")
+            return None
+
+    def register_user(self, user_data: Dict[str, Any], password: str) -> Optional[Dict[str, Any]]:
+        """
+        Registra um novo usuário no auth-service com UUID
+
+        Args:
+            user_data: Dados do usuário (deve conter sid_uuid, name, email)
+            password: Senha do usuário
+
+        Returns:
+            Dict com resposta do auth-service ou None em caso de erro
+        """
+        try:
+            payload = {
+                "uuid": user_data.get('sid_uuid'),  # Mapeia sid_uuid para uuid
+                "name": user_data.get('name'),
+                "email": user_data.get('email'),
+                "password": password,
+                "phone": user_data.get('phone'),
+                "avatar": user_data.get('avatar')
+            }
+
+            response = requests.post(
+                f"{self.base_url}/api/auth/register",
+                json=payload,
+                timeout=self.timeout
+            )
+
+            if response.status_code in [200, 201]:
+                return response.json()
+            else:
+                print(f"Erro ao registrar usuário no auth-service: {response.status_code} - {response.text}")
                 return None
 
         except requests.exceptions.RequestException as e:

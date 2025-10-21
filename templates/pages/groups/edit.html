@@ -28,11 +28,19 @@
                 <i class="fas fa-arrow-left mr-2"></i>
                 Voltar
             </a>
+            <button type="submit" form="edit-group-form" class="btn-primary px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all inline-flex items-center">
+                <i class="fas fa-save mr-2"></i>
+                Salvar
+            </button>
+            <button type="button" onclick="confirmDelete()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all inline-flex items-center">
+                <i class="fas fa-trash mr-2"></i>
+                Excluir
+            </button>
         </div>
     </div>
 
     <!-- Form -->
-    <form method="POST" action="{{ url_for('admin.groups_edit', group_id=group.id) }}" class="space-y-6">
+    <form id="edit-group-form" method="POST" action="{{ url_for('admin.groups_edit', group_id=group.id) }}" class="space-y-6">
         <!-- Basic Info Card -->
         <div class="card p-6 shadow-md">
             <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -157,18 +165,10 @@
                 <strong>Nota:</strong> Para alterar as permissões deste grupo, volte para a tela de Gerenciamento de Permissões e clique no grupo desejado.
             </p>
         </div>
+    </form>
 
-        <!-- Actions -->
-        <div class="flex justify-end gap-3">
-            <a href="{{ url_for('admin.groups_permissions') }}" class="btn-secondary px-8 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all">
-                <i class="fas fa-times mr-2"></i>
-                Cancelar
-            </a>
-            <button type="submit" class="btn-primary px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all">
-                <i class="fas fa-save mr-2"></i>
-                Salvar Alterações
-            </button>
-        </div>
+    <!-- Form de Exclusão (oculto) -->
+    <form id="delete-form" method="POST" action="{{ url_for('admin.groups_delete', group_id=group.id) }}" style="display: none;">
     </form>
 </div>
 
@@ -177,6 +177,13 @@
 document.getElementById('color').addEventListener('input', function(e) {
     document.getElementById('color_text').value = e.target.value;
 });
+
+// Confirm delete
+function confirmDelete() {
+    if (confirm('Tem certeza que deseja excluir o grupo "{{ group.name }}"?\n\nEsta ação não pode ser desfeita.')) {
+        document.getElementById('delete-form').submit();
+    }
+}
 </script>
 
 <style>

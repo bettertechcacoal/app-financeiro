@@ -24,7 +24,7 @@
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                {% if 'veiculos_create' in user_permissions %}
+                {% if 'vehicles_create' in user_permissions %}
                 <a href="{{ url_for('admin.vehicles_create') }}" class="btn-primary text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all inline-flex items-center">
                     <i class="fas fa-plus-circle mr-2"></i>
                     Novo Veículo
@@ -103,14 +103,14 @@
 
                                     <!-- Botões de Ação -->
                                     <div class="flex flex-wrap gap-2 lg:flex-shrink-0">
-                                        {% if 'veiculos_edit' in user_permissions %}
+                                        {% if 'vehicles_edit' in user_permissions %}
                                         <a href="{{ url_for('admin.vehicles_edit', vehicle_id=vehicle.id) }}"
                                            class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
                                             <i class="fas fa-edit mr-1.5"></i>
                                             Editar
                                         </a>
                                         {% endif %}
-                                        {% if 'veiculos_delete' in user_permissions %}
+                                        {% if 'vehicles_delete' in user_permissions %}
                                         <button onclick="toggleVehicleStatus({{ vehicle.id }}, '{{ vehicle.plate }}', {{ 'true' if vehicle.is_active else 'false' }})"
                                                 class="inline-flex items-center px-3 py-2 {% if vehicle.is_active %}bg-orange-600 hover:bg-orange-700{% else %}bg-green-600 hover:bg-green-700{% endif %} text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
                                             <i class="fas {% if vehicle.is_active %}fa-ban{% else %}fa-check-circle{% endif %} mr-1.5"></i>

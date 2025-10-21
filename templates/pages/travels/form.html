@@ -813,18 +813,50 @@ $(document).ready(function() {
             return;
         }
 
+        // Separar usuários disponíveis e já adicionados
+        const availableUsersList = [];
+        const addedUsersList = [];
+
         filteredUsers.forEach(function(user) {
+            const isAdded = passengers.some(p => p.id == user.id);
+            if (isAdded) {
+                addedUsersList.push(user);
+            } else {
+                availableUsersList.push(user);
+            }
+        });
+
+        // Ordenar ambas as listas alfabeticamente
+        availableUsersList.sort((a, b) => a.name.localeCompare(b.name));
+        addedUsersList.sort((a, b) => a.name.localeCompare(b.name));
+
+        // Concatenar: disponíveis primeiro, depois adicionados
+        const sortedUsers = [...availableUsersList, ...addedUsersList];
+
+        sortedUsers.forEach(function(user) {
+            const isAdded = passengers.some(p => p.id == user.id);
+
             const item = $('<div>')
-                .addClass('p-3 hover:bg-blue-50 cursor-pointer transition-all border-b border-gray-100 last:border-0')
+                .addClass(`p-3 border-b border-gray-100 last:border-0 transition-all ${isAdded ? 'opacity-40 cursor-not-allowed bg-gray-50' : 'hover:bg-blue-50 cursor-pointer'}`)
                 .html(`
-                    <div class="text-sm font-semibold text-gray-900">${user.name}</div>
-                    ${user.email ? `<div class="text-xs text-gray-500">${user.email}</div>` : ''}
-                `)
-                .on('click', function() {
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="text-sm font-semibold ${isAdded ? 'text-gray-400' : 'text-gray-900'}">${user.name}</div>
+                            ${user.email ? `<div class="text-xs ${isAdded ? 'text-gray-400' : 'text-gray-500'}">${user.email}</div>` : ''}
+                        </div>
+                        ${isAdded ? '<div class="text-xs font-semibold text-gray-400 ml-3">(Adicionado)</div>' : ''}
+                    </div>
+                `);
+
+            // Apenas adicionar evento de clique se NÃO foi adicionado
+            if (!isAdded) {
+                item.on('click', function() {
                     $('#select-user').val(user.id);
                     $('#passenger-search').val(user.name);
                     dropdown.addClass('hidden');
                 });
+            }
+
             dropdown.append(item);
         });
 

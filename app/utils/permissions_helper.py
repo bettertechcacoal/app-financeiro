@@ -35,7 +35,7 @@ def user_has_permission(permission_slug):
     Verifica se o usuário atual possui uma permissão específica
 
     Args:
-        permission_slug: Slug da permissão a verificar (ex: 'viagens_create')
+        permission_slug: Slug da permissão a verificar (ex: 'travels_create')
 
     Returns:
         bool: True se o usuário possui a permissão, False caso contrário
@@ -86,7 +86,7 @@ def permission_required(permission_slug, redirect_to='admin.dashboard'):
     Decorator para proteger rotas que requerem uma permissão específica
 
     Usage:
-        @permission_required('viagens_create')
+        @permission_required('travels_create')
         def create_travel():
             # código da rota
 
@@ -117,7 +117,7 @@ def any_permission_required(permission_slugs, redirect_to='admin.dashboard'):
     Decorator para proteger rotas que requerem pelo menos uma das permissões especificadas
 
     Usage:
-        @any_permission_required(['viagens_view', 'viagens_view_all'])
+        @any_permission_required(['travels_view', 'travels_view_all'])
         def list_travels():
             # código da rota
 
@@ -183,7 +183,7 @@ def inject_user_permissions():
         app.context_processor(inject_user_permissions)
 
     Usage no template:
-        {% if 'viagens_create' in user_permissions %}
+        {% if 'travels_create' in user_permissions %}
             <button>Criar Viagem</button>
         {% endif %}
     """

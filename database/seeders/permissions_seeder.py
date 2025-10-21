@@ -5,10 +5,10 @@ Popula a tabela permissions com todas as permissões do sistema
 """
 
 import sys
-import os
+from config import ROOT_DIR
 
 # Adicionar o diretório raiz ao path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+sys.path.insert(0, ROOT_DIR)
 
 from app.models.database import SessionLocal
 from app.models.permission import Permission
@@ -41,31 +41,31 @@ def seed_permissions():
                 'name': 'Visualizar Clientes',
                 'slug': 'clients_view',
                 'description': 'Permite visualizar lista de clientes',
-                'module': 'clientes'
+                'module': 'clients'
             },
             {
                 'name': 'Criar Cliente',
                 'slug': 'clients_create',
                 'description': 'Permite criar novos clientes',
-                'module': 'clientes'
+                'module': 'clients'
             },
             {
                 'name': 'Editar Cliente',
                 'slug': 'clients_edit',
                 'description': 'Permite editar dados de clientes',
-                'module': 'clientes'
+                'module': 'clients'
             },
             {
                 'name': 'Deletar Cliente',
                 'slug': 'clients_delete',
                 'description': 'Permite deletar clientes',
-                'module': 'clientes'
+                'module': 'clients'
             },
             {
                 'name': 'Gerenciar Aplicações de Clientes',
                 'slug': 'clients_manage_applications',
                 'description': 'Permite vincular/desvincular aplicações aos clientes',
-                'module': 'clientes'
+                'module': 'clients'
             },
 
             # ===== TICKETS =====
@@ -109,91 +109,97 @@ def seed_permissions():
             # ===== VIAGENS (TRAVELS) =====
             {
                 'name': 'Visualizar Viagens',
-                'slug': 'viagens_view',
+                'slug': 'travels_view',
                 'description': 'Permite visualizar suas próprias viagens',
-                'module': 'viagens'
+                'module': 'travels'
             },
             {
                 'name': 'Solicitar Viagem',
-                'slug': 'viagens_create',
+                'slug': 'travels_create',
                 'description': 'Permite criar solicitação de viagem',
-                'module': 'viagens'
+                'module': 'travels'
             },
             {
                 'name': 'Editar Viagem',
-                'slug': 'viagens_edit',
+                'slug': 'travels_edit',
                 'description': 'Permite editar suas próprias viagens',
-                'module': 'viagens'
+                'module': 'travels'
             },
             {
                 'name': 'Deletar Viagem',
-                'slug': 'viagens_delete',
+                'slug': 'travels_delete',
                 'description': 'Permite deletar suas próprias viagens',
-                'module': 'viagens'
+                'module': 'travels'
             },
             {
                 'name': 'Aprovar Viagens',
-                'slug': 'viagens_approve',
+                'slug': 'travels_approve',
                 'description': 'Permite aprovar ou reprovar viagens',
-                'module': 'viagens'
+                'module': 'travels'
             },
             {
                 'name': 'Cancelar Viagens',
-                'slug': 'viagens_cancel',
+                'slug': 'travels_cancel',
                 'description': 'Permite cancelar viagens',
-                'module': 'viagens'
+                'module': 'travels'
             },
             {
                 'name': 'Visualizar Todas Viagens',
-                'slug': 'viagens_view_all',
+                'slug': 'travels_view_all',
                 'description': 'Permite visualizar viagens de todos os usuários',
-                'module': 'viagens'
+                'module': 'travels'
             },
 
             # ===== FINANCEIRO (FINANCE) =====
             {
                 'name': 'Visualizar Financeiro',
-                'slug': 'financeiro_view',
+                'slug': 'financial_view',
                 'description': 'Permite visualizar módulo financeiro',
-                'module': 'financeiro'
+                'module': 'financial'
             },
             {
                 'name': 'Prestação de Contas',
-                'slug': 'financeiro_prestacao_contas',
+                'slug': 'financial_accountability',
                 'description': 'Permite acessar e gerenciar prestação de contas',
-                'module': 'financeiro'
+                'module': 'financial'
+            },
+            {
+                'name': 'Analisar Prestação de Contas',
+                'slug': 'financial_review_accountability',
+                'description': 'Permite analisar, aprovar ou devolver prestações de contas enviadas',
+                'module': 'financial'
             },
 
             # ===== VEÍCULOS (VEHICLES) =====
             {
                 'name': 'Visualizar Veículos',
-                'slug': 'veiculos_view',
+                'slug': 'vehicles_view',
                 'description': 'Permite visualizar lista de veículos',
-                'module': 'veiculos'
+                'module': 'vehicles'
             },
             {
                 'name': 'Criar Veículo',
-                'slug': 'veiculos_create',
+                'slug': 'vehicles_create',
                 'description': 'Permite cadastrar novos veículos',
-                'module': 'veiculos'
+                'module': 'vehicles'
             },
             {
                 'name': 'Editar Veículo',
-                'slug': 'veiculos_edit',
+                'slug': 'vehicles_edit',
                 'description': 'Permite editar dados de veículos',
-                'module': 'veiculos'
+                'module': 'vehicles'
             },
             {
                 'name': 'Deletar Veículo',
-                'slug': 'veiculos_delete',
+                'slug': 'vehicles_delete',
                 'description': 'Permite deletar veículos',
-                'module': 'veiculos'
+                'module': 'vehicles'
             },
             {
                 'name': 'Gerenciar Manutenções',
-                'slug': 'veiculos_manage_maintenance',
+                'slug': 'vehicles_manage_maintenance',
                 'description': 'Permite gerenciar manutenções de veículos',
-                'module': 'veiculos'
+                'module': 'vehicles'
             },
 
             # ===== INTEGRAÇÕES (INTEGRATIONS) =====
@@ -201,37 +207,37 @@ def seed_permissions():
                 'name': 'Visualizar Integrações',
                 'slug': 'integrations_view',
                 'description': 'Permite visualizar página de integrações',
-                'module': 'integracoes'
+                'module': 'integrations'
             },
             {
                 'name': 'Gerenciar Integrações',
                 'slug': 'integrations_manage',
                 'description': 'Permite gerenciar todas as integrações',
-                'module': 'integracoes'
+                'module': 'integrations'
             },
             {
                 'name': 'Sincronizar Tickets Movidesk',
                 'slug': 'integrations_sync_tickets',
                 'description': 'Permite sincronizar tickets do Movidesk',
-                'module': 'integracoes'
+                'module': 'integrations'
             },
             {
                 'name': 'Sincronizar Organizações Movidesk',
                 'slug': 'integrations_sync_organizations',
                 'description': 'Permite sincronizar organizações do Movidesk',
-                'module': 'integracoes'
+                'module': 'integrations'
             },
             {
                 'name': 'Editar Organizações',
                 'slug': 'integrations_edit_organizations',
                 'description': 'Permite editar organizações integradas',
-                'module': 'integracoes'
+                'module': 'integrations'
             },
             {
                 'name': 'Vincular Clientes',
                 'slug': 'integrations_link_clients',
                 'description': 'Permite vincular/desvincular clientes de organizações',
-                'module': 'integracoes'
+                'module': 'integrations'
             },
 
             # ===== LICENÇAS (LICENSES) =====
@@ -239,43 +245,43 @@ def seed_permissions():
                 'name': 'Visualizar Licenças',
                 'slug': 'licenses_view',
                 'description': 'Permite visualizar licenças',
-                'module': 'licencas'
+                'module': 'licenses'
             },
             {
                 'name': 'Upload de Licenças',
                 'slug': 'licenses_upload',
                 'description': 'Permite fazer upload de licenças',
-                'module': 'licencas'
+                'module': 'licenses'
             },
             {
                 'name': 'Gerar Licenças',
                 'slug': 'licenses_generate',
                 'description': 'Permite gerar licenças',
-                'module': 'licencas'
+                'module': 'licenses'
             },
             {
                 'name': 'Gerar Licenças em Lote',
                 'slug': 'licenses_generate_bulk',
                 'description': 'Permite gerar múltiplas licenças',
-                'module': 'licencas'
+                'module': 'licenses'
             },
             {
                 'name': 'Visualizar PDF de Licenças',
                 'slug': 'licenses_view_pdf',
                 'description': 'Permite visualizar licenças em PDF',
-                'module': 'licencas'
+                'module': 'licenses'
             },
             {
                 'name': 'Deletar Data de Licença',
                 'slug': 'licenses_delete_date',
                 'description': 'Permite deletar datas de licenças',
-                'module': 'licencas'
+                'module': 'licenses'
             },
             {
                 'name': 'Gerenciar Módulos de Licenças',
                 'slug': 'licenses_manage_modules',
                 'description': 'Permite criar/editar módulos de licenças',
-                'module': 'licencas'
+                'module': 'licenses'
             },
 
             # ===== USUÁRIOS (USERS) =====
@@ -283,31 +289,31 @@ def seed_permissions():
                 'name': 'Visualizar Usuários',
                 'slug': 'users_view',
                 'description': 'Permite visualizar lista de usuários',
-                'module': 'usuarios'
+                'module': 'users'
             },
             {
                 'name': 'Criar Usuário',
                 'slug': 'users_create',
                 'description': 'Permite criar novos usuários',
-                'module': 'usuarios'
+                'module': 'users'
             },
             {
                 'name': 'Editar Usuário',
                 'slug': 'users_edit',
                 'description': 'Permite editar usuários',
-                'module': 'usuarios'
+                'module': 'users'
             },
             {
                 'name': 'Deletar Usuário',
                 'slug': 'users_delete',
                 'description': 'Permite deletar usuários',
-                'module': 'usuarios'
+                'module': 'users'
             },
             {
                 'name': 'Gerenciar Grupos de Usuários',
                 'slug': 'users_manage_groups',
                 'description': 'Permite gerenciar grupos dos usuários',
-                'module': 'usuarios'
+                'module': 'users'
             },
 
             # ===== PERFIL (PROFILE) =====
@@ -315,13 +321,13 @@ def seed_permissions():
                 'name': 'Visualizar Próprio Perfil',
                 'slug': 'profile_view',
                 'description': 'Permite visualizar próprio perfil',
-                'module': 'perfil'
+                'module': 'profile'
             },
             {
                 'name': 'Editar Próprio Perfil',
                 'slug': 'profile_edit',
                 'description': 'Permite editar próprio perfil',
-                'module': 'perfil'
+                'module': 'profile'
             },
 
             # ===== NOTIFICAÇÕES (NOTIFICATIONS) =====
@@ -329,13 +335,13 @@ def seed_permissions():
                 'name': 'Visualizar Notificações',
                 'slug': 'notifications_view',
                 'description': 'Permite visualizar notificações',
-                'module': 'notificacoes'
+                'module': 'notifications'
             },
             {
                 'name': 'Gerenciar Notificações',
                 'slug': 'notifications_manage',
                 'description': 'Permite marcar como lida e deletar notificações',
-                'module': 'notificacoes'
+                'module': 'notifications'
             },
 
             # ===== CONFIGURAÇÕES (SETTINGS) =====
@@ -343,13 +349,13 @@ def seed_permissions():
                 'name': 'Visualizar Configurações',
                 'slug': 'settings_view',
                 'description': 'Permite visualizar configurações do sistema',
-                'module': 'configuracoes'
+                'module': 'settings'
             },
             {
                 'name': 'Editar Configurações',
                 'slug': 'settings_edit',
                 'description': 'Permite editar configurações do sistema',
-                'module': 'configuracoes'
+                'module': 'settings'
             },
 
             # ===== NOTAS (NOTES) =====
@@ -357,25 +363,25 @@ def seed_permissions():
                 'name': 'Visualizar Notas',
                 'slug': 'notes_view',
                 'description': 'Permite visualizar notas/lembretes',
-                'module': 'notas'
+                'module': 'notes'
             },
             {
                 'name': 'Criar Nota',
                 'slug': 'notes_create',
                 'description': 'Permite criar novas notas',
-                'module': 'notas'
+                'module': 'notes'
             },
             {
                 'name': 'Editar Nota',
                 'slug': 'notes_edit',
                 'description': 'Permite editar notas',
-                'module': 'notas'
+                'module': 'notes'
             },
             {
                 'name': 'Deletar Nota',
                 'slug': 'notes_delete',
                 'description': 'Permite deletar notas',
-                'module': 'notas'
+                'module': 'notes'
             },
 
             # ===== RELATÓRIOS (REPORTS) =====
@@ -383,19 +389,19 @@ def seed_permissions():
                 'name': 'Visualizar Relatórios',
                 'slug': 'reports_view',
                 'description': 'Permite visualizar relatórios',
-                'module': 'relatorios'
+                'module': 'reports'
             },
             {
                 'name': 'Gerar Relatórios',
                 'slug': 'reports_generate',
                 'description': 'Permite gerar relatórios em PDF',
-                'module': 'relatorios'
+                'module': 'reports'
             },
             {
                 'name': 'Exportar Relatórios',
                 'slug': 'reports_export',
                 'description': 'Permite exportar relatórios',
-                'module': 'relatorios'
+                'module': 'reports'
             },
 
             # ===== PERMISSÕES (PERMISSIONS) - Gerenciamento =====
@@ -403,13 +409,13 @@ def seed_permissions():
                 'name': 'Visualizar Permissões',
                 'slug': 'permissions_view',
                 'description': 'Permite visualizar permissões do sistema',
-                'module': 'permissoes'
+                'module': 'permissions'
             },
             {
                 'name': 'Gerenciar Permissões',
                 'slug': 'permissions_manage',
                 'description': 'Permite gerenciar permissões dos grupos',
-                'module': 'permissoes'
+                'module': 'permissions'
             },
 
             # ===== GRUPOS (GROUPS) - Gerenciamento =====
@@ -417,25 +423,25 @@ def seed_permissions():
                 'name': 'Visualizar Grupos',
                 'slug': 'groups_view',
                 'description': 'Permite visualizar grupos do sistema',
-                'module': 'grupos'
+                'module': 'groups'
             },
             {
                 'name': 'Criar Grupo',
                 'slug': 'groups_create',
                 'description': 'Permite criar novos grupos',
-                'module': 'grupos'
+                'module': 'groups'
             },
             {
                 'name': 'Editar Grupo',
                 'slug': 'groups_edit',
                 'description': 'Permite editar grupos',
-                'module': 'grupos'
+                'module': 'groups'
             },
             {
                 'name': 'Deletar Grupo',
                 'slug': 'groups_delete',
                 'description': 'Permite deletar grupos',
-                'module': 'grupos'
+                'module': 'groups'
             },
         ]
 

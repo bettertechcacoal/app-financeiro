@@ -8,8 +8,10 @@ from flask import render_template, request, redirect, url_for, flash
 from app.models.database import SessionLocal
 from app.models.group import Group
 from app.models.permission import Permission
+from app.utils.permissions_helper import permission_required
 
 
+@permission_required('groups_view')
 def groups_list():
     """
     Lista todos os grupos do sistema
@@ -22,6 +24,7 @@ def groups_list():
         db.close()
 
 
+@permission_required('groups_create')
 def groups_create():
     """
     Exibe formulário de criação de grupo
@@ -92,6 +95,7 @@ def groups_create():
         db.close()
 
 
+@permission_required('groups_edit')
 def groups_edit(group_id):
     """
     Exibe formulário de edição de grupo
@@ -128,6 +132,7 @@ def groups_edit(group_id):
         db.close()
 
 
+@permission_required('groups_delete')
 def groups_delete(group_id):
     """
     Deleta um grupo

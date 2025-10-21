@@ -2,6 +2,7 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from app.services.user_service import user_service
 from app.services.group_service import group_service
+from app.services.auth_service import auth_service
 
 
 def users_list():
@@ -22,6 +23,7 @@ def user_create():
         # Validação dos campos obrigatórios
         name = request.form.get('name', '').strip()
         email = request.form.get('email', '').strip()
+        password = request.form.get('password', '').strip()
 
         errors = []
 
@@ -30,6 +32,9 @@ def user_create():
 
         if not email:
             errors.append('O campo "E-mail" é obrigatório')
+
+        if not password:
+            errors.append('O campo "Senha" é obrigatório')
 
         # Se houver erros de validação, retornar ao formulário com mensagens
         if errors:
@@ -42,12 +47,21 @@ def user_create():
             'email': email,
             'phone': request.form.get('phone'),
             'avatar': request.form.get('avatar'),
-            'is_active': request.form.get('is_active', 'on') == 'on',
+            'active': request.form.get('is_active', 'on') == 'on',
             'groups': request.form.getlist('groups[]')  # Capturar grupos selecionados
         }
 
+        # Criar usuário localmente (gera sid_uuid automaticamente)
         user = user_service.create_user(user_data)
-        flash('Usuário cadastrado com sucesso!', 'success')
+
+        # Sincronizar com auth-service
+        auth_response = auth_service.register_user(user, password)
+
+        if not auth_response:
+            flash('Usuário criado localmente, mas houve erro ao sincronizar com o serviço de autenticação. Verifique os logs.', 'warning')
+        else:
+            flash('Usuário cadastrado com sucesso!', 'success')
+
         return redirect(url_for('admin.users_list'))
     except Exception as e:
         flash(f'Erro ao cadastrar usuário: {str(e)}', 'error')
@@ -91,7 +105,7 @@ def user_update(user_id):
             'email': email,
             'phone': request.form.get('phone'),
             'avatar': request.form.get('avatar'),
-            'is_active': request.form.get('is_active', 'off') == 'on',
+            'active': request.form.get('is_active', 'off') == 'on',
             'groups': request.form.getlist('groups[]')  # Capturar grupos selecionados
         }
 

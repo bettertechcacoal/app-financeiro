@@ -1,7 +1,7 @@
 """create_travel_statements_table
 
-Revision ID: 033
-Revises: 032
+Revision ID: 032
+Revises: 031
 Create Date: 2025-10-16 15:30:00.000000
 
 """
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '033'
-down_revision: Union[str, None] = '032'
+revision: str = '032'
+down_revision: Union[str, None] = '031'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

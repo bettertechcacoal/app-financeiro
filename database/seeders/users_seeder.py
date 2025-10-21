@@ -3,11 +3,11 @@
 Seeder para popular o banco de dados com usuarios de teste
 """
 import sys
-import os
 from datetime import datetime
+from config import ROOT_DIR
 
 # Adicionar o diretorio raiz ao path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+sys.path.insert(0, ROOT_DIR)
 
 from app.models.database import SessionLocal
 from app.models.user import User
@@ -21,175 +21,63 @@ def seed_users():
     db = SessionLocal()
 
     try:
-        # Buscar grupos
-        admin_group = db.query(Group).filter_by(slug='administradores').first()
-        gestor_group = db.query(Group).filter_by(slug='gestores').first()
-        colaborador_group = db.query(Group).filter_by(slug='colaboradores').first()
+        # ID fixo do grupo de administradores
+        admin_group_id = 1
 
-        if not admin_group or not gestor_group or not colaborador_group:
-            print("\n[ERRO] Grupos nao encontrados!")
-            print("Execute primeiro: python database/seeders/groups_seeder.py")
-            return
+        # Verifica se o usuario ja existe
+        existing_user = db.query(User).filter_by(email='renan@bettertech.com.br').first()
 
-        # Definir usuarios de teste
-        users_data = [
-            # Usuario original
-            {
-                'name': 'Usuario Demo',
-                'email': 'demo@demo.com',
-                'phone': '(69) 99999-0000',
-                'group_id': admin_group.id,
-                'email_verified_at': datetime.now()
-            },
-            # 10 novos usuarios ficticios
-            {
-                'name': 'Maria Silva',
-                'email': 'maria.silva@empresa.com',
-                'phone': '(69) 98765-4321',
-                'group_id': admin_group.id,
-                'email_verified_at': datetime.now()
-            },
-            {
-                'name': 'João Santos',
-                'email': 'joao.santos@empresa.com',
-                'phone': '(69) 98765-4322',
-                'group_id': gestor_group.id,
-                'email_verified_at': datetime.now()
-            },
-            {
-                'name': 'Ana Costa',
-                'email': 'ana.costa@empresa.com',
-                'phone': '(69) 98765-4323',
-                'group_id': gestor_group.id,
-                'email_verified_at': datetime.now()
-            },
-            {
-                'name': 'Pedro Oliveira',
-                'email': 'pedro.oliveira@empresa.com',
-                'phone': '(69) 98765-4324',
-                'group_id': colaborador_group.id,
-                'email_verified_at': datetime.now()
-            },
-            {
-                'name': 'Carla Souza',
-                'email': 'carla.souza@empresa.com',
-                'phone': '(69) 98765-4325',
-                'group_id': colaborador_group.id,
-                'email_verified_at': datetime.now()
-            },
-            {
-                'name': 'Ricardo Ferreira',
-                'email': 'ricardo.ferreira@empresa.com',
-                'phone': '(69) 98765-4326',
-                'group_id': colaborador_group.id,
-                'email_verified_at': datetime.now()
-            },
-            {
-                'name': 'Juliana Alves',
-                'email': 'juliana.alves@empresa.com',
-                'phone': '(69) 98765-4327',
-                'group_id': gestor_group.id,
-                'email_verified_at': datetime.now()
-            },
-            {
-                'name': 'Marcos Lima',
-                'email': 'marcos.lima@empresa.com',
-                'phone': '(69) 98765-4328',
-                'group_id': colaborador_group.id,
-                'email_verified_at': datetime.now()
-            },
-            {
-                'name': 'Fernanda Rocha',
-                'email': 'fernanda.rocha@empresa.com',
-                'phone': '(69) 98765-4329',
-                'group_id': colaborador_group.id,
-                'email_verified_at': datetime.now()
-            },
-            {
-                'name': 'Bruno Martins',
-                'email': 'bruno.martins@empresa.com',
-                'phone': '(69) 98765-4330',
-                'group_id': gestor_group.id,
-                'email_verified_at': datetime.now()
-            },
-            {
-                'name': 'Patricia Mendes',
-                'email': 'patricia.mendes@empresa.com',
-                'phone': '(69) 98765-4331',
-                'group_id': colaborador_group.id,
-                'email_verified_at': datetime.now()
-            }
-        ]
+        if not existing_user:
+            # Criar usuario com ID fixo
+            db.execute(
+                text("""
+                    INSERT INTO users (id, sid_uuid, name, email, phone, active, email_verified_at, created_at, updated_at)
+                    VALUES (:id, :sid_uuid, :name, :email, :phone, :active, :email_verified_at, NOW(), NOW())
+                """),
+                {
+                    "id": 1,
+                    "sid_uuid": '019a0333-7cc7-7530-8c15-ca31ccd295d2',
+                    "name": 'Renan',
+                    "email": 'renan@bettertech.com.br',
+                    "phone": '(69) 99999-0000',
+                    "active": True,
+                    "email_verified_at": datetime.now()
+                }
+            )
 
-        created_count = 0
-        existing_count = 0
+            # Vincular ao grupo de administradores (ID fixo = 1)
+            db.execute(
+                text("INSERT INTO user_groups (user_id, group_id) VALUES (:user_id, :group_id)"),
+                {"user_id": 1, "group_id": admin_group_id}
+            )
 
-        for user_data in users_data:
-            # Verifica se o usuario ja existe
-            existing_user = db.query(User).filter_by(email=user_data['email']).first()
+            print("  [OK] Usuario criado: Renan (vinculado ao grupo Administradores - ID 1)")
+        else:
+            # Verifica se já está vinculado ao grupo de administradores
+            existing_link = db.execute(
+                text("SELECT 1 FROM user_groups WHERE user_id = :user_id AND group_id = :group_id"),
+                {"user_id": 1, "group_id": admin_group_id}
+            ).fetchone()
 
-            if not existing_user:
-                # Criar usuario
-                user = User(
-                    name=user_data['name'],
-                    email=user_data['email'],
-                    phone=user_data['phone'],
-                    is_active=True,
-                    email_verified_at=user_data['email_verified_at']
-                )
-                db.add(user)
-                db.flush()  # Para obter o ID do usuario
-
-                # Vincular ao grupo atraves da tabela pivot
+            if not existing_link:
+                # Vincular ao grupo de administradores
                 db.execute(
                     text("INSERT INTO user_groups (user_id, group_id) VALUES (:user_id, :group_id)"),
-                    {"user_id": user.id, "group_id": user_data['group_id']}
+                    {"user_id": 1, "group_id": admin_group_id}
                 )
-
-                created_count += 1
-                print(f"  [OK] Usuario criado: {user_data['name']} ({user_data['email']})")
+                print("  [OK] Usuario ja existe: Renan (vinculado ao grupo Administradores - ID 1)")
             else:
-                existing_count += 1
-                print(f"  [OK] Usuario ja existe: {user_data['name']}")
+                print("  [OK] Usuario ja existe: Renan (ja vinculado ao grupo Administradores)")
 
         db.commit()
 
-        print(f"\n{'='*60}")
-        print(f"Seeder finalizado com sucesso!")
-        print(f"Usuarios criados: {created_count}")
-        print(f"Usuarios ja existentes: {existing_count}")
-        print(f"Total de usuarios: {len(users_data)}")
-        print(f"{'='*60}\n")
-
-        # Mostrar resumo
-        print("Resumo dos usuarios:")
-        print(f"  Administradores (2):")
-        print(f"    - Usuario Demo (demo@demo.com)")
-        print(f"    - Maria Silva (maria.silva@empresa.com)")
-        print(f"  Gestores (4):")
-        print(f"    - João Santos (joao.santos@empresa.com)")
-        print(f"    - Ana Costa (ana.costa@empresa.com)")
-        print(f"    - Juliana Alves (juliana.alves@empresa.com)")
-        print(f"    - Bruno Martins (bruno.martins@empresa.com)")
-        print(f"  Colaboradores (5):")
-        print(f"    - Pedro Oliveira (pedro.oliveira@empresa.com)")
-        print(f"    - Carla Souza (carla.souza@empresa.com)")
-        print(f"    - Ricardo Ferreira (ricardo.ferreira@empresa.com)")
-        print(f"    - Marcos Lima (marcos.lima@empresa.com)")
-        print(f"    - Fernanda Rocha (fernanda.rocha@empresa.com)")
-        print(f"    - Patricia Mendes (patricia.mendes@empresa.com)")
-        print()
-
     except Exception as e:
         db.rollback()
-        print(f"\n[ERRO] Erro ao executar seeder: {str(e)}\n")
+        print(f"[ERRO] Erro ao executar seeder: {str(e)}")
         raise
     finally:
         db.close()
 
 
 if __name__ == '__main__':
-    print("\n" + "="*60)
-    print("SEEDER: Usuarios de Teste")
-    print("="*60 + "\n")
     seed_users()

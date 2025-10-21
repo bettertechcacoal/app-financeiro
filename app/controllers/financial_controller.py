@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask import render_template, request, redirect, url_for, flash, session, jsonify
 from app.models.database import SessionLocal
-from app.models.travel_payout import TravelPayout, PayoutStatus
+from app.models.travel_payout import TravelPayout
 from app.models.travel_statement import TravelStatement, StatementStatus
 from app.models.travel import Travel
 from app.models.user import User
@@ -40,11 +40,6 @@ def financial_accountability(payout_id):
 
         if not payout:
             flash('Repasse não encontrado ou você não tem permissão para acessá-lo', 'error')
-            return redirect(url_for('admin.financial_payouts_list'))
-
-        # Verificar se o payout está pendente
-        if payout.status != PayoutStatus.PENDING:
-            flash('Este repasse já foi processado', 'warning')
             return redirect(url_for('admin.financial_payouts_list'))
 
         payout_data = payout.to_dict()
@@ -142,9 +137,7 @@ def financial_payouts_list():
                 }
             payouts_data.append(payout_dict)
 
-        # Calcular totais (usando status do payout original, não da prestação)
-        total_pending = sum(p['amount'] for p in payouts_data if p['status'] == 'pending')
-        total_paid = sum(p['amount'] for p in payouts_data if p['status'] == 'paid')
+        # Calcular totais
         total_all = sum(p['amount'] for p in payouts_data)
 
         db.close()
@@ -153,8 +146,6 @@ def financial_payouts_list():
             'pages/financial/list.html',
             payouts=payouts_data,
             total_payouts=len(payouts_data),
-            total_pending=total_pending,
-            total_paid=total_paid,
             total_all=total_all
         )
 

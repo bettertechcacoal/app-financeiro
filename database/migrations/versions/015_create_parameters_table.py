@@ -1,7 +1,7 @@
 """create_parameters_table
 
-Revision ID: 016
-Revises: 015
+Revision ID: 015
+Revises: 014
 Create Date: 2025-10-11 22:20:10.000000
 
 """
@@ -13,8 +13,8 @@ from sqlalchemy.dialects import postgresql
 
 
 # revision identifiers, used by Alembic.
-revision: str = '016'
-down_revision: Union[str, None] = '015'
+revision: str = '015'
+down_revision: Union[str, None] = '014'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

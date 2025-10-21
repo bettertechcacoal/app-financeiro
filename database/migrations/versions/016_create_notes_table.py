@@ -1,7 +1,7 @@
 """create notes table
 
-Revision ID: 017
-Revises: 016
+Revision ID: 016
+Revises: 015
 Create Date: 2025-01-11
 
 """
@@ -11,8 +11,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '017'
-down_revision: Union[str, None] = '016'
+revision: str = '016'
+down_revision: Union[str, None] = '015'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

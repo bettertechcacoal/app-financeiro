@@ -9,9 +9,11 @@ from app.models.database import SessionLocal
 from app.models.permission import Permission
 from app.models.group import Group
 from app.models.group_permission import group_permissions
+from app.utils.permissions_helper import permission_required
 from sqlalchemy import select, delete
 
 
+@permission_required('permissions_view')
 def permissions_list():
     """
     Lista todas as permissões do sistema agrupadas por módulo
@@ -36,6 +38,7 @@ def permissions_list():
         db.close()
 
 
+@permission_required('permissions_manage')
 def groups_permissions():
     """
     Página de gerenciamento de permissões por grupo
@@ -67,6 +70,7 @@ def groups_permissions():
         db.close()
 
 
+@permission_required('permissions_manage')
 def group_permissions_update(group_id):
     """
     Atualiza as permissões de um grupo específico
@@ -112,6 +116,7 @@ def group_permissions_update(group_id):
         db.close()
 
 
+@permission_required('permissions_manage')
 def api_group_permissions(group_id):
     """
     API: Retorna as permissões de um grupo específico
@@ -140,6 +145,7 @@ def api_group_permissions(group_id):
         db.close()
 
 
+@permission_required('permissions_view')
 def api_permissions_by_module():
     """
     API: Retorna todas as permissões agrupadas por módulo

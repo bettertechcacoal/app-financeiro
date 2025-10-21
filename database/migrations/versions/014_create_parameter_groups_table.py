@@ -1,7 +1,7 @@
 """create_parameter_groups_table
 
-Revision ID: 015
-Revises: 014
+Revision ID: 014
+Revises: 013
 Create Date: 2025-10-11 22:20:00.000000
 
 """
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '015'
-down_revision: Union[str, None] = '014'
+revision: str = '014'
+down_revision: Union[str, None] = '013'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

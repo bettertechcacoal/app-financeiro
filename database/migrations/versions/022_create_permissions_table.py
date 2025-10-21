@@ -1,7 +1,7 @@
 """create permissions table
 
-Revision ID: 023
-Revises: 022
+Revision ID: 022
+Revises: 021
 Create Date: 2024-10-13
 
 """
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 from sqlalchemy.sql import func
 
 # revision identifiers, used by Alembic.
-revision = '023'
-down_revision = '022'
+revision = '022'
+down_revision = '021'
 branch_labels = None
 depends_on = None
 

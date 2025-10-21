@@ -155,7 +155,7 @@
                     {% endif %}
 
                     <!-- Viagens -->
-                    {% if 'viagens_view' in user_permissions or 'viagens_view_all' in user_permissions %}
+                    {% if 'travels_view' in user_permissions or 'travels_view_all' in user_permissions %}
                     <a href="{{ url_for('admin.travels_list') }}" class="block">
                         <div class="module-card">
                             <div class="module-icon bg-gradient-to-br from-blue-500 to-blue-600">
@@ -163,7 +163,7 @@
                             </div>
                             <h3 class="text-lg font-bold text-gray-900 mb-2">Viagens</h3>
                             <p class="text-sm text-gray-600">Agendamento e histórico de viagens</p>
-                            {% if pending_travels_count > 0 and 'viagens_approve' in user_permissions %}
+                            {% if pending_travels_count > 0 and 'travels_approve' in user_permissions %}
                             <div class="module-badge">{{ pending_travels_count }}</div>
                             {% endif %}
                         </div>
@@ -171,7 +171,7 @@
                     {% endif %}
 
                     <!-- Financeiro -->
-                    {% if 'financeiro_view' in user_permissions %}
+                    {% if 'financial_view' in user_permissions %}
                     <a href="{{ url_for('admin.financial_payouts_list') }}" class="block">
                         <div class="module-card">
                             <div class="module-icon bg-gradient-to-br from-purple-500 to-purple-600">
@@ -213,7 +213,7 @@
                     {% endif %}
 
                     <!-- Veículos -->
-                    {% if 'veiculos_view' in user_permissions %}
+                    {% if 'vehicles_view' in user_permissions %}
                     <a href="{{ url_for('admin.vehicles_list') }}" class="block">
                         <div class="module-card">
                             <div class="module-icon bg-gradient-to-br from-cyan-500 to-cyan-600">

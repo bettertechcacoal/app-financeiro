@@ -27,14 +27,17 @@ def init_scheduler(app):
     """Inicializa o scheduler de tarefas"""
     global scheduler
 
+    # Evitar inicialização duplicada no reloader do Flask
+    import os
+    if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
+        return None
+
     if scheduler is not None:
         logger.warning("Scheduler já está inicializado")
         return scheduler
 
     scheduler = BackgroundScheduler(daemon=True)
     scheduler.start()
-
-    logger.info("[SCHEDULER] Scheduler iniciado com sucesso")
 
     # Carregar e configurar horários de sincronização
     load_sync_schedules()

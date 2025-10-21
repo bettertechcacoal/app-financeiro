@@ -3,6 +3,12 @@
 Seed para popular a tabela license_applications com mapeamento de códigos → módulos
 Baseado no mapeamento real dos sistemas Elotech
 """
+import sys
+from config import ROOT_DIR
+
+# Adicionar o diretorio raiz ao path
+sys.path.insert(0, ROOT_DIR)
+
 from app.models.database import SessionLocal
 from app.models.license_application import LicenseApplication
 
@@ -51,6 +57,9 @@ def seed_license_applications():
                 if existing.name != module['name']:
                     existing.name = module['name']
                     updated_count += 1
+                    print(f"  [OK] Módulo atualizado: {module['code']} - {module['name']}")
+                else:
+                    print(f"  [OK] Módulo já existe: {module['code']} - {module['name']}")
             else:
                 # Inserir novo
                 app = LicenseApplication(
@@ -59,24 +68,29 @@ def seed_license_applications():
                 )
                 db.add(app)
                 inserted_count += 1
+                print(f"  [OK] Módulo criado: {module['code']} - {module['name']}")
 
         db.commit()
-        print(f"[SEED] {inserted_count} módulos inseridos, {updated_count} atualizados")
-        print(f"[SEED] Total de {len(modules)} módulos no catálogo")
+
+        print(f"\n{'='*60}")
+        print(f"Seeder finalizado com sucesso!")
+        print(f"Módulos inseridos: {inserted_count}")
+        print(f"Módulos atualizados: {updated_count}")
+        print(f"Total de módulos: {len(modules)}")
+        print(f"{'='*60}\n")
+
         return inserted_count + updated_count
 
     except Exception as e:
         db.rollback()
-        print(f"[SEED ERROR] Erro ao popular license_applications: {str(e)}")
-        import traceback
-        print(traceback.format_exc())
+        print(f"\n[ERRO] Erro ao executar seeder: {str(e)}\n")
         raise e
     finally:
         db.close()
 
 
 if __name__ == '__main__':
-    print("[SEED] Iniciando seed de license_applications...")
-    print("[SEED] Carregando 22 módulos mapeados...")
+    print("\n" + "="*60)
+    print("SEEDER: License Applications (Módulos)")
+    print("="*60 + "\n")
     seed_license_applications()
-    print("[SEED] Concluído!")

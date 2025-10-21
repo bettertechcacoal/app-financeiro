@@ -14,7 +14,7 @@ from sqlalchemy import or_, desc
 from datetime import datetime
 
 
-@permission_required('veiculos_view')
+@permission_required('vehicles_view')
 def vehicles_list():
     """Lista todos os veículos cadastrados"""
     db = SessionLocal()
@@ -57,7 +57,7 @@ def vehicles_list():
         db.close()
 
 
-@permission_required('veiculos_create')
+@permission_required('vehicles_create')
 def vehicles_create():
     """Cria um novo veículo"""
     db = SessionLocal()
@@ -105,7 +105,7 @@ def vehicles_create():
         db.close()
 
 
-@permission_required('veiculos_edit')
+@permission_required('vehicles_edit')
 def vehicles_edit(vehicle_id):
     """Edita um veículo existente"""
     db = SessionLocal()
@@ -139,7 +139,7 @@ def vehicles_edit(vehicle_id):
         db.close()
 
 
-@permission_required('veiculos_view')
+@permission_required('vehicles_view')
 def vehicles_details(vehicle_id):
     """Exibe detalhes de um veículo"""
     db = SessionLocal()
@@ -169,7 +169,7 @@ def vehicles_details(vehicle_id):
         db.close()
 
 
-@permission_required('veiculos_delete')
+@permission_required('vehicles_delete')
 def vehicles_toggle_status(vehicle_id):
     """Alterna o status ativo/inativo de um veículo"""
     db = SessionLocal()
@@ -197,7 +197,7 @@ def vehicles_toggle_status(vehicle_id):
 
 # ========== API: Configurações de Manutenção ==========
 
-@permission_required('veiculos_edit')
+@permission_required('vehicles_edit')
 def vehicles_add_maintenance_config(vehicle_id):
     """API: Adiciona uma configuração de manutenção ao veículo"""
     db = SessionLocal()
@@ -247,7 +247,7 @@ def vehicles_add_maintenance_config(vehicle_id):
         db.close()
 
 
-@permission_required('veiculos_edit')
+@permission_required('vehicles_edit')
 def vehicles_remove_maintenance_config(vehicle_id, config_id):
     """API: Remove uma configuração de manutenção"""
     db = SessionLocal()

@@ -1,10 +1,4 @@
-"""create cities table
-
-Revision ID: 005
-Revises: 004
-Create Date: 2025-10-11
-
-"""
+"""table cities"""
 from typing import Sequence, Union
 
 from alembic import op

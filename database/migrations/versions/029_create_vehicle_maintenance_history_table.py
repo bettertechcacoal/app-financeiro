@@ -1,16 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Migration: Create vehicle_maintenance_history table
-Tabela para armazenar histórico de manutenções realizadas
-"""
+"""table vehicle_maintenance_history"""
 
 from alembic import op
 import sqlalchemy as sa
 
 
 # revision identifiers
-revision = '028'
-down_revision = '027'
+revision = '029'
+down_revision = '028'
 branch_labels = None
 depends_on = None
 

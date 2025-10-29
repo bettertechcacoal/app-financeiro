@@ -390,26 +390,6 @@ def seed_permissions():
                 'module': 'notes'
             },
 
-            # ===== RELATÓRIOS (REPORTS) =====
-            {
-                'name': 'Visualizar Relatórios',
-                'slug': 'reports_view',
-                'description': 'Permite visualizar relatórios',
-                'module': 'reports'
-            },
-            {
-                'name': 'Gerar Relatórios',
-                'slug': 'reports_generate',
-                'description': 'Permite gerar relatórios em PDF',
-                'module': 'reports'
-            },
-            {
-                'name': 'Exportar Relatórios',
-                'slug': 'reports_export',
-                'description': 'Permite exportar relatórios',
-                'module': 'reports'
-            },
-
             # ===== PERMISSÕES (PERMISSIONS) - Gerenciamento =====
             {
                 'name': 'Visualizar Permissões',

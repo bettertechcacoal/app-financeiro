@@ -6,7 +6,11 @@ from flask import Flask
 from flask_socketio import SocketIO
 from routes import register_routes
 from config import SECRET_KEY, DEBUG
+from config.logger import configure_logging
 from app.models.database import init_db
+
+# Configurar sistema de logging
+logger = configure_logging()
 
 # Desabilitar logs do Werkzeug
 log = logging.getLogger('werkzeug')
@@ -64,14 +68,11 @@ def migrate_fresh():
     alembic_cfg = Config("alembic.ini")
 
     try:
-        print("\n[AVISO] Recriando banco de dados (todos os dados serão perdidos)...")
         command.downgrade(alembic_cfg, "base")
         command.upgrade(alembic_cfg, "head")
-        print("[OK] Banco de dados recriado com sucesso!\n")
         return True
     except Exception as e:
-        print(f"\n[ERRO] Erro ao recriar banco de dados:")
-        print(f"  {str(e)}\n")
+        print(f"\nErro ao recriar banco de dados: {str(e)}\n")
         return False
 
 if __name__ == '__main__':
@@ -99,18 +100,22 @@ if __name__ == '__main__':
 
     # Iniciar o servidor
     try:
+        logger.info("Iniciando aplicação...")
+
         with app.app_context():
-            init_db()
+            logger.info("Banco de dados inicializado")
 
             # Inicializar scheduler de tarefas automáticas
             from app.services.scheduler_service import init_scheduler
             init_scheduler(app)
+            logger.info("Scheduler de tarefas inicializado")
 
         # Mostrar mensagem apenas no processo principal (evitar duplicação no reloader)
         import os
         if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
             print(f"\n[OK] Servidor iniciado em http://{args.host}:{args.port}")
             print(f"  Modo debug: {'Ativado' if args.debug or DEBUG else 'Desativado'}\n")
+            logger.info(f"Servidor Flask iniciado em {args.host}:{args.port} (Debug: {args.debug or DEBUG})")
 
         debug_mode = args.debug or DEBUG
 
@@ -120,6 +125,7 @@ if __name__ == '__main__':
 
         socketio.run(app, debug=debug_mode, host=args.host, port=args.port, log_output=False)
     except Exception as e:
+        logger.error(f"Erro ao iniciar o servidor: {str(e)}", exc_info=True)
         print(f"\n[ERRO] Erro ao iniciar o servidor:")
         print(f"  {str(e)}")
         print(f"\n  Dica: Execute 'python main.py --migrate' antes de iniciar o servidor.\n")

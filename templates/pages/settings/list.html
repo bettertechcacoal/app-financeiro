@@ -13,13 +13,21 @@
 <div class="py-8">
     <!-- Header -->
     <div class="mb-8 animate-fade-in">
-        <div class="flex items-center mb-4">
-            <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-gray-600 to-gray-700 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
-                <i class="fas fa-cog text-white text-2xl sm:text-3xl"></i>
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            <div class="flex items-center">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-gray-600 to-gray-700 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+                    <i class="fas fa-cog text-white text-2xl sm:text-3xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Configurações do Sistema</h1>
+                    <p class="text-sm sm:text-base text-gray-600">Gerencie os parâmetros de configuração</p>
+                </div>
             </div>
-            <div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Configurações do Sistema</h1>
-                <p class="text-sm sm:text-base text-gray-600">Gerencie os parâmetros de configuração</p>
+            <div class="flex items-center gap-3">
+                <button id="saveChangesBtn" disabled class="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all inline-flex items-center disabled:bg-gray-400 disabled:cursor-not-allowed disabled:shadow-none">
+                    <i class="fas fa-save mr-2"></i>
+                    Salvar Alterações
+                </button>
             </div>
         </div>
     </div>
@@ -83,24 +91,34 @@
                                         <i class="fas fa-list mr-1"></i>
                                         Select
                                     </span>
+                                    {% elif param.type.value == 'json' %}
+                                    <span class="badge bg-orange-100 text-orange-700">
+                                        <i class="fas fa-code mr-1"></i>
+                                        JSON
+                                    </span>
                                     {% endif %}
                                 </td>
                                 <td class="px-6 py-4">
-                                    <form action="{{ url_for('admin.settings_update', parameter_id=param.id) }}" method="POST" class="inline-block w-full">
+                                    <form action="{{ url_for('admin.settings_update') }}" method="POST" class="inline-block w-full" data-param-id="{{ param.id }}">
                                         {% if param.type.value == 'checkbox' %}
                                             <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" name="value" value="S" {% if param.value == 'S' %}checked{% endif %} onchange="this.form.submit()" class="sr-only peer">
+                                                <input type="checkbox" name="value" value="S" {% if param.value == 'S' %}checked{% endif %} class="sr-only peer">
                                                 <div class="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div>
                                             </label>
                                         {% elif param.type.value == 'select' %}
-                                            <select name="value" onchange="this.form.submit()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <select name="value" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                                 {% set options = param.options | from_json %}
                                                 {% for option in options %}
                                                 <option value="{{ option }}" {% if param.value == option %}selected{% endif %}>{{ option }}</option>
                                                 {% endfor %}
                                             </select>
+                                        {% elif param.type.value == 'json' %}
+                                            <input type="hidden" name="value" value="{{ param.value or '' }}" data-param-id="{{ param.id }}">
+                                            <div class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 font-mono cursor-pointer hover:bg-gray-100 transition-all" onclick="openJsonEditor({{ param.id }}, '{{ param.parameter }}', this.previousElementSibling.value)">
+                                                <span class="text-gray-600">{{ param.value or '{"key":"value"}' }}</span>
+                                            </div>
                                         {% else %}
-                                            <input type="text" name="value" value="{{ param.value or '' }}" onblur="this.form.submit()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Digite o valor...">
+                                            <input type="text" name="value" value="{{ param.value or '' }}" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Digite o valor...">
                                         {% endif %}
                                     </form>
                                 </td>
@@ -168,24 +186,31 @@
                                     <i class="fas fa-list mr-1"></i>
                                     Select
                                 </span>
+                                {% elif param.type.value == 'json' %}
+                                <span class="badge bg-orange-100 text-orange-700">
+                                    <i class="fas fa-code mr-1"></i>
+                                    JSON
+                                </span>
                                 {% endif %}
                             </td>
                             <td class="px-6 py-4">
                                 <form action="{{ url_for('admin.settings_update', parameter_id=param.id) }}" method="POST" class="inline-block w-full">
                                     {% if param.type.value == 'checkbox' %}
                                         <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" name="value" value="S" {% if param.value == 'S' %}checked{% endif %} onchange="this.form.submit()" class="sr-only peer">
+                                            <input type="checkbox" name="value" value="S" {% if param.value == 'S' %}checked{% endif %} class="sr-only peer">
                                             <div class="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div>
                                         </label>
                                     {% elif param.type.value == 'select' %}
-                                        <select name="value" onchange="this.form.submit()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        <select name="value" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                             {% set options = param.options | from_json %}
                                             {% for option in options %}
                                             <option value="{{ option }}" {% if param.value == option %}selected{% endif %}>{{ option }}</option>
                                             {% endfor %}
                                         </select>
+                                    {% elif param.type.value == 'json' %}
+                                        <input type="text" name="value" value="{{ param.value or '' }}" readonly class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 font-mono cursor-pointer hover:bg-gray-100 transition-all" placeholder='{"key":"value"}' onclick="openJsonEditor({{ param.id }}, '{{ param.parameter }}', this.value)">
                                     {% else %}
-                                        <input type="text" name="value" value="{{ param.value or '' }}" onblur="this.form.submit()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Digite o valor...">
+                                        <input type="text" name="value" value="{{ param.value or '' }}" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Digite o valor...">
                                     {% endif %}
                                 </form>
                             </td>
@@ -216,4 +241,245 @@
         </a>
     </div>
 </div>
+
+<!-- Modal Editor JSON -->
+<div id="jsonEditorModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-bold text-gray-900">Editor JSON</h3>
+                <p class="text-sm text-gray-600" id="jsonEditorParamName"></p>
+            </div>
+            <button onclick="closeJsonEditor()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 p-6 overflow-auto">
+            <textarea id="jsonEditorTextarea" rows="12" class="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono" placeholder='{"key":"value"}'></textarea>
+            <div id="jsonEditorError" class="hidden mt-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                <span id="jsonEditorErrorMsg"></span>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+            <button onclick="closeJsonEditor()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all">
+                Cancelar
+            </button>
+            <button onclick="saveJsonValue()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">
+                <i class="fas fa-check mr-2"></i>
+                Concluir
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentParamId = null;
+
+function openJsonEditor(paramId, paramName, currentValue) {
+    currentParamId = paramId;
+    document.getElementById('jsonEditorParamName').textContent = paramName;
+    document.getElementById('jsonEditorTextarea').value = currentValue || '';
+    document.getElementById('jsonEditorError').classList.add('hidden');
+    document.getElementById('jsonEditorModal').classList.remove('hidden');
+}
+
+function closeJsonEditor() {
+    document.getElementById('jsonEditorModal').classList.add('hidden');
+    currentParamId = null;
+}
+
+function saveJsonValue() {
+    const value = document.getElementById('jsonEditorTextarea').value.trim();
+    const errorDiv = document.getElementById('jsonEditorError');
+    const errorMsg = document.getElementById('jsonEditorErrorMsg');
+
+    // Validar JSON se não estiver vazio
+    if (value !== '') {
+        try {
+            JSON.parse(value);
+        } catch (e) {
+            errorMsg.textContent = 'JSON inválido: ' + e.message;
+            errorDiv.classList.remove('hidden');
+            return;
+        }
+    }
+
+    // Atualizar o campo hidden e a div que simula o input
+    const hiddenInput = document.querySelector(`input[type="hidden"][data-param-id="${currentParamId}"]`);
+
+    if (hiddenInput) {
+        // Atualizar valor do campo hidden
+        hiddenInput.value = value;
+
+        // Atualizar texto da div
+        const displayDiv = hiddenInput.nextElementSibling;
+        if (displayDiv) {
+            const span = displayDiv.querySelector('span');
+            if (span) {
+                span.textContent = value || '{"key":"value"}';
+            }
+        }
+
+        // Disparar evento de input para detectar mudança
+        hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    closeJsonEditor();
+    checkForChanges();
+}
+
+// Fechar modal ao clicar fora
+document.getElementById('jsonEditorModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeJsonEditor();
+    }
+});
+
+// Detectar mudanças nos campos e habilitar botão "Salvar Alterações"
+let hasChanges = false;
+const saveBtn = document.getElementById('saveChangesBtn');
+
+// Armazenar valores originais
+const originalValues = {};
+document.querySelectorAll('input[name="value"], select[name="value"], textarea[name="value"]').forEach(input => {
+    const form = input.closest('form');
+    if (form) {
+        const paramId = form.getAttribute('data-param-id');
+        if (input.type === 'checkbox') {
+            originalValues[paramId] = input.checked ? 'S' : '';
+        } else {
+            originalValues[paramId] = input.value || '';
+        }
+    }
+});
+
+// Detectar mudanças em text inputs
+document.querySelectorAll('input[type="text"][name="value"]:not([readonly])').forEach(input => {
+    input.addEventListener('input', function() {
+        checkForChanges();
+    });
+});
+
+// Detectar mudanças em checkboxes
+document.querySelectorAll('input[type="checkbox"][name="value"]').forEach(input => {
+    input.addEventListener('change', function() {
+        hasChanges = true;
+        enableSaveButton();
+    });
+});
+
+// Detectar mudanças em selects
+document.querySelectorAll('select[name="value"]').forEach(select => {
+    select.addEventListener('change', function() {
+        hasChanges = true;
+        enableSaveButton();
+    });
+});
+
+function checkForChanges() {
+    hasChanges = false;
+    document.querySelectorAll('input[name="value"]:not([readonly]), select[name="value"], textarea[name="value"]').forEach(input => {
+        const form = input.closest('form');
+        if (form) {
+            const paramId = form.getAttribute('data-param-id');
+            const currentValue = input.type === 'checkbox' ? (input.checked ? 'S' : '') : (input.value || '');
+            if (originalValues[paramId] !== currentValue) {
+                hasChanges = true;
+            }
+        }
+    });
+
+    if (hasChanges) {
+        enableSaveButton();
+    } else {
+        disableSaveButton();
+    }
+}
+
+function enableSaveButton() {
+    if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+        saveBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+    }
+}
+
+function disableSaveButton() {
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+        saveBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+    }
+}
+
+// Quando clicar no botão salvar, submeter todos os parâmetros alterados de uma vez
+if (saveBtn) {
+    saveBtn.addEventListener('click', function() {
+        const parametersToUpdate = [];
+
+        document.querySelectorAll('input[name="value"]:not([readonly]), select[name="value"], textarea[name="value"]').forEach(input => {
+            const form = input.closest('form');
+            if (form) {
+                const paramId = form.getAttribute('data-param-id');
+                const currentValue = input.type === 'checkbox' ? (input.checked ? 'S' : '') : (input.value || '');
+
+                if (originalValues[paramId] !== currentValue) {
+                    parametersToUpdate.push({
+                        id: parseInt(paramId),
+                        value: currentValue
+                    });
+                }
+            }
+        });
+
+        if (parametersToUpdate.length > 0) {
+            // Desabilitar botão durante o salvamento
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Salvando...';
+
+            // Enviar uma única requisição com todos os parâmetros
+            fetch('/admin/settings/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    parameters: parametersToUpdate
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+
+                    // Atualizar valores originais
+                    parametersToUpdate.forEach(param => {
+                        originalValues[param.id] = param.value;
+                    });
+
+                    // Desabilitar botão
+                    disableSaveButton();
+                    saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Salvar Alterações';
+                } else {
+                    showToast(data.message, 'error');
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Salvar Alterações';
+                }
+            })
+            .catch(error => {
+                showToast('Erro ao conectar com o servidor', 'error');
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Salvar Alterações';
+            });
+        }
+    });
+}
+</script>
+
 {% endblock %}

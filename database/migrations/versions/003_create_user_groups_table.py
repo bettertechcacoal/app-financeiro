@@ -1,10 +1,4 @@
-"""create user_groups table
-
-Revision ID: 003
-Revises: 002
-Create Date: 2025-10-11
-
-"""
+"""table user_groups"""
 from typing import Sequence, Union
 
 from alembic import op

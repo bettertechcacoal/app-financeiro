@@ -1,10 +1,4 @@
-"""create clients table
-
-Revision ID: 008
-Revises: 007
-Create Date: 2025-10-11
-
-"""
+"""table clients"""
 from typing import Sequence, Union
 
 from alembic import op

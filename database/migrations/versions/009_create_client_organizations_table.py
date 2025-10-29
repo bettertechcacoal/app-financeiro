@@ -1,10 +1,4 @@
-"""create client_organizations table
-
-Revision ID: 009
-Revises: 008
-Create Date: 2025-10-11
-
-"""
+"""table client_organizations"""
 from typing import Sequence, Union
 
 from alembic import op

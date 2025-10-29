@@ -1,16 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Migration: Create vehicle_travel_history table
-Tabela para armazenar histórico de viagens dos veículos
-"""
+"""table vehicle_travel_history"""
 
 from alembic import op
 import sqlalchemy as sa
 
 
 # revision identifiers
-revision = '026'
-down_revision = '025'
+revision = '027'
+down_revision = '026'
 branch_labels = None
 depends_on = None
 

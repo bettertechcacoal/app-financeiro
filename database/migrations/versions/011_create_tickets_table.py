@@ -1,10 +1,4 @@
-"""create tickets table
-
-Revision ID: 011
-Revises: 010
-Create Date: 2025-10-11
-
-"""
+"""table tickets"""
 from typing import Sequence, Union
 
 from alembic import op

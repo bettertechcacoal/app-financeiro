@@ -724,6 +724,15 @@
                         Por favor, informe um valor maior que zero
                     </p>
                 </div>
+
+                <!-- Descrição -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Descrição (Opcional)</label>
+                    <textarea id="modal-lodging-description" maxlength="100" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none" placeholder="Ex: Hotel, Pousada, Airbnb, etc."></textarea>
+                    <div class="flex justify-end items-center mt-1">
+                        <span id="lodging-char-counter" class="text-xs text-gray-500">0/100</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Footer do Modal -->
@@ -917,18 +926,21 @@
     <!-- Card com JSON (visível em todas as etapas) -->
     <div class="mt-6 animate-fade-in">
         <div class="card">
-            <div class="p-6 border-b border-gray-200">
-                <div class="flex items-center">
-                    <div class="w-10 h-10 bg-gray-600 rounded-lg flex items-center justify-center mr-3">
-                        <i class="fas fa-code text-white"></i>
+            <button type="button" id="json-debug-button" onclick="toggleJsonDebug()" class="w-full p-6 border-b border-gray-200 hover:bg-gray-50 transition-colors text-left rounded-t-xl rounded-b-xl">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-gray-600 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-code text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">Dados em JSON (Debug)</h3>
+                            <p class="text-sm text-gray-500">Visualização dos dados preenchidos</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-900">Dados em JSON (Debug)</h3>
-                        <p class="text-sm text-gray-500">Visualização dos dados preenchidos</p>
-                    </div>
+                    <i id="json-debug-icon" class="fas fa-chevron-down text-gray-400 transition-transform"></i>
                 </div>
-            </div>
-            <div class="p-6 bg-gray-900">
+            </button>
+            <div id="json-debug-content" class="p-6 bg-gray-900 hidden">
                 <pre id="json-output" class="text-green-400 text-xs overflow-x-auto"><code>{
   "payout_id": {{ payout.id }},
   "amount": {{ payout.amount }},
@@ -949,6 +961,59 @@
     "notes": ""
   }
 }</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Anexos -->
+    <div id="attachment-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 animate-fade-in">
+            <!-- Header do Modal -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-purple-900 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-paperclip text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900">Gerenciar Anexos</h3>
+                    </div>
+                    <button type="button" onclick="closeAttachmentModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Corpo do Modal -->
+            <div class="p-6 space-y-4">
+                <!-- Upload de arquivo e separador -->
+                <div id="attachment-upload-area">
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-500 transition-colors cursor-pointer" onclick="document.getElementById('attachment-file-input').click()">
+                        <input type="file" id="attachment-file-input" class="hidden" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
+                        <div class="space-y-2">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400"></i>
+                            <div>
+                                <span class="text-purple-600 hover:text-purple-800 font-semibold">Clique para selecionar um arquivo</span>
+                            </div>
+                            <p class="text-xs text-gray-400">PDF, JPG, PNG, DOC, XLS (máx. 5MB)</p>
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-200 mt-4"></div>
+                </div>
+
+                <!-- Lista de anexos -->
+                <div id="attachment-list-section">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-3">Anexos Adicionados</h4>
+                    <div id="attachment-list" class="space-y-2 max-h-64 overflow-y-auto">
+                        <!-- Anexos serão renderizados aqui -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer do Modal -->
+            <div class="p-6 bg-gray-50 rounded-b-xl flex justify-end">
+                <button type="button" onclick="closeAttachmentModal()" class="px-6 py-2 bg-purple-900 hover:bg-purple-800 text-white rounded-lg font-semibold transition-all">
+                    Concluir
+                </button>
             </div>
         </div>
     </div>
@@ -1007,17 +1072,12 @@ $(document).ready(function() {
         const TRIP_VEHICLE = 'Próprio';
     {% endif %}
 
-    // Debug: Verificar datas recebidas do backend
-    console.log('Data de Saída da Viagem:', TRIP_START_DATE);
-    console.log('Data de Retorno da Viagem:', TRIP_END_DATE);
-
     // Calcular número de dias da viagem
     let TRIP_DAYS = 999; // Valor padrão alto caso as datas não estejam disponíveis
     if (TRIP_START_DATE && TRIP_END_DATE && TRIP_START_DATE !== '' && TRIP_END_DATE !== '') {
         const tripStartDate = new Date(TRIP_START_DATE + 'T00:00:00');
         const tripEndDate = new Date(TRIP_END_DATE + 'T00:00:00');
         TRIP_DAYS = Math.ceil((tripEndDate - tripStartDate) / (1000 * 60 * 60 * 24)) + 1;
-        console.log('Número de dias da viagem:', TRIP_DAYS);
     }
 
     // Valores parametrizados das refeições (futuramente virá do backend)
@@ -1026,6 +1086,36 @@ $(document).ready(function() {
         lunch: 50.00,
         dinner: 45.00
     };
+
+    // Configuração do Storage Service (será carregado dinamicamente)
+    let STORAGE_BUCKET = '';
+    let STORAGE_USER_ID = {{ session.get('user_id') }};
+    let STORAGE_MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB padrão
+    let STORAGE_CONFIGURED = false;
+
+    // Carregar configurações do storage service
+    async function loadStorageConfig() {
+        try {
+            const response = await fetch('/admin/api/storage/config');
+            const result = await response.json();
+
+            if (result.success) {
+                STORAGE_BUCKET = result.data.bucket;
+                STORAGE_USER_ID = result.data.user_id;
+                STORAGE_MAX_FILE_SIZE = result.data.max_file_size;
+                STORAGE_CONFIGURED = true;
+            } else {
+                console.error('Erro ao carregar configurações do storage:', result.message);
+                showToast('Erro ao configurar storage service', 'error');
+            }
+        } catch (error) {
+            console.error('Erro ao buscar configurações do storage:', error);
+            showToast('Erro ao conectar com servidor', 'error');
+        }
+    }
+
+    // Carregar configurações ao iniciar a página
+    loadStorageConfig();
 
     // Dados da prestação de contas
     {% if payout.existing_statement and payout.existing_statement.statement_content %}
@@ -1106,10 +1196,717 @@ $(document).ready(function() {
         return parseFloat(value.replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
     }
 
-    // Função para atualizar JSON
+    // ========================================
+    // ARQUITETURA DE DADOS (Single Source of Truth)
+    // ========================================
+
+    /**
+     * Atualiza a visualização do JSON debug
+     */
     function updateJSON() {
         $('#json-output code').text(JSON.stringify(accountabilityData, null, 2));
     }
+
+    /**
+     * Renderiza toda a interface a partir do accountabilityData
+     * Esta é a função principal que sincroniza o modelo com a view
+     */
+    function renderFromData() {
+
+        // Limpar interface atual
+        $('#food-days-list').empty();
+        $('#vehicle-expenses-list').empty();
+        $('#lodging-expenses-list').empty();
+        $('#other-expenses-list').empty();
+
+        // Resetar contadores
+        foodDayCounter = 0;
+        vehicleExpenseCounter = 0;
+        lodgingExpenseCounter = 0;
+        otherExpenseCounter = 0;
+
+        // Renderizar cada seção
+        renderFoodDays();
+        renderVehicleExpenses();
+        renderLodgingExpenses();
+        renderOtherExpenses();
+
+        // Atualizar totais e resumo
+        updateTotalsDisplay();
+        updateJSON();
+        renderSummary();
+
+    }
+
+    /**
+     * Renderiza os dias de alimentação a partir do accountabilityData
+     */
+    function renderFoodDays() {
+        if (!accountabilityData.food.days || accountabilityData.food.days.length === 0) {
+            return;
+        }
+
+        accountabilityData.food.days.forEach((day) => {
+            foodDayCounter++;
+
+            // Criar HTML do dia
+            const rowHtml = `
+                <div class="food-day-item flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors" data-day-id="${foodDayCounter}">
+                    <!-- Data -->
+                    <div class="w-36">
+                        <input type="date" id="food-day-date-${foodDayCounter}" value="${day.date}"
+                               class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                               min="${TRIP_START_DATE}" max="${TRIP_END_DATE}">
+                    </div>
+
+                    <!-- Refeições -->
+                    <div class="flex gap-4 flex-1">
+                        <!-- Café -->
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" class="food-meal-checkbox w-4 h-4 text-purple-900 border-gray-300 rounded focus:ring-purple-500 cursor-pointer"
+                                   data-day-id="${foodDayCounter}" data-meal="breakfast" ${day.meals.find(m => m.type === 'breakfast') ? 'checked' : ''}>
+                            <span class="text-sm text-gray-700">
+                                <i class="fas fa-coffee text-purple-900 text-xs"></i> Café
+                            </span>
+                        </label>
+
+                        <!-- Almoço -->
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" class="food-meal-checkbox w-4 h-4 text-purple-900 border-gray-300 rounded focus:ring-purple-500 cursor-pointer"
+                                   data-day-id="${foodDayCounter}" data-meal="lunch" ${day.meals.find(m => m.type === 'lunch') ? 'checked' : ''}>
+                            <span class="text-sm text-gray-700">
+                                <i class="fas fa-utensils text-purple-900 text-xs"></i> Almoço
+                            </span>
+                        </label>
+
+                        <!-- Janta -->
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" class="food-meal-checkbox w-4 h-4 text-purple-900 border-gray-300 rounded focus:ring-purple-500 cursor-pointer"
+                                   data-day-id="${foodDayCounter}" data-meal="dinner" ${day.meals.find(m => m.type === 'dinner') ? 'checked' : ''}>
+                            <span class="text-sm text-gray-700">
+                                <i class="fas fa-moon text-purple-900 text-xs"></i> Janta
+                            </span>
+                        </label>
+                    </div>
+
+                    <!-- Total do Dia -->
+                    <div class="w-32 text-right">
+                        <span id="day-total-${foodDayCounter}" class="font-bold text-purple-900">R$ ${day.amount.toFixed(2).replace('.', ',')}</span>
+                    </div>
+
+                    <!-- Botão Remover -->
+                    <button type="button" onclick="removeFoodDayByIndex(${foodDayCounter - 1})"
+                            class="text-red-600 hover:text-red-800 transition-colors" title="Remover">
+                        <i class="fas fa-trash text-sm"></i>
+                    </button>
+                </div>
+            `;
+
+            $('#food-days-list').append(rowHtml);
+        });
+
+        updateAddFoodDayButton();
+    }
+
+    /**
+     * Renderiza as despesas de veículo a partir do accountabilityData
+     */
+    function renderVehicleExpenses() {
+        if (!IS_DRIVER || !accountabilityData.vehicle.expenses || accountabilityData.vehicle.expenses.length === 0) {
+            return;
+        }
+
+        // Atualizar quilometragem
+        if (accountabilityData.vehicle.km_start) {
+            $('#km-departure').val(accountabilityData.vehicle.km_start);
+        }
+        if (accountabilityData.vehicle.km_end) {
+            $('#km-arrival').val(accountabilityData.vehicle.km_end);
+        }
+
+        accountabilityData.vehicle.expenses.forEach((expense, index) => {
+            vehicleExpenseCounter++;
+
+            const expenseInfo = getExpenseIconAndName(expense.type, expense.name);
+
+            const rowHtml = `
+                <div class="vehicle-expense-item flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                     data-expense-id="${vehicleExpenseCounter}"
+                     data-type="${expense.type}"
+                     data-amount="${expense.amount}"
+                     data-description="${expense.name || ''}">
+
+                    <div class="w-36">
+                        <input type="date" id="vehicle-expense-date-${vehicleExpenseCounter}" value="${expense.date}"
+                               class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                    </div>
+
+                    <div class="flex items-center gap-2 flex-1">
+                        <i class="fas ${expenseInfo.icon} text-purple-900"></i>
+                        <span class="text-gray-700">${expenseInfo.name}</span>
+                        ${expense.attachments && expense.attachments.length > 0 ? `
+                        <button type="button" onclick="openAttachmentModal(${vehicleExpenseCounter}, 'vehicle')"
+                                class="flex items-center gap-1.5 ml-2 cursor-pointer hover:opacity-80 transition-opacity" title="${expense.attachments.length} anexo(s)">
+                            <div class="relative">
+                                <i class="fas fa-paperclip text-purple-900"></i>
+                                <span class="absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">${expense.attachments.length}</span>
+                            </div>
+                            <span class="text-gray-700 text-sm">Anexos</span>
+                        </button>
+                        ` : `
+                        <button type="button" onclick="openAttachmentModal(${vehicleExpenseCounter}, 'vehicle')"
+                                class="text-purple-600 hover:text-purple-800 transition-colors ml-2" title="Adicionar anexo">
+                            <i class="fas fa-paperclip"></i>
+                            <span class="attachment-count-${vehicleExpenseCounter} hidden ml-1 px-2 py-0.5 bg-purple-600 text-white rounded-full text-xs">0</span>
+                        </button>
+                        `}
+                    </div>
+
+                    <div class="w-32 text-right">
+                        <span class="font-bold text-purple-900">R$ ${expense.amount.toFixed(2).replace('.', ',')}</span>
+                    </div>
+
+                    <button type="button" onclick="removeVehicleExpenseByIndex(${index})"
+                            class="text-red-600 hover:text-red-800 transition-colors" title="Remover">
+                        <i class="fas fa-trash text-sm"></i>
+                    </button>
+                </div>
+            `;
+
+            $('#vehicle-expenses-list').append(rowHtml);
+
+            // Restaurar anexos
+            if (expense.attachments && expense.attachments.length > 0) {
+                const attachmentKey = `vehicle-${vehicleExpenseCounter}`;
+                window.expenseAttachments[attachmentKey] = expense.attachments;
+            }
+        });
+    }
+
+    /**
+     * Renderiza as despesas de hospedagem a partir do accountabilityData
+     */
+    function renderLodgingExpenses() {
+        if (!accountabilityData.lodging.expenses || accountabilityData.lodging.expenses.length === 0) {
+            return;
+        }
+
+        accountabilityData.lodging.expenses.forEach((expense, index) => {
+            lodgingExpenseCounter++;
+
+            const rowHtml = `
+                <div class="lodging-expense-item flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                     data-expense-id="${lodgingExpenseCounter}"
+                     data-description="${expense.description || ''}">
+
+                    <div class="w-36">
+                        <input type="date" id="lodging-expense-date-${lodgingExpenseCounter}" value="${expense.date}"
+                               class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                    </div>
+
+                    <div class="flex items-center gap-2 flex-1">
+                        <i class="fas fa-bed text-purple-900"></i>
+                        <span class="text-sm text-gray-700">Hospedagem</span>
+                        ${expense.description ? `<span class="ml-1 px-2 py-0.5 bg-purple-100 text-purple-900 font-bold rounded-full text-sm">${expense.description}</span>` : ''}
+                        <button type="button" onclick="openAttachmentModal(${lodgingExpenseCounter}, 'lodging')"
+                                class="flex items-center gap-1.5 ml-2 cursor-pointer hover:opacity-80 transition-opacity" title="${expense.attachments && expense.attachments.length > 0 ? expense.attachments.length + ' anexo(s)' : 'Adicionar anexo'}">
+                            <div class="relative">
+                                <i class="fas fa-paperclip text-purple-900"></i>
+                                ${expense.attachments && expense.attachments.length > 0 ? `
+                                <span class="absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">${expense.attachments.length}</span>
+                                ` : ''}
+                            </div>
+                            <span class="text-gray-700 text-sm">Anexos</span>
+                        </button>
+                    </div>
+
+                    <div class="w-32 text-right">
+                        <span class="font-bold text-purple-900">R$ ${expense.amount.toFixed(2).replace('.', ',')}</span>
+                    </div>
+
+                    <button type="button" onclick="removeLodgingExpenseByIndex(${index})"
+                            class="text-red-600 hover:text-red-800 transition-colors" title="Remover">
+                        <i class="fas fa-trash text-sm"></i>
+                    </button>
+                </div>
+            `;
+
+            $('#lodging-expenses-list').append(rowHtml);
+
+            // Restaurar anexos
+            if (expense.attachments && expense.attachments.length > 0) {
+                const attachmentKey = `lodging-${lodgingExpenseCounter}`;
+                window.expenseAttachments[attachmentKey] = expense.attachments;
+            }
+        });
+    }
+
+    /**
+     * Renderiza outras despesas a partir do accountabilityData
+     */
+    function renderOtherExpenses() {
+        if (!accountabilityData.other.expenses || accountabilityData.other.expenses.length === 0) {
+            return;
+        }
+
+        accountabilityData.other.expenses.forEach((expense, index) => {
+            otherExpenseCounter++;
+
+            const rowHtml = `
+                <div class="other-expense-item flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                     data-expense-id="${otherExpenseCounter}">
+
+                    <div class="w-36">
+                        <input type="date" id="other-expense-date-${otherExpenseCounter}" value="${expense.date}"
+                               class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                    </div>
+
+                    <div class="flex items-center gap-2 flex-1">
+                        <i class="fas fa-receipt text-purple-900"></i>
+                        <span class="text-gray-700">${expense.name || expense.description}</span>
+                        <button type="button" onclick="openAttachmentModal(${otherExpenseCounter}, 'other')"
+                                class="flex items-center gap-1.5 ml-2 cursor-pointer hover:opacity-80 transition-opacity" title="${expense.attachments && expense.attachments.length > 0 ? expense.attachments.length + ' anexo(s)' : 'Adicionar anexo'}">
+                            <div class="relative">
+                                <i class="fas fa-paperclip text-purple-900"></i>
+                                ${expense.attachments && expense.attachments.length > 0 ? `
+                                <span class="absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">${expense.attachments.length}</span>
+                                ` : ''}
+                            </div>
+                            <span class="text-gray-700 text-sm">Anexos</span>
+                        </button>
+                    </div>
+
+                    <div class="w-32 text-right">
+                        <span class="font-bold text-purple-900">R$ ${expense.amount.toFixed(2).replace('.', ',')}</span>
+                    </div>
+
+                    <button type="button" onclick="removeOtherExpenseByIndex(${index})"
+                            class="text-red-600 hover:text-red-800 transition-colors" title="Remover">
+                        <i class="fas fa-trash text-sm"></i>
+                    </button>
+                </div>
+            `;
+
+            $('#other-expenses-list').append(rowHtml);
+
+            // Restaurar anexos
+            if (expense.attachments && expense.attachments.length > 0) {
+                const attachmentKey = `other-${otherExpenseCounter}`;
+                window.expenseAttachments[attachmentKey] = expense.attachments;
+            }
+        });
+    }
+
+    /**
+     * Atualiza apenas a exibição dos totais (não recalcula)
+     */
+    function updateTotalsDisplay() {
+        // Alimentação
+        $('#food-total').text('R$ ' + accountabilityData.food.amount.toFixed(2).replace('.', ','));
+
+        // Veículo
+        if (IS_DRIVER) {
+            $('#vehicle-total').text('R$ ' + accountabilityData.vehicle.amount.toFixed(2).replace('.', ','));
+            if (accountabilityData.vehicle.km_traveled) {
+                $('#km-traveled-display').text(accountabilityData.vehicle.km_traveled + ' km');
+            }
+        }
+
+        // Hospedagem
+        $('#lodging-total').text('R$ ' + accountabilityData.lodging.amount.toFixed(2).replace('.', ','));
+
+        // Outras despesas
+        $('#other-total').text('R$ ' + accountabilityData.other.amount.toFixed(2).replace('.', ','));
+    }
+
+    // ========================================
+    // FUNÇÕES DE ATUALIZAÇÃO DE DADOS (Update Functions)
+    // ========================================
+
+    /**
+     * Sincroniza dados do DOM para o accountabilityData
+     * Esta função lê os valores da interface e atualiza o modelo
+     */
+    function syncDataFromDOM() {
+
+        // Sincronizar alimentação
+        syncFoodDataFromDOM();
+
+        // Sincronizar veículo
+        if (IS_DRIVER) {
+            syncVehicleDataFromDOM();
+        }
+
+        // Sincronizar hospedagem
+        syncLodgingDataFromDOM();
+
+        // Sincronizar outras despesas
+        syncOtherDataFromDOM();
+
+        // Atualizar JSON e resumo
+        updateJSON();
+        renderSummary();
+
+    }
+
+    /**
+     * Sincroniza dados de alimentação do DOM
+     */
+    function syncFoodDataFromDOM() {
+        let total = 0;
+        accountabilityData.food.days = [];
+
+        $('.food-day-item').each(function() {
+            const dayId = $(this).data('day-id');
+            const date = $(`#food-day-date-${dayId}`).val();
+
+            const mealsDetail = [];
+            let dayTotal = 0;
+
+            $(this).find('.food-meal-checkbox').each(function() {
+                if ($(this).is(':checked')) {
+                    const meal = $(this).data('meal');
+                    const mealValue = MEAL_PRICES[meal];
+                    dayTotal += mealValue;
+
+                    let mealName = '';
+                    if (meal === 'breakfast') mealName = 'Café';
+                    else if (meal === 'lunch') mealName = 'Almoço';
+                    else if (meal === 'dinner') mealName = 'Janta';
+
+                    mealsDetail.push({
+                        type: meal,
+                        name: mealName,
+                        value: mealValue
+                    });
+                }
+            });
+
+            // Atualizar total do dia no card
+            $(`#day-total-${dayId}`).text('R$ ' + dayTotal.toFixed(2).replace('.', ','));
+
+            if (date) {
+                const dateObj = new Date(date + 'T00:00:00');
+                const formattedDate = dateObj.toLocaleDateString('pt-BR');
+
+                accountabilityData.food.days.push({
+                    day_number: accountabilityData.food.days.length + 1,
+                    date: date,
+                    date_formatted: formattedDate,
+                    meals: mealsDetail,
+                    meals_count: mealsDetail.length,
+                    amount: dayTotal
+                });
+                total += dayTotal;
+            }
+        });
+
+        accountabilityData.food.amount = total;
+        accountabilityData.food.days_count = accountabilityData.food.days.length;
+        $('#food-total').text('R$ ' + total.toFixed(2).replace('.', ','));
+    }
+
+    /**
+     * Sincroniza dados de veículo do DOM
+     */
+    function syncVehicleDataFromDOM() {
+        let total = 0;
+        accountabilityData.vehicle.expenses = [];
+
+        // Sincronizar quilometragem
+        const kmStart = parseInt($('#km-departure').val()) || 0;
+        const kmEnd = parseInt($('#km-arrival').val()) || 0;
+        const kmTraveled = Math.max(0, kmEnd - kmStart);
+
+        accountabilityData.vehicle.km_start = kmStart;
+        accountabilityData.vehicle.km_end = kmEnd;
+        accountabilityData.vehicle.km_traveled = kmTraveled;
+
+        if (kmTraveled > 0) {
+            $('#km-traveled-display').text(kmTraveled + ' km');
+        }
+
+        $('.vehicle-expense-item').each(function() {
+            const expenseId = $(this).data('expense-id');
+            const type = $(this).data('type');
+            const date = $(`#vehicle-expense-date-${expenseId}`).val();
+            const amount = parseFloat($(this).data('amount')) || 0;
+            const description = $(this).data('description') || '';
+
+            const dateObj = new Date(date + 'T00:00:00');
+            const formattedDate = dateObj.toLocaleDateString('pt-BR');
+
+            const expenseInfo = getExpenseIconAndName(type, description);
+
+            // Pegar anexos desta despesa
+            const attachmentKey = `vehicle-${expenseId}`;
+            const attachments = window.expenseAttachments[attachmentKey] || [];
+
+            accountabilityData.vehicle.expenses.push({
+                type: type,
+                name: expenseInfo.name,
+                date: date,
+                date_formatted: formattedDate,
+                amount: amount,
+                attachments: attachments,
+                attachments_count: attachments.length
+            });
+
+            total += amount;
+        });
+
+        accountabilityData.vehicle.amount = total;
+        accountabilityData.vehicle.expenses_count = accountabilityData.vehicle.expenses.length;
+        $('#vehicle-total').text('R$ ' + total.toFixed(2).replace('.', ','));
+    }
+
+    /**
+     * Sincroniza dados de hospedagem do DOM
+     */
+    function syncLodgingDataFromDOM() {
+        let total = 0;
+        accountabilityData.lodging.expenses = [];
+
+        $('.lodging-expense-item').each(function() {
+            const expenseId = $(this).data('expense-id');
+            const date = $(`#lodging-expense-date-${expenseId}`).val();
+            const amount = parseFloat($(this).closest('.lodging-expense-item').find('.font-bold').text().replace('R$ ', '').replace(',', '.')) || 0;
+            const description = $(this).data('description') || '';
+
+            const dateObj = new Date(date + 'T00:00:00');
+            const formattedDate = dateObj.toLocaleDateString('pt-BR');
+
+            // Pegar anexos desta despesa
+            const attachmentKey = `lodging-${expenseId}`;
+            const attachments = window.expenseAttachments[attachmentKey] || [];
+
+            accountabilityData.lodging.expenses.push({
+                name: 'Hospedagem',
+                description: description,
+                date: date,
+                date_formatted: formattedDate,
+                amount: amount,
+                attachments: attachments,
+                attachments_count: attachments.length
+            });
+
+            total += amount;
+        });
+
+        accountabilityData.lodging.amount = total;
+        accountabilityData.lodging.expenses_count = accountabilityData.lodging.expenses.length;
+        $('#lodging-total').text('R$ ' + total.toFixed(2).replace('.', ','));
+    }
+
+    /**
+     * Sincroniza dados de outras despesas do DOM
+     */
+    function syncOtherDataFromDOM() {
+        let total = 0;
+        accountabilityData.other.expenses = [];
+
+        $('.other-expense-item').each(function() {
+            const expenseId = $(this).data('expense-id');
+            const date = $(`#other-expense-date-${expenseId}`).val();
+            const name = $(this).find('.text-gray-700').text().trim();
+            const amount = parseFloat($(this).find('.font-bold').text().replace('R$ ', '').replace(',', '.')) || 0;
+
+            const dateObj = new Date(date + 'T00:00:00');
+            const formattedDate = dateObj.toLocaleDateString('pt-BR');
+
+            // Pegar anexos desta despesa
+            const attachmentKey = `other-${expenseId}`;
+            const attachments = window.expenseAttachments[attachmentKey] || [];
+
+            accountabilityData.other.expenses.push({
+                name: name,
+                description: name,
+                date: date,
+                date_formatted: formattedDate,
+                amount: amount,
+                attachments: attachments,
+                attachments_count: attachments.length
+            });
+
+            total += amount;
+        });
+
+        accountabilityData.other.amount = total;
+        accountabilityData.other.expenses_count = accountabilityData.other.expenses.length;
+        $('#other-total').text('R$ ' + total.toFixed(2).replace('.', ','));
+    }
+
+    /**
+     * Adiciona novo dia de alimentação
+     */
+    function addNewFoodDay() {
+        const currentDaysCount = accountabilityData.food.days.length;
+        if (currentDaysCount >= TRIP_DAYS) {
+            return;
+        }
+
+        // Calcular próxima data
+        let nextDate;
+        if (currentDaysCount === 0) {
+            nextDate = TRIP_START_DATE;
+        } else {
+            const lastDay = accountabilityData.food.days[currentDaysCount - 1];
+            const date = new Date(lastDay.date + 'T00:00:00');
+            date.setDate(date.getDate() + 1);
+            nextDate = date.toISOString().split('T')[0];
+        }
+
+        // Adicionar ao modelo
+        const dateObj = new Date(nextDate + 'T00:00:00');
+        const formattedDate = dateObj.toLocaleDateString('pt-BR');
+
+        accountabilityData.food.days.push({
+            day_number: currentDaysCount + 1,
+            date: nextDate,
+            date_formatted: formattedDate,
+            meals: [
+                { type: 'breakfast', name: 'Café', value: MEAL_PRICES.breakfast },
+                { type: 'lunch', name: 'Almoço', value: MEAL_PRICES.lunch },
+                { type: 'dinner', name: 'Janta', value: MEAL_PRICES.dinner }
+            ],
+            meals_count: 3,
+            amount: MEAL_PRICES.breakfast + MEAL_PRICES.lunch + MEAL_PRICES.dinner
+        });
+
+        // Recalcular total
+        accountabilityData.food.amount = accountabilityData.food.days.reduce((sum, day) => sum + day.amount, 0);
+        accountabilityData.food.days_count = accountabilityData.food.days.length;
+
+        // Re-renderizar
+        renderFromData();
+    }
+
+    /**
+     * Remove dia de alimentação por índice
+     */
+    function removeFoodDayByIndex(index) {
+        accountabilityData.food.days.splice(index, 1);
+
+        // Recalcular total
+        accountabilityData.food.amount = accountabilityData.food.days.reduce((sum, day) => sum + day.amount, 0);
+        accountabilityData.food.days_count = accountabilityData.food.days.length;
+
+        // Re-renderizar
+        renderFromData();
+    }
+
+    /**
+     * Remove despesa de veículo por índice
+     */
+    function removeVehicleExpenseByIndex(index) {
+        // Remover anexos associados
+        const expense = accountabilityData.vehicle.expenses[index];
+        const expenseId = vehicleExpenseCounter - (accountabilityData.vehicle.expenses.length - 1 - index);
+        const attachmentKey = `vehicle-${expenseId}`;
+        delete window.expenseAttachments[attachmentKey];
+
+        accountabilityData.vehicle.expenses.splice(index, 1);
+
+        // Recalcular total
+        accountabilityData.vehicle.amount = accountabilityData.vehicle.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+        accountabilityData.vehicle.expenses_count = accountabilityData.vehicle.expenses.length;
+
+        // Re-renderizar
+        renderFromData();
+    }
+
+    /**
+     * Remove despesa de hospedagem por índice
+     */
+    function removeLodgingExpenseByIndex(index) {
+        // Remover anexos associados
+        const expenseId = lodgingExpenseCounter - (accountabilityData.lodging.expenses.length - 1 - index);
+        const attachmentKey = `lodging-${expenseId}`;
+        delete window.expenseAttachments[attachmentKey];
+
+        accountabilityData.lodging.expenses.splice(index, 1);
+
+        // Recalcular total
+        accountabilityData.lodging.amount = accountabilityData.lodging.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+        accountabilityData.lodging.expenses_count = accountabilityData.lodging.expenses.length;
+
+        // Re-renderizar
+        renderFromData();
+    }
+
+    /**
+     * Remove outras despesas por índice
+     */
+    function removeOtherExpenseByIndex(index) {
+        // Remover anexos associados
+        const expenseId = otherExpenseCounter - (accountabilityData.other.expenses.length - 1 - index);
+        const attachmentKey = `other-${expenseId}`;
+        delete window.expenseAttachments[attachmentKey];
+
+        accountabilityData.other.expenses.splice(index, 1);
+
+        // Recalcular total
+        accountabilityData.other.amount = accountabilityData.other.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+        accountabilityData.other.expenses_count = accountabilityData.other.expenses.length;
+
+        // Re-renderizar
+        renderFromData();
+    }
+
+    // ========================================
+    // ALIASES PARA COMPATIBILIDADE COM CÓDIGO LEGADO
+    // ========================================
+
+    // Redirecionar funções antigas para as novas
+    window.calculateFoodTotal = function() {
+        syncFoodDataFromDOM();
+        updateJSON();
+        renderSummary();
+    };
+
+    window.calculateVehicleTotal = function() {
+        syncVehicleDataFromDOM();
+        updateJSON();
+        renderSummary();
+    };
+
+    window.calculateLodgingTotal = function() {
+        syncLodgingDataFromDOM();
+        updateJSON();
+        renderSummary();
+    };
+
+    window.calculateOtherTotal = function() {
+        syncOtherDataFromDOM();
+        updateJSON();
+        renderSummary();
+    };
+
+    // Expor funções globalmente
+    window.addFoodDay = addNewFoodDay;
+    window.removeFoodDayByIndex = removeFoodDayByIndex;
+    window.removeVehicleExpenseByIndex = removeVehicleExpenseByIndex;
+    window.removeLodgingExpenseByIndex = removeLodgingExpenseByIndex;
+    window.removeOtherExpenseByIndex = removeOtherExpenseByIndex;
+
+    // Função para expandir/colapsar seção JSON Debug
+    window.toggleJsonDebug = function() {
+        const content = $('#json-debug-content');
+        const icon = $('#json-debug-icon');
+        const button = $('#json-debug-button');
+
+        if (content.hasClass('hidden')) {
+            // Expandir
+            content.removeClass('hidden');
+            icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+            button.removeClass('rounded-b-xl');
+        } else {
+            // Colapsar
+            content.addClass('hidden');
+            icon.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+            button.addClass('rounded-b-xl');
+        }
+    };
 
     // Função para verificar e atualizar estado do botão Adicionar
     function updateAddFoodDayButton() {
@@ -1214,65 +2011,6 @@ $(document).ready(function() {
         updateAddFoodDayButton();
     };
 
-    // Função para calcular total de alimentação
-    window.calculateFoodTotal = function() {
-        let total = 0;
-        accountabilityData.food.days = [];
-
-        $('.food-day-item').each(function() {
-            const dayId = $(this).data('day-id');
-            const date = $(`#food-day-date-${dayId}`).val();
-
-            const mealsDetail = [];
-            let dayTotal = 0;
-
-            $(this).find('.food-meal-checkbox').each(function() {
-                if ($(this).is(':checked')) {
-                    const meal = $(this).data('meal');
-                    const mealValue = MEAL_PRICES[meal];
-                    dayTotal += mealValue;
-
-                    // Adicionar detalhes da refeição
-                    let mealName = '';
-                    if (meal === 'breakfast') mealName = 'Café da Manhã';
-                    else if (meal === 'lunch') mealName = 'Almoço';
-                    else if (meal === 'dinner') mealName = 'Janta';
-
-                    mealsDetail.push({
-                        type: meal,
-                        name: mealName,
-                        value: mealValue
-                    });
-                }
-            });
-
-            // Atualizar total do dia no card
-            $(`#day-total-${dayId}`).text('R$ ' + dayTotal.toFixed(2).replace('.', ','));
-
-            if (date && dayTotal > 0) {
-                // Formatar data para exibição
-                const dateObj = new Date(date + 'T00:00:00');
-                const formattedDate = dateObj.toLocaleDateString('pt-BR');
-
-                accountabilityData.food.days.push({
-                    day_number: accountabilityData.food.days.length + 1,
-                    date: date,
-                    date_formatted: formattedDate,
-                    meals: mealsDetail,
-                    meals_count: mealsDetail.length,
-                    amount: dayTotal
-                });
-                total += dayTotal;
-            }
-        });
-
-        accountabilityData.food.amount = total;
-        accountabilityData.food.days_count = accountabilityData.food.days.length;
-
-        $('#food-total').text('R$ ' + total.toFixed(2).replace('.', ','));
-
-        updateJSON();
-    };
 
     // Função para obter ícone e nome da despesa
     function getExpenseIconAndName(type, customDescription) {
@@ -1454,15 +2192,34 @@ $(document).ready(function() {
             return;
         }
 
-        // Adicionar despesa
-        addVehicleExpenseRow(date, type, amount, customDescription);
+        // Adicionar despesa diretamente ao modelo
+        const dateObj = new Date(date + 'T00:00:00');
+        const formattedDate = dateObj.toLocaleDateString('pt-BR');
+        const expenseInfo = getExpenseIconAndName(type, customDescription);
+
+        accountabilityData.vehicle.expenses.push({
+            type: type,
+            name: expenseInfo.name,
+            date: date,
+            date_formatted: formattedDate,
+            amount: amount,
+            attachments: [],
+            attachments_count: 0
+        });
+
+        // Recalcular total
+        accountabilityData.vehicle.amount = accountabilityData.vehicle.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+        accountabilityData.vehicle.expenses_count = accountabilityData.vehicle.expenses.length;
+
+        // Re-renderizar interface
+        renderFromData();
 
         // Fechar modal
         closeVehicleModal();
     };
 
     // Função para adicionar linha de despesa de veículo
-    function addVehicleExpenseRow(date, type, amount, customDescription) {
+    function addVehicleExpenseRow(date, type, amount, customDescription, skipCalculate = false) {
         vehicleExpenseCounter++;
 
         const expenseInfo = getExpenseIconAndName(type, customDescription);
@@ -1481,7 +2238,7 @@ $(document).ready(function() {
                 <!-- Tipo de Despesa -->
                 <div class="flex items-center gap-2 flex-1">
                     <i class="fas ${expenseInfo.icon} text-purple-900 text-xs"></i>
-                    <span class="text-sm text-gray-700 font-medium">${expenseInfo.name}</span>
+                    <span class="text-sm text-gray-700">${expenseInfo.name}</span>
                 </div>
 
                 <!-- Valor -->
@@ -1489,8 +2246,14 @@ $(document).ready(function() {
                     <span class="text-sm font-bold text-purple-900">R$ ${amount.toFixed(2).replace('.', ',')}</span>
                 </div>
 
+                <!-- Botão Anexos -->
+                <button type="button" onclick="openAttachmentModal(${vehicleExpenseCounter}, 'vehicle')" class="text-purple-600 hover:text-purple-800 transition-colors relative" title="Anexos">
+                    <i class="fas fa-paperclip text-xs"></i>
+                    <span class="attachment-count-${vehicleExpenseCounter} hidden absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">0</span>
+                </button>
+
                 <!-- Botão Excluir -->
-                <button type="button" onclick="removeVehicleExpense(${vehicleExpenseCounter})" class="text-red-600 hover:text-red-800 transition-colors">
+                <button type="button" onclick="removeVehicleExpense(${vehicleExpenseCounter})" class="text-red-600 hover:text-red-800 transition-colors" title="Excluir">
                     <i class="fas fa-trash text-xs"></i>
                 </button>
             </div>
@@ -1503,7 +2266,11 @@ $(document).ready(function() {
             calculateVehicleTotal();
         });
 
-        calculateVehicleTotal();
+        if (!skipCalculate) {
+            calculateVehicleTotal();
+        }
+
+        return vehicleExpenseCounter;
     }
 
     // Função para remover despesa de veículo
@@ -1512,47 +2279,501 @@ $(document).ready(function() {
         calculateVehicleTotal();
     };
 
-    // Função para calcular total de despesas de veículo
-    window.calculateVehicleTotal = function() {
-        let total = 0;
-        accountabilityData.vehicle.expenses = [];
+    // ==================== FUNÇÕES DE ANEXOS ====================
 
-        // Capturar valores de quilometragem
-        const kmDeparture = $('#km-departure').val() || '0';
-        const kmArrival = $('#km-arrival').val() || '0';
-        accountabilityData.vehicle.km_start = parseInt(kmDeparture) || 0;
-        accountabilityData.vehicle.km_end = parseInt(kmArrival) || 0;
-        accountabilityData.vehicle.km_traveled = accountabilityData.vehicle.km_end - accountabilityData.vehicle.km_start;
+    // Armazenar anexos de cada despesa
+    window.expenseAttachments = {};
 
-        $('.vehicle-expense-item').each(function() {
-            const expenseId = $(this).data('expense-id');
-            const date = $(`#vehicle-expense-date-${expenseId}`).val();
-            const type = $(this).data('type');
-            const amount = parseFloat($(this).data('amount'));
-            const customDescription = $(this).data('custom-description');
+    // Abrir modal de anexos
+    window.openAttachmentModal = function(expenseId, expenseType, viewOnly = false) {
+        window.currentAttachmentExpense = { id: expenseId, type: expenseType };
 
-            const expenseInfo = getExpenseIconAndName(type, customDescription);
-            const dateObj = new Date(date + 'T00:00:00');
-            const formattedDate = dateObj.toLocaleDateString('pt-BR');
+        // Inicializar array de anexos se não existir
+        const key = `${expenseType}-${expenseId}`;
+        if (!window.expenseAttachments[key]) {
+            window.expenseAttachments[key] = [];
+        }
 
-            accountabilityData.vehicle.expenses.push({
-                expense_number: accountabilityData.vehicle.expenses.length + 1,
-                date: date,
-                date_formatted: formattedDate,
-                type: type,
-                name: expenseInfo.name,
-                amount: amount
+        // Renderizar lista de anexos
+        renderAttachmentList(key, viewOnly);
+
+        // Mostrar/ocultar área de upload baseado no modo
+        if (viewOnly) {
+            $('#attachment-upload-area').addClass('hidden');
+            $('#attachment-modal h3').text('Visualizar Anexos');
+        } else {
+            $('#attachment-upload-area').removeClass('hidden');
+            $('#attachment-modal h3').text('Gerenciar Anexos');
+
+            // Adicionar listener para upload automático
+            const fileInput = document.getElementById('attachment-file-input');
+            fileInput.value = ''; // Limpar input anterior
+
+            // Remover listeners anteriores
+            $('#attachment-file-input').off('change');
+
+            // Adicionar novo listener
+            $('#attachment-file-input').on('change', function() {
+                if (this.files.length > 0) {
+                    addAttachment();
+                }
             });
-            total += amount;
+        }
+
+        // Mostrar modal
+        $('#attachment-modal').removeClass('hidden');
+    };
+
+    // Abrir modal de anexos a partir do resumo (somente visualização)
+    window.openAttachmentModalFromSummary = function(expenseType, expenseIndex) {
+        // Encontrar o expense ID correto baseado no índice
+        let expenseId = null;
+
+        // Procurar na lista renderizada para encontrar o expense-id correto
+        if (expenseType === 'vehicle') {
+            const items = $('.vehicle-expense-item');
+            items.each(function(idx) {
+                const expense = accountabilityData.vehicle.expenses[idx];
+                if (accountabilityData.vehicle.expenses.indexOf(expense) === expenseIndex) {
+                    expenseId = $(this).data('expense-id');
+                    return false; // break
+                }
+            });
+        } else if (expenseType === 'lodging') {
+            const items = $('.lodging-expense-item');
+            items.each(function(idx) {
+                const expense = accountabilityData.lodging.expenses[idx];
+                if (accountabilityData.lodging.expenses.indexOf(expense) === expenseIndex) {
+                    expenseId = $(this).data('expense-id');
+                    return false; // break
+                }
+            });
+        } else if (expenseType === 'other') {
+            const items = $('.other-expense-item');
+            items.each(function(idx) {
+                const expense = accountabilityData.other.expenses[idx];
+                if (accountabilityData.other.expenses.indexOf(expense) === expenseIndex) {
+                    expenseId = $(this).data('expense-id');
+                    return false; // break
+                }
+            });
+        }
+
+        if (expenseId) {
+            // Abrir modal em modo somente visualização
+            openAttachmentModal(expenseId, expenseType, true);
+        }
+    };
+
+    // Fechar modal de anexos
+    window.closeAttachmentModal = function() {
+        $('#attachment-modal').addClass('hidden');
+        window.currentAttachmentExpense = null;
+    };
+
+    // Adicionar anexo
+    window.addAttachment = async function() {
+        const fileInput = document.getElementById('attachment-file-input');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            showToast('Selecione um arquivo', 'error');
+            return;
+        }
+
+        // Validar se storage service está configurado
+        if (!STORAGE_CONFIGURED) {
+            showToast('Storage service não configurado. Aguarde...', 'warning');
+            fileInput.value = '';
+            return;
+        }
+
+        // Validar tamanho do arquivo
+        if (file.size > STORAGE_MAX_FILE_SIZE) {
+            const sizeMB = (STORAGE_MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
+            showToast(`Arquivo muito grande. Máximo: ${sizeMB}MB`, 'error');
+            fileInput.value = '';
+            return;
+        }
+
+        const key = `${window.currentAttachmentExpense.type}-${window.currentAttachmentExpense.id}`;
+
+        // Mostrar loading
+        showToast('Enviando arquivo...', 'info');
+
+        // Adicionar placeholder enquanto faz upload
+        const tempId = Date.now();
+        const tempAttachment = {
+            id: tempId,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            uploading: true
+        };
+
+        window.expenseAttachments[key].push(tempAttachment);
+        renderAttachmentList(key);
+
+        try {
+            // Fazer upload via rota intermediária do app-financeiro
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('expense_type', window.currentAttachmentExpense.type);
+            formData.append('expense_id', window.currentAttachmentExpense.id);
+            formData.append('payout_id', {{ payout.id }});
+
+            const response = await fetch('/admin/api/storage/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                // Remover placeholder
+                const index = window.expenseAttachments[key].findIndex(a => a.id === tempId);
+                if (index !== -1) {
+                    window.expenseAttachments[key].splice(index, 1);
+                }
+
+                // Adicionar com dados reais do storage-service
+                const attachment = {
+                    id: result.data.id,
+                    uuid: result.data.uuid,
+                    name: result.data.filename,
+                    size: result.data.size,
+                    type: result.data.mime_type,
+                    hash_md5: result.data.hash_md5,
+                    hash_sha256: result.data.hash_sha256,
+                    path: result.data.path,
+                    created_at: result.data.created_at,
+                    download_url: `/admin/api/storage/${result.data.uuid}`
+                };
+
+                window.expenseAttachments[key].push(attachment);
+                renderAttachmentList(key);
+                updateAttachmentCount(window.currentAttachmentExpense.id);
+
+                // Limpar input
+                fileInput.value = '';
+
+                // Atualizar JSON recalculando os totais
+                // Isso garante que os anexos sejam incluídos no JSON
+                if (window.currentAttachmentExpense.type === 'vehicle') {
+                    calculateVehicleTotal();
+                } else if (window.currentAttachmentExpense.type === 'lodging') {
+                    calculateLodgingTotal();
+                } else if (window.currentAttachmentExpense.type === 'other') {
+                    calculateOtherTotal();
+                }
+
+                // Atualizar resumo para mostrar badge de anexos
+                renderSummary();
+
+                showToast('Anexo enviado com sucesso!', 'success');
+            } else {
+                throw new Error(result.message || 'Erro ao enviar arquivo');
+            }
+        } catch (error) {
+            console.error('Erro ao fazer upload:', error);
+
+            // Remover placeholder em caso de erro
+            const index = window.expenseAttachments[key].findIndex(a => a.id === tempId);
+            if (index !== -1) {
+                window.expenseAttachments[key].splice(index, 1);
+            }
+            renderAttachmentList(key);
+
+            showToast('Erro ao enviar arquivo: ' + error.message, 'error');
+
+            // Limpar input
+            fileInput.value = '';
+        }
+    };
+
+    // Remover anexo
+    window.removeAttachment = async function(attachmentIdentifier) {
+        const key = `${window.currentAttachmentExpense.type}-${window.currentAttachmentExpense.id}`;
+
+        // Encontrar o anexo pelo UUID ou ID
+        const attachment = window.expenseAttachments[key].find(a =>
+            a.uuid === attachmentIdentifier || a.id == attachmentIdentifier
+        );
+
+        if (!attachment) {
+            showToast('Anexo não encontrado', 'error');
+            return;
+        }
+
+        // Confirmar remoção
+        if (!confirm('Deseja realmente remover este anexo?')) {
+            return;
+        }
+
+        // Se tiver UUID, deletar do storage-service
+        if (attachment.uuid) {
+            try {
+                const response = await fetch(`/admin/api/storage/${attachment.uuid}/delete`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    console.error('Erro ao deletar do storage:', result.message);
+                    showToast('Erro ao remover anexo do servidor', 'error');
+                    return;
+                }
+            } catch (error) {
+                console.error('Erro ao deletar anexo:', error);
+                showToast('Erro ao remover anexo', 'error');
+                return;
+            }
+        }
+
+        // Remover da lista local
+        window.expenseAttachments[key] = window.expenseAttachments[key].filter(a =>
+            a.uuid !== attachmentIdentifier && a.id != attachmentIdentifier
+        );
+
+        renderAttachmentList(key);
+        updateAttachmentCount(window.currentAttachmentExpense.id);
+
+        // Atualizar JSON recalculando os totais
+        if (window.currentAttachmentExpense.type === 'vehicle') {
+            calculateVehicleTotal();
+        } else if (window.currentAttachmentExpense.type === 'lodging') {
+            calculateLodgingTotal();
+        } else if (window.currentAttachmentExpense.type === 'other') {
+            calculateOtherTotal();
+        }
+
+        // Atualizar resumo para mostrar badge de anexos
+        renderSummary();
+
+        showToast('Anexo removido com sucesso', 'success');
+    };
+
+    // Visualizar anexo em nova aba
+    window.viewAttachment = async function(uuid) {
+        try {
+            showToast('Carregando arquivo...', 'info');
+
+            // Fazer requisição para baixar o arquivo como blob
+            const response = await fetch(`/admin/api/storage/${uuid}/view`);
+
+            if (!response.ok) {
+                throw new Error('Erro ao carregar arquivo');
+            }
+
+            // Obter o blob
+            const blob = await response.blob();
+
+            // Obter o tipo MIME do header ou do blob
+            const contentType = response.headers.get('Content-Type') || blob.type;
+
+            // Obter o nome do arquivo do header Content-Disposition
+            let filename = 'arquivo';
+            const contentDisposition = response.headers.get('Content-Disposition');
+            if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                if (filenameMatch) {
+                    filename = filenameMatch[1];
+                }
+            }
+
+            // Criar URL do blob
+            const blobUrl = URL.createObjectURL(blob);
+
+            // Abrir em nova aba
+            const newWindow = window.open(blobUrl, '_blank');
+
+            if (!newWindow) {
+                showToast('Popup bloqueado! Permita popups para visualizar o arquivo', 'warning');
+                // Fallback: fazer download
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } else {
+                // Definir título da janela com o nome do arquivo
+                newWindow.document.title = filename;
+            }
+
+            // Limpar a URL do blob após 1 minuto (para liberar memória)
+            setTimeout(() => {
+                URL.revokeObjectURL(blobUrl);
+            }, 60000);
+
+            showToast('Arquivo carregado com sucesso', 'success');
+        } catch (error) {
+            console.error('Erro ao visualizar anexo:', error);
+            showToast('Erro ao carregar arquivo: ' + error.message, 'error');
+        }
+    };
+
+    // Baixar anexo
+    window.downloadAttachment = async function(uuid, filename) {
+        try {
+            showToast('Baixando arquivo...', 'info');
+
+            // Fazer requisição para baixar o arquivo como blob
+            const response = await fetch(`/admin/api/storage/${uuid}/view`);
+
+            if (!response.ok) {
+                throw new Error('Erro ao baixar arquivo');
+            }
+
+            // Obter o blob
+            const blob = await response.blob();
+
+            // Obter o nome do arquivo do header Content-Disposition se não foi passado
+            if (!filename || filename === 'undefined') {
+                filename = 'arquivo';
+                const contentDisposition = response.headers.get('Content-Disposition');
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                    if (filenameMatch) {
+                        filename = filenameMatch[1];
+                    }
+                }
+            }
+
+            // Criar URL do blob
+            const blobUrl = URL.createObjectURL(blob);
+
+            // Criar elemento <a> temporário e simular clique para download
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            // Limpar a URL do blob após download
+            setTimeout(() => {
+                URL.revokeObjectURL(blobUrl);
+            }, 1000);
+
+            showToast('Download iniciado com sucesso', 'success');
+        } catch (error) {
+            console.error('Erro ao baixar anexo:', error);
+            showToast('Erro ao baixar arquivo: ' + error.message, 'error');
+        }
+    };
+
+    // Renderizar lista de anexos
+    function renderAttachmentList(key, viewOnly = false) {
+        const attachments = window.expenseAttachments[key] || [];
+        const container = $('#attachment-list');
+
+        if (attachments.length === 0) {
+            container.html(`
+                <div class="text-center py-8 text-gray-400">
+                    <i class="fas fa-paperclip text-4xl mb-2"></i>
+                    <p class="text-sm">Nenhum anexo adicionado</p>
+                </div>
+            `);
+            return;
+        }
+
+        let html = '';
+        attachments.forEach(att => {
+            const sizeKB = (att.size / 1024).toFixed(1);
+            const fileType = att.type || att.mime_type;
+            const fileName = att.name || att.filename || 'Arquivo sem nome';
+            const icon = getFileIcon(fileType);
+
+            if (att.uploading) {
+                // Mostrar estado de upload
+                html += `
+                    <div class="flex items-center gap-3 p-3 bg-blue-50 rounded border border-blue-200 animate-pulse">
+                        <i class="fas fa-spinner fa-spin text-blue-600 text-lg"></i>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-900 truncate">${fileName}</p>
+                            <p class="text-xs text-blue-600">Enviando... ${sizeKB} KB</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Mostrar arquivo enviado com sucesso
+                html += `
+                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded border border-gray-200">
+                        <i class="fas ${icon} text-purple-600 text-lg"></i>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-900 truncate">${fileName}</p>
+                            <p class="text-xs text-gray-500">${sizeKB} KB</p>
+                            ${att.uuid ? `<p class="text-xs text-gray-400 font-mono">UUID: ${att.uuid.substring(0, 8)}...</p>` : ''}
+                        </div>
+                        ${att.uuid ? `
+                            <button type="button" onclick="viewAttachment('${att.uuid}')" class="text-blue-600 hover:text-blue-800 transition-colors" title="Visualizar">
+                                <i class="fas fa-eye text-sm"></i>
+                            </button>
+                        ` : ''}
+                        ${att.uuid ? `
+                            <button type="button" onclick="downloadAttachment('${att.uuid}', '${fileName}')" class="text-purple-600 hover:text-purple-800 transition-colors" title="Baixar">
+                                <i class="fas fa-download text-sm"></i>
+                            </button>
+                        ` : ''}
+                        ${!viewOnly ? `
+                        <button type="button" onclick="removeAttachment('${att.uuid || att.id}')" class="text-red-600 hover:text-red-800 transition-colors" title="Excluir">
+                            <i class="fas fa-trash text-sm"></i>
+                        </button>
+                        ` : ''}
+                    </div>
+                `;
+            }
         });
 
-        accountabilityData.vehicle.amount = total;
-        accountabilityData.vehicle.expenses_count = accountabilityData.vehicle.expenses.length;
+        container.html(html);
+    }
 
-        $('#vehicle-total').text('R$ ' + total.toFixed(2).replace('.', ','));
+    // Atualizar contador de anexos
+    function updateAttachmentCount(expenseId, expenseType) {
+        // Se expenseType não foi fornecido, tentar obter de window.currentAttachmentExpense
+        if (!expenseType && window.currentAttachmentExpense) {
+            expenseType = window.currentAttachmentExpense.type;
+        }
 
-        updateJSON();
-    };
+        // Se ainda não temos o tipo, tentar descobrir verificando todas as chaves
+        if (!expenseType) {
+            const types = ['vehicle', 'lodging', 'other'];
+            for (const type of types) {
+                const key = `${type}-${expenseId}`;
+                if (window.expenseAttachments[key]) {
+                    expenseType = type;
+                    break;
+                }
+            }
+        }
+
+        if (!expenseType) {
+            return;
+        }
+
+        const key = `${expenseType}-${expenseId}`;
+        const count = (window.expenseAttachments[key] || []).length;
+        const badge = $(`.attachment-count-${expenseId}`);
+
+
+        if (count > 0) {
+            badge.text(count).removeClass('hidden');
+        } else {
+            badge.addClass('hidden');
+        }
+    }
+
+    // Obter ícone do arquivo
+    function getFileIcon(fileType) {
+        if (!fileType) return 'fa-file';
+        if (fileType.includes('pdf')) return 'fa-file-pdf';
+        if (fileType.includes('image')) return 'fa-file-image';
+        if (fileType.includes('word') || fileType.includes('document')) return 'fa-file-word';
+        if (fileType.includes('excel') || fileType.includes('spreadsheet')) return 'fa-file-excel';
+        return 'fa-file';
+    }
 
     // ==================== FUNÇÕES DE HOSPEDAGEM ====================
 
@@ -1571,6 +2792,8 @@ $(document).ready(function() {
 
         // Resetar campos
         $('#modal-lodging-amount').val('0,00');
+        $('#modal-lodging-description').val('');
+        $('#lodging-char-counter').text('0/100');
 
         // Limpar erros de validação
         clearLodgingValidationErrors();
@@ -1640,6 +2863,7 @@ $(document).ready(function() {
 
         const date = $('#modal-lodging-date').val();
         const amount = parseMoneyValue($('#modal-lodging-amount').val());
+        const description = $('#modal-lodging-description').val().trim();
 
         let hasError = false;
 
@@ -1662,21 +2886,40 @@ $(document).ready(function() {
             return;
         }
 
-        // Adicionar despesa
-        addLodgingExpenseRow(date, amount);
+        // Adicionar despesa diretamente ao modelo
+        const dateObj = new Date(date + 'T00:00:00');
+        const formattedDate = dateObj.toLocaleDateString('pt-BR');
+
+        accountabilityData.lodging.expenses.push({
+            name: 'Hospedagem',
+            description: description,
+            date: date,
+            date_formatted: formattedDate,
+            amount: amount,
+            attachments: [],
+            attachments_count: 0
+        });
+
+        // Recalcular total
+        accountabilityData.lodging.amount = accountabilityData.lodging.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+        accountabilityData.lodging.expenses_count = accountabilityData.lodging.expenses.length;
+
+        // Re-renderizar interface
+        renderFromData();
 
         // Fechar modal
         closeLodgingModal();
     };
 
     // Função para adicionar linha de despesa de hospedagem
-    function addLodgingExpenseRow(date, amount) {
+    function addLodgingExpenseRow(date, amount, description = '', skipCalculate = false) {
         lodgingExpenseCounter++;
 
         const rowHtml = `
             <div class="lodging-expense-item flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
                  data-expense-id="${lodgingExpenseCounter}"
-                 data-amount="${amount}">
+                 data-amount="${amount}"
+                 data-description="${description}">
                 <!-- Data -->
                 <div class="w-36">
                     <input type="date" id="lodging-expense-date-${lodgingExpenseCounter}" class="lodging-expense-date w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-purple-500" value="${date}">
@@ -1685,7 +2928,8 @@ $(document).ready(function() {
                 <!-- Tipo de Despesa -->
                 <div class="flex items-center gap-2 flex-1">
                     <i class="fas fa-bed text-purple-900 text-xs"></i>
-                    <span class="text-sm text-gray-700 font-medium">Hospedagem</span>
+                    <span class="text-sm text-gray-700">Hospedagem</span>
+                    ${description ? `<span class="ml-1 px-2 py-0.5 bg-purple-100 text-purple-900 font-bold rounded-full text-sm">${description}</span>` : ''}
                 </div>
 
                 <!-- Valor -->
@@ -1693,8 +2937,14 @@ $(document).ready(function() {
                     <span class="text-sm font-bold text-purple-900">R$ ${amount.toFixed(2).replace('.', ',')}</span>
                 </div>
 
+                <!-- Botão Anexos -->
+                <button type="button" onclick="openAttachmentModal(${lodgingExpenseCounter}, 'lodging')" class="text-purple-600 hover:text-purple-800 transition-colors relative" title="Anexos">
+                    <i class="fas fa-paperclip text-xs"></i>
+                    <span class="attachment-count-${lodgingExpenseCounter} hidden absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">0</span>
+                </button>
+
                 <!-- Botão Excluir -->
-                <button type="button" onclick="removeLodgingExpense(${lodgingExpenseCounter})" class="text-red-600 hover:text-red-800 transition-colors">
+                <button type="button" onclick="removeLodgingExpense(${lodgingExpenseCounter})" class="text-red-600 hover:text-red-800 transition-colors" title="Excluir">
                     <i class="fas fa-trash text-xs"></i>
                 </button>
             </div>
@@ -1707,45 +2957,17 @@ $(document).ready(function() {
             calculateLodgingTotal();
         });
 
-        calculateLodgingTotal();
+        if (!skipCalculate) {
+            calculateLodgingTotal();
+        }
+
+        return lodgingExpenseCounter;
     }
 
     // Função para remover despesa de hospedagem
     window.removeLodgingExpense = function(expenseId) {
         $(`.lodging-expense-item[data-expense-id="${expenseId}"]`).remove();
         calculateLodgingTotal();
-    };
-
-    // Função para calcular total de despesas de hospedagem
-    window.calculateLodgingTotal = function() {
-        let total = 0;
-        accountabilityData.lodging.expenses = [];
-
-        $('.lodging-expense-item').each(function() {
-            const expenseId = $(this).data('expense-id');
-            const date = $(`#lodging-expense-date-${expenseId}`).val();
-            const amount = parseFloat($(this).data('amount'));
-
-            const dateObj = new Date(date + 'T00:00:00');
-            const formattedDate = dateObj.toLocaleDateString('pt-BR');
-
-            accountabilityData.lodging.expenses.push({
-                expense_number: accountabilityData.lodging.expenses.length + 1,
-                date: date,
-                date_formatted: formattedDate,
-                type: 'lodging',
-                name: 'Hospedagem',
-                amount: amount
-            });
-            total += amount;
-        });
-
-        accountabilityData.lodging.amount = total;
-        accountabilityData.lodging.expenses_count = accountabilityData.lodging.expenses.length;
-
-        $('#lodging-total').text('R$ ' + total.toFixed(2).replace('.', ','));
-
-        updateJSON();
     };
 
     // ==================== FUNÇÕES DE OUTRAS DESPESAS ====================
@@ -1825,6 +3047,12 @@ $(document).ready(function() {
         }
     });
 
+    // Contador de caracteres para descrição de hospedagem
+    $(document).on('input', '#modal-lodging-description', function() {
+        const length = $(this).val().length;
+        $('#lodging-char-counter').text(`${length}/100`);
+    });
+
     // Limpar erro de data de outras despesas quando o usuário selecionar
     $(document).on('change', '#modal-other-date', function() {
         if ($(this).val()) {
@@ -1879,15 +3107,33 @@ $(document).ready(function() {
             return;
         }
 
-        // Adicionar despesa
-        addOtherExpenseRow(description, date, amount);
+        // Adicionar despesa diretamente ao modelo
+        const dateObj = new Date(date + 'T00:00:00');
+        const formattedDate = dateObj.toLocaleDateString('pt-BR');
+
+        accountabilityData.other.expenses.push({
+            name: description,
+            description: description,
+            date: date,
+            date_formatted: formattedDate,
+            amount: amount,
+            attachments: [],
+            attachments_count: 0
+        });
+
+        // Recalcular total
+        accountabilityData.other.amount = accountabilityData.other.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+        accountabilityData.other.expenses_count = accountabilityData.other.expenses.length;
+
+        // Re-renderizar interface
+        renderFromData();
 
         // Fechar modal
         closeOtherModal();
     };
 
     // Função para adicionar linha de outras despesas
-    function addOtherExpenseRow(description, date, amount) {
+    function addOtherExpenseRow(description, date, amount, skipCalculate = false) {
         otherExpenseCounter++;
 
         const rowHtml = `
@@ -1903,7 +3149,7 @@ $(document).ready(function() {
                 <!-- Descrição -->
                 <div class="flex items-center gap-2 flex-1">
                     <i class="fas fa-receipt text-purple-900 text-xs"></i>
-                    <span class="text-sm text-gray-700 font-medium">${description}</span>
+                    <span class="text-sm text-gray-700">${description}</span>
                 </div>
 
                 <!-- Valor -->
@@ -1911,8 +3157,14 @@ $(document).ready(function() {
                     <span class="text-sm font-bold text-purple-900">R$ ${amount.toFixed(2).replace('.', ',')}</span>
                 </div>
 
+                <!-- Botão Anexos -->
+                <button type="button" onclick="openAttachmentModal(${otherExpenseCounter}, 'other')" class="text-purple-600 hover:text-purple-800 transition-colors relative" title="Anexos">
+                    <i class="fas fa-paperclip text-xs"></i>
+                    <span class="attachment-count-${otherExpenseCounter} hidden absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">0</span>
+                </button>
+
                 <!-- Botão Excluir -->
-                <button type="button" onclick="removeOtherExpense(${otherExpenseCounter})" class="text-red-600 hover:text-red-800 transition-colors">
+                <button type="button" onclick="removeOtherExpense(${otherExpenseCounter})" class="text-red-600 hover:text-red-800 transition-colors" title="Excluir">
                     <i class="fas fa-trash text-xs"></i>
                 </button>
             </div>
@@ -1925,7 +3177,11 @@ $(document).ready(function() {
             calculateOtherTotal();
         });
 
-        calculateOtherTotal();
+        if (!skipCalculate) {
+            calculateOtherTotal();
+        }
+
+        return otherExpenseCounter;
     }
 
     // Função para remover outras despesas
@@ -1934,50 +3190,23 @@ $(document).ready(function() {
         calculateOtherTotal();
     };
 
-    // Função para calcular total de outras despesas
-    window.calculateOtherTotal = function() {
-        let total = 0;
-        accountabilityData.other.expenses = [];
-
-        $('.other-expense-item').each(function() {
-            const expenseId = $(this).data('expense-id');
-            const date = $(`#other-expense-date-${expenseId}`).val();
-            const amount = parseFloat($(this).data('amount'));
-            const description = $(this).data('description');
-
-            const dateObj = new Date(date + 'T00:00:00');
-            const formattedDate = dateObj.toLocaleDateString('pt-BR');
-
-            accountabilityData.other.expenses.push({
-                expense_number: accountabilityData.other.expenses.length + 1,
-                date: date,
-                date_formatted: formattedDate,
-                description: description,
-                amount: amount
-            });
-            total += amount;
-        });
-
-        accountabilityData.other.amount = total;
-        accountabilityData.other.expenses_count = accountabilityData.other.expenses.length;
-
-        $('#other-total').text('R$ ' + total.toFixed(2).replace('.', ','));
-
-        updateJSON();
-    };
-
     // Função para coletar dados do passo atual
+    /**
+     * Coleta dados do step atual antes de navegar
+     * Sincroniza apenas a seção relevante para evitar re-renderizações desnecessárias
+     */
     function collectCurrentStepData() {
         if (currentStep === 1) {
-            calculateFoodTotal();
+            syncFoodDataFromDOM();
         } else if (currentStep === 2 && IS_DRIVER) {
-            calculateVehicleTotal();
+            syncVehicleDataFromDOM();
         } else if (currentStep === 3) {
-            calculateLodgingTotal();
+            syncLodgingDataFromDOM();
         } else if (currentStep === 4) {
-            calculateOtherTotal();
+            syncOtherDataFromDOM();
         }
         updateJSON();
+        renderSummary();
     }
 
     // Função para renderizar resumo
@@ -2048,7 +3277,7 @@ $(document).ready(function() {
             accountabilityData.food.days.forEach(day => {
                 // Criar objeto com todas as refeições (valor 0 se não existir)
                 const mealsMap = {
-                    breakfast: { name: 'Café da Manhã', value: 0, icon: 'fa-coffee' },
+                    breakfast: { name: 'Café', value: 0, icon: 'fa-coffee' },
                     lunch: { name: 'Almoço', value: 0, icon: 'fa-utensils' },
                     dinner: { name: 'Janta', value: 0, icon: 'fa-moon' }
                 };
@@ -2148,6 +3377,7 @@ $(document).ready(function() {
         if (accountabilityData.vehicle.expenses && accountabilityData.vehicle.expenses.length > 0) {
             html += '<div class="ml-4 space-y-2 mb-4">';
             accountabilityData.vehicle.expenses.forEach(expense => {
+                const attachmentCount = expense.attachments_count || 0;
                 html += `
                     <div class="flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
                         <div class="w-24 flex items-center gap-2">
@@ -2156,7 +3386,16 @@ $(document).ready(function() {
                         </div>
                         <div class="flex items-center gap-2 flex-1">
                             <i class="fas fa-car text-purple-900"></i>
-                            <span class="text-gray-700 font-medium">${expense.name}</span>
+                            <span class="text-gray-700">${expense.name}</span>
+                            ${attachmentCount > 0 ? `
+                            <button type="button" onclick="openAttachmentModalFromSummary('vehicle', ${accountabilityData.vehicle.expenses.indexOf(expense)})" class="flex items-center gap-1.5 ml-2 cursor-pointer hover:opacity-80 transition-opacity" title="${attachmentCount} anexo(s)">
+                                <div class="relative">
+                                    <i class="fas fa-paperclip text-purple-900"></i>
+                                    <span class="absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">${attachmentCount}</span>
+                                </div>
+                                <span class="text-gray-700">Anexos</span>
+                            </button>
+                            ` : ''}
                         </div>
                         <div class="text-right">
                             <span class="font-bold text-purple-900">R$ ${expense.amount.toFixed(2).replace('.', ',')}</span>
@@ -2194,6 +3433,7 @@ $(document).ready(function() {
         if (accountabilityData.lodging.expenses && accountabilityData.lodging.expenses.length > 0) {
             html += '<div class="ml-4 space-y-2 mb-4">';
             accountabilityData.lodging.expenses.forEach(expense => {
+                const attachmentCount = expense.attachments_count || 0;
                 html += `
                     <div class="flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
                         <div class="w-24 flex items-center gap-2">
@@ -2202,7 +3442,17 @@ $(document).ready(function() {
                         </div>
                         <div class="flex items-center gap-2 flex-1">
                             <i class="fas fa-bed text-purple-900"></i>
-                            <span class="text-gray-700 font-medium">${expense.name}</span>
+                            <span class="text-gray-700">${expense.name}</span>
+                            ${expense.description ? `<span class="ml-1 px-2 py-0.5 bg-purple-100 text-purple-900 font-bold rounded-full text-xs">${expense.description}</span>` : ''}
+                            ${attachmentCount > 0 ? `
+                            <button type="button" onclick="openAttachmentModalFromSummary('lodging', ${accountabilityData.lodging.expenses.indexOf(expense)})" class="flex items-center gap-1.5 ml-2 cursor-pointer hover:opacity-80 transition-opacity" title="${attachmentCount} anexo(s)">
+                                <div class="relative">
+                                    <i class="fas fa-paperclip text-purple-900"></i>
+                                    <span class="absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">${attachmentCount}</span>
+                                </div>
+                                <span class="text-gray-700">Anexos</span>
+                            </button>
+                            ` : ''}
                         </div>
                         <div class="text-right">
                             <span class="font-bold text-purple-900">R$ ${expense.amount.toFixed(2).replace('.', ',')}</span>
@@ -2240,6 +3490,7 @@ $(document).ready(function() {
         if (accountabilityData.other.expenses && accountabilityData.other.expenses.length > 0) {
             html += '<div class="ml-4 space-y-2 mb-4">';
             accountabilityData.other.expenses.forEach(expense => {
+                const attachmentCount = expense.attachments_count || 0;
                 html += `
                     <div class="flex items-center gap-3 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
                         <div class="w-24 flex items-center gap-2">
@@ -2248,7 +3499,16 @@ $(document).ready(function() {
                         </div>
                         <div class="flex items-center gap-2 flex-1">
                             <i class="fas fa-receipt text-purple-900"></i>
-                            <span class="text-gray-700 font-medium">${expense.description}</span>
+                            <span class="text-gray-700">${expense.description}</span>
+                            ${attachmentCount > 0 ? `
+                            <button type="button" onclick="openAttachmentModalFromSummary('other', ${accountabilityData.other.expenses.indexOf(expense)})" class="flex items-center gap-1.5 ml-2 cursor-pointer hover:opacity-80 transition-opacity" title="${attachmentCount} anexo(s)">
+                                <div class="relative">
+                                    <i class="fas fa-paperclip text-purple-900"></i>
+                                    <span class="absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">${attachmentCount}</span>
+                                </div>
+                                <span class="text-gray-700">Anexos</span>
+                            </button>
+                            ` : ''}
                         </div>
                         <div class="text-right">
                             <span class="font-bold text-purple-900">R$ ${expense.amount.toFixed(2).replace('.', ',')}</span>
@@ -2443,7 +3703,6 @@ $(document).ready(function() {
     // Renderizar dados salvos (se houver)
     {% if payout.existing_statement and payout.existing_statement.statement_content %}
     function renderSavedData() {
-        console.log('Carregando dados salvos...', accountabilityData);
 
         // Renderizar dias de alimentação
         if (accountabilityData.food && accountabilityData.food.days && accountabilityData.food.days.length > 0) {
@@ -2465,8 +3724,6 @@ $(document).ready(function() {
                             checkbox.prop('checked', false);
                         }
                     });
-
-                    calculateFoodTotal();
                 }, 50 * (index + 1));
             });
         }
@@ -2485,12 +3742,30 @@ $(document).ready(function() {
             if (accountabilityData.vehicle.expenses && accountabilityData.vehicle.expenses.length > 0) {
                 accountabilityData.vehicle.expenses.forEach((expense, index) => {
                     setTimeout(() => {
-                        addVehicleExpenseRow(
+                        const rowId = addVehicleExpenseRow(
                             expense.date || TRIP_START_DATE,
                             expense.type || 'fuel',
-                            parseFloat(expense.value) || 0,
-                            expense.description || ''
+                            parseFloat(expense.amount) || 0,
+                            expense.name || '',
+                            true  // skipCalculate = true para não recalcular durante o carregamento
                         );
+
+                        // Restaurar anexos desta despesa
+                        if (expense.attachments && expense.attachments.length > 0) {
+                            const attachmentKey = `vehicle-${rowId}`;
+                            window.expenseAttachments[attachmentKey] = expense.attachments.map(att => ({
+                                uuid: att.uuid,
+                                name: att.filename,
+                                size: att.size,
+                                type: att.mime_type,
+                                hash_md5: att.hash_md5,
+                                hash_sha256: att.hash_sha256,
+                                path: att.path,
+                                download_url: att.download_url,
+                                created_at: att.created_at
+                            }));
+                            updateAttachmentCount(rowId, 'vehicle');
+                        }
                     }, 50 * (index + 1));
                 });
             }
@@ -2500,10 +3775,29 @@ $(document).ready(function() {
         if (accountabilityData.lodging && accountabilityData.lodging.expenses && accountabilityData.lodging.expenses.length > 0) {
             accountabilityData.lodging.expenses.forEach((expense, index) => {
                 setTimeout(() => {
-                    addLodgingExpenseRow(
+                    const rowId = addLodgingExpenseRow(
                         expense.date || TRIP_START_DATE,
-                        parseFloat(expense.value) || 0
+                        parseFloat(expense.amount) || 0,
+                        expense.description || '',
+                        true  // skipCalculate = true para não recalcular durante o carregamento
                     );
+
+                    // Restaurar anexos desta despesa
+                    if (expense.attachments && expense.attachments.length > 0) {
+                        const attachmentKey = `lodging-${rowId}`;
+                        window.expenseAttachments[attachmentKey] = expense.attachments.map(att => ({
+                            uuid: att.uuid,
+                            name: att.filename,
+                            size: att.size,
+                            type: att.mime_type,
+                            hash_md5: att.hash_md5,
+                            hash_sha256: att.hash_sha256,
+                            path: att.path,
+                            download_url: att.download_url,
+                            created_at: att.created_at
+                        }));
+                        updateAttachmentCount(rowId, 'lodging');
+                    }
                 }, 50 * (index + 1));
             });
         }
@@ -2512,20 +3806,101 @@ $(document).ready(function() {
         if (accountabilityData.other && accountabilityData.other.expenses && accountabilityData.other.expenses.length > 0) {
             accountabilityData.other.expenses.forEach((expense, index) => {
                 setTimeout(() => {
-                    addOtherExpenseRow(
-                        expense.description || 'Despesa',
+                    const rowId = addOtherExpenseRow(
+                        expense.name || expense.description || 'Despesa',
                         expense.date || TRIP_START_DATE,
-                        parseFloat(expense.value) || 0
+                        parseFloat(expense.amount) || 0,
+                        true  // skipCalculate = true para não recalcular durante o carregamento
                     );
+
+                    // Restaurar anexos desta despesa
+                    if (expense.attachments && expense.attachments.length > 0) {
+                        const attachmentKey = `other-${rowId}`;
+                        window.expenseAttachments[attachmentKey] = expense.attachments.map(att => ({
+                            uuid: att.uuid,
+                            name: att.filename,
+                            size: att.size,
+                            type: att.mime_type,
+                            hash_md5: att.hash_md5,
+                            hash_sha256: att.hash_sha256,
+                            path: att.path,
+                            download_url: att.download_url,
+                            created_at: att.created_at
+                        }));
+                        updateAttachmentCount(rowId, 'other');
+                    }
                 }, 50 * (index + 1));
             });
         }
 
-        console.log('Dados salvos carregados com sucesso!');
     }
 
-    // Chamar função para renderizar dados salvos com delay para garantir que DOM está pronto
-    setTimeout(renderSavedData, 100);
+    // ========================================
+    // INICIALIZAÇÃO DA INTERFACE
+    // ========================================
+
+    // ========================================
+    // EVENT HANDLERS (Delegação de Eventos)
+    // ========================================
+
+    // Event delegation para checkboxes de refeições
+    $(document).on('change', '.food-meal-checkbox', function() {
+        syncFoodDataFromDOM();
+        updateJSON();
+        renderSummary();
+    });
+
+    // Event delegation para mudança de data nos dias de alimentação
+    $(document).on('change', '[id^="food-day-date-"]', function() {
+        syncFoodDataFromDOM();
+        updateJSON();
+        renderSummary();
+    });
+
+    // Event delegation para mudança de data nas despesas de veículo
+    // Usar 'blur' ao invés de 'change' para evitar interferir com a digitação
+    $(document).on('blur', '[id^="vehicle-expense-date-"]', function() {
+        syncVehicleDataFromDOM();
+        updateJSON();
+        renderSummary();
+    });
+
+    // Event delegation para mudança de quilometragem
+    $(document).on('blur', '#km-departure, #km-arrival', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        syncVehicleDataFromDOM();
+        updateJSON();
+        renderSummary();
+    });
+
+    // Validar apenas números durante a digitação sem sincronizar
+    $(document).on('input', '#km-departure, #km-arrival', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+
+    // Event delegation para mudança de data nas despesas de hospedagem
+    // Usar 'blur' ao invés de 'change' para evitar interferir com a digitação
+    $(document).on('blur', '[id^="lodging-expense-date-"]', function() {
+        syncLodgingDataFromDOM();
+        updateJSON();
+        renderSummary();
+    });
+
+    // Event delegation para mudança de data nas outras despesas
+    // Usar 'blur' ao invés de 'change' para evitar interferir com a digitação
+    $(document).on('blur', '[id^="other-expense-date-"]', function() {
+        syncOtherDataFromDOM();
+        updateJSON();
+        renderSummary();
+    });
+
+    // Aguardar o DOM estar pronto e renderizar a interface a partir dos dados
+    $(document).ready(function() {
+
+        // Renderizar toda a interface a partir do accountabilityData
+        renderFromData();
+
+    });
     {% endif %}
 
     // Controle do dropdown de salvar

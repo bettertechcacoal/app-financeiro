@@ -1,10 +1,4 @@
-"""create users table
-
-Revision ID: 002
-Revises: 001
-Create Date: 2025-10-11
-
-"""
+"""table users"""
 from typing import Sequence, Union
 
 from alembic import op

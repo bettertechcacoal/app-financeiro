@@ -1,10 +1,4 @@
-"""create applications table
-
-Revision ID: 020
-Revises: 019
-Create Date: 2025-10-13
-
-"""
+"""table applications"""
 from typing import Sequence, Union
 
 from alembic import op

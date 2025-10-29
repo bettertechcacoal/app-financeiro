@@ -1,16 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Migration: Create vehicle_maintenance_configs table
-Tabela para configurar intervalos de manutenção de cada veículo
-"""
+"""table vehicle_maintenance_configs"""
 
 from alembic import op
 import sqlalchemy as sa
 
 
 # revision identifiers
-revision = '029'
-down_revision = '028'
+revision = '030'
+down_revision = '029'
 branch_labels = None
 depends_on = None
 

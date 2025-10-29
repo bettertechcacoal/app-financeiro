@@ -1,10 +1,4 @@
-"""create states table
-
-Revision ID: 004
-Revises: 003
-Create Date: 2025-10-11
-
-"""
+"""table states"""
 from typing import Sequence, Union
 
 from alembic import op

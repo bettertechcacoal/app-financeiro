@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Cria tabela de licenças/senhas dos clientes (dados dos TXT de senhas)
-"""
+"""table licenses"""
 from alembic import op
 import sqlalchemy as sa
 

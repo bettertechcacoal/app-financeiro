@@ -4,6 +4,12 @@ body {
     min-height: 100vh;
 }
 
+.breadcrumbs-wrapper {
+    background: linear-gradient(135deg, #e0f2fe 0%, #e0e7ff 50%, #ddd6fe 100%);
+    background-attachment: fixed;
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.05);
+}
+
 .card {
     background: white;
     border-radius: 16px;

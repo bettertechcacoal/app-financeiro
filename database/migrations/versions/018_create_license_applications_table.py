@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Cria tabela de módulos de licenças (mapeamento código → nome do módulo)
-"""
+"""table license_applications"""
 from alembic import op
 import sqlalchemy as sa
 

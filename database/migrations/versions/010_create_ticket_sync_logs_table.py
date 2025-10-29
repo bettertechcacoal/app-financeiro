@@ -1,10 +1,4 @@
-"""create ticket_sync_logs table
-
-Revision ID: 010
-Revises: 009
-Create Date: 2025-10-11
-
-"""
+"""table ticket_sync_logs"""
 from typing import Sequence, Union
 
 from alembic import op

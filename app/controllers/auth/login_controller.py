@@ -24,7 +24,7 @@ def login():
             local_user = db.query(User).filter_by(email=email).first()
 
             if not local_user:
-                flash('Usuário não autorizado nesta aplicação', 'error')
+                flash('Usuário ou senha inválidos', 'error')
                 return redirect(url_for('auth.login'))
 
             if not local_user.active:

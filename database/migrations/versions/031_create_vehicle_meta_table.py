@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Migration: Create vehicle_meta table
-Tabela para armazenar metadados calculados e agregados dos veículos
-"""
+"""table vehicle_meta"""
 
 from alembic import op
 import sqlalchemy as sa
@@ -10,8 +6,8 @@ import os
 
 
 # revision identifiers
-revision = '030'
-down_revision = '029'
+revision = '031'
+down_revision = '030'
 branch_labels = None
 depends_on = None
 

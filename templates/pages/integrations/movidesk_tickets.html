@@ -174,8 +174,8 @@
 </div>
 
 <script>
-    // Array de horários configurados
-    let schedules = [];
+    // Objeto de horários configurados (key: time)
+    let schedules = {};
 
     // Definir data padrão (hoje)
     const today = new Date();
@@ -235,12 +235,16 @@
             const response = await fetch('/admin/api/parameters/MOVIDESK_SYNC_SCHEDULES');
             const result = await response.json();
 
-            if (result.success && result.value) {
+            if (result.success && result.value && result.value.trim() !== '') {
                 schedules = JSON.parse(result.value);
-                renderSchedules();
+            } else {
+                schedules = {};
             }
+            renderSchedules();
         } catch (error) {
             console.error('Erro ao carregar horários:', error);
+            schedules = {};
+            renderSchedules();
         }
     }
 
@@ -248,7 +252,9 @@
     function renderSchedules() {
         const container = document.getElementById('schedules-container');
 
-        if (schedules.length === 0) {
+        const scheduleKeys = Object.keys(schedules);
+
+        if (scheduleKeys.length === 0) {
             container.innerHTML = `
                 <div class="text-center py-4 text-gray-500 text-sm">
                     <i class="fas fa-clock text-2xl mb-2"></i>
@@ -258,16 +264,16 @@
             return;
         }
 
-        // Ordenar horários
-        schedules.sort();
+        // Ordenar horários por valor (time)
+        const sortedEntries = Object.entries(schedules).sort((a, b) => a[1].localeCompare(b[1]));
 
-        container.innerHTML = schedules.map(time => `
+        container.innerHTML = sortedEntries.map(([key, time]) => `
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                 <div class="flex items-center gap-3">
                     <i class="fas fa-clock text-green-600"></i>
                     <span class="font-semibold text-gray-900">${time}</span>
                 </div>
-                <button onclick="removeSchedule('${time}')"
+                <button onclick="removeSchedule('${key}')"
                         class="text-red-600 hover:text-red-700 transition-colors">
                     <i class="fas fa-trash"></i>
                 </button>
@@ -286,44 +292,57 @@
         }
 
         // Verificar duplicado
-        if (schedules.includes(time)) {
+        if (Object.values(schedules).includes(time)) {
             showToast('Este horário já está configurado', 'warning');
             return;
         }
 
-        schedules.push(time);
+        // Adicionar com qualquer key temporária (será reindexado ao salvar)
+        const tempKey = Date.now();
+        schedules[tempKey] = time;
         renderSchedules();
         timeInput.value = '';
 
-        // Salvar automaticamente
+        // Salvar automaticamente (reindexará)
         await saveSchedules(`Sincronização automática adicionada para ${time}`);
     }
 
     // Remover horário
-    async function removeSchedule(time) {
-        schedules = schedules.filter(t => t !== time);
+    async function removeSchedule(key) {
+        const time = schedules[key];
+        delete schedules[key];
         renderSchedules();
 
-        // Salvar automaticamente
+        // Salvar automaticamente (reindexará)
         await saveSchedules(`Horário ${time} removido com sucesso`);
     }
 
     // Salvar horários no backend
     async function saveSchedules(customMessage = null) {
         try {
+            // Reindexar o objeto: pegar todos os valores, ordenar, e criar novo objeto com índices 0, 1, 2...
+            const times = Object.values(schedules).sort();
+            const reindexed = {};
+            times.forEach((time, index) => {
+                reindexed[index] = time;
+            });
+
             const response = await fetch('/admin/api/parameters/MOVIDESK_SYNC_SCHEDULES/update', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    value: JSON.stringify(schedules)
+                    value: JSON.stringify(reindexed)
                 })
             });
 
             const result = await response.json();
 
             if (result.success) {
+                // Atualizar schedules local com o reindexado
+                schedules = reindexed;
+                renderSchedules();
                 showToast(customMessage || 'Horários salvos automaticamente!', 'success');
             } else {
                 showToast('Erro ao salvar horários', 'error');

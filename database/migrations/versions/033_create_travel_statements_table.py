@@ -1,10 +1,4 @@
-"""create_travel_statements_table
-
-Revision ID: 032
-Revises: 031
-Create Date: 2025-10-16 15:30:00.000000
-
-"""
+"""table travel_statements"""
 from typing import Sequence, Union
 
 from alembic import op
@@ -12,8 +6,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '032'
-down_revision: Union[str, None] = '031'
+revision: str = '033'
+down_revision: Union[str, None] = '032'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -39,10 +33,12 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # Remover índices e tabela
+    # Remover índices
     op.drop_index('ix_travel_statements_status', 'travel_statements')
     op.drop_index('ix_travel_statements_payout_id', 'travel_statements')
+
+    # Remover tabela (isso deve automaticamente dropar o enum se não houver outras dependências)
     op.drop_table('travel_statements')
 
-    # Remover enum type
-    op.execute('DROP TYPE IF EXISTS statementstatus')
+    # Forçar remoção do enum type caso ainda exista
+    op.execute('DROP TYPE IF EXISTS statementstatus CASCADE')

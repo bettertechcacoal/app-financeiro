@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-Migration: Create vehicles table
-Tabela para armazenar dados básicos dos veículos da frota
-"""
+"""table vehicles"""
 
 from alembic import op
 import sqlalchemy as sa

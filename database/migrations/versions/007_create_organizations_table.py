@@ -1,10 +1,4 @@
-"""create organizations table
-
-Revision ID: 007
-Revises: 006
-Create Date: 2025-10-11
-
-"""
+"""table organizations"""
 from typing import Sequence, Union
 
 from alembic import op

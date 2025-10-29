@@ -1,10 +1,4 @@
-"""create groups table
-
-Revision ID: 001
-Revises:
-Create Date: 2025-10-11
-
-"""
+"""table groups"""
 from typing import Sequence, Union
 
 from alembic import op

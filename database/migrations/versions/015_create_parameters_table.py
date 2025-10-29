@@ -1,10 +1,4 @@
-"""create_parameters_table
-
-Revision ID: 015
-Revises: 014
-Create Date: 2025-10-11 22:20:10.000000
-
-"""
+"""table parameters"""
 from typing import Sequence, Union
 
 from alembic import op
@@ -23,7 +17,7 @@ def upgrade() -> None:
     """Criar tabela parameters"""
 
     # Criar o tipo ENUM do PostgreSQL
-    parameter_type_enum = postgresql.ENUM('TEXT', 'CHECKBOX', 'SELECT', name='parametertype', create_type=True)
+    parameter_type_enum = postgresql.ENUM('TEXT', 'CHECKBOX', 'SELECT', 'JSON', name='parametertype', create_type=True)
     parameter_type_enum.create(op.get_bind(), checkfirst=True)
 
     # Criar tabela parameters
@@ -31,7 +25,7 @@ def upgrade() -> None:
         'parameters',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('parameter', sa.String(length=100), nullable=False),
-        sa.Column('type', postgresql.ENUM('TEXT', 'CHECKBOX', 'SELECT', name='parametertype', create_type=False), nullable=False),
+        sa.Column('type', postgresql.ENUM('TEXT', 'CHECKBOX', 'SELECT', 'JSON', name='parametertype', create_type=False), nullable=False),
         sa.Column('description', sa.String(length=255), nullable=False),
         sa.Column('value', sa.Text(), nullable=True),
         sa.Column('options', sa.Text(), nullable=True),

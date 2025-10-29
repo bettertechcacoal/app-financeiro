@@ -1,10 +1,4 @@
-"""create notifications table
-
-Revision ID: 013
-Revises: 012
-Create Date: 2025-10-11
-
-"""
+"""table notifications"""
 from typing import Sequence, Union
 
 from alembic import op

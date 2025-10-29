@@ -30,6 +30,11 @@
                     Voltar
                 </a>
 
+                <button onclick="openReportModal()" class="inline-flex items-center px-4 sm:px-6 py-2.5 sm:py-3 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all">
+                    <i class="fas fa-file-pdf mr-2"></i>
+                    Emitir Relatório
+                </button>
+
                 <!-- Dropdown Conclusão -->
                 <div class="relative" id="conclusionDropdown">
                     <button id="conclusionButton" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all inline-flex items-center shadow-md hover:shadow-lg">
@@ -243,6 +248,15 @@
                             <div class="flex items-center gap-2 flex-1">
                                 <i class="fas fa-car text-blue-900"></i>
                                 <span class="text-gray-700 font-medium">{{ expense.name if expense.name else expense.description }}</span>
+                                {% if expense.attachments and expense.attachments|length > 0 %}
+                                <button type="button" onclick="openAttachmentModal({{ loop.index0 }}, 'vehicle')" class="flex items-center gap-1.5 ml-2 cursor-pointer hover:opacity-80 transition-opacity" title="{{ expense.attachments|length }} anexo(s)">
+                                    <div class="relative">
+                                        <i class="fas fa-paperclip text-blue-900"></i>
+                                        <span class="absolute -top-1 -right-1 bg-blue-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">{{ expense.attachments|length }}</span>
+                                    </div>
+                                    <span class="text-gray-700 text-sm">Anexos</span>
+                                </button>
+                                {% endif %}
                             </div>
                             <div class="text-right">
                                 <span class="font-bold text-blue-900">R$ {{ "%.2f"|format(expense.amount|default(0))|replace('.', ',') }}</span>
@@ -284,6 +298,15 @@
                             <div class="flex items-center gap-2 flex-1">
                                 <i class="fas fa-bed text-blue-900"></i>
                                 <span class="text-gray-700 font-medium">{{ expense.name if expense.name else 'Hospedagem' }}</span>
+                                {% if expense.attachments and expense.attachments|length > 0 %}
+                                <button type="button" onclick="openAttachmentModal({{ loop.index0 }}, 'lodging')" class="flex items-center gap-1.5 ml-2 cursor-pointer hover:opacity-80 transition-opacity" title="{{ expense.attachments|length }} anexo(s)">
+                                    <div class="relative">
+                                        <i class="fas fa-paperclip text-blue-900"></i>
+                                        <span class="absolute -top-1 -right-1 bg-blue-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">{{ expense.attachments|length }}</span>
+                                    </div>
+                                    <span class="text-gray-700 text-sm">Anexos</span>
+                                </button>
+                                {% endif %}
                             </div>
                             <div class="text-right">
                                 <span class="font-bold text-blue-900">R$ {{ "%.2f"|format(expense.amount|default(0))|replace('.', ',') }}</span>
@@ -325,6 +348,15 @@
                             <div class="flex items-center gap-2 flex-1">
                                 <i class="fas fa-receipt text-blue-900"></i>
                                 <span class="text-gray-700 font-medium">{{ expense.description }}</span>
+                                {% if expense.attachments and expense.attachments|length > 0 %}
+                                <button type="button" onclick="openAttachmentModal({{ loop.index0 }}, 'other')" class="flex items-center gap-1.5 ml-2 cursor-pointer hover:opacity-80 transition-opacity" title="{{ expense.attachments|length }} anexo(s)">
+                                    <div class="relative">
+                                        <i class="fas fa-paperclip text-blue-900"></i>
+                                        <span class="absolute -top-1 -right-1 bg-blue-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">{{ expense.attachments|length }}</span>
+                                    </div>
+                                    <span class="text-gray-700 text-sm">Anexos</span>
+                                </button>
+                                {% endif %}
                             </div>
                             <div class="text-right">
                                 <span class="font-bold text-blue-900">R$ {{ "%.2f"|format(expense.amount|default(0))|replace('.', ',') }}</span>
@@ -374,6 +406,44 @@
                     <span class="font-bold text-xl {% if (payout.amount - total_general) < 0 %}text-red-900{% else %}text-blue-900{% endif %}">R$ {{ "%.2f"|format(payout.amount - total_general)|replace('.', ',') }}</span>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Anexos -->
+<div id="attachment-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 animate-fade-in">
+        <!-- Header do Modal -->
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-paperclip text-white"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900">Visualizar Anexos</h3>
+                </div>
+                <button type="button" onclick="closeAttachmentModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Corpo do Modal -->
+        <div class="p-6 space-y-4">
+            <!-- Lista de anexos -->
+            <div id="attachment-list-section">
+                <h4 class="text-sm font-semibold text-gray-700 mb-3">Anexos Adicionados</h4>
+                <div id="attachment-list" class="space-y-2 max-h-64 overflow-y-auto">
+                    <!-- Anexos serão renderizados aqui -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer do Modal -->
+        <div class="p-6 bg-gray-50 rounded-b-xl flex justify-end">
+            <button type="button" onclick="closeAttachmentModal()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all">
+                Fechar
+            </button>
         </div>
     </div>
 </div>
@@ -497,6 +567,162 @@ $(document).ready(function() {
             console.error('Erro:', error);
             showToast('Erro ao processar a revisão', 'error');
         });
+    };
+
+    // ===== CONTROLE DO MODAL DE ANEXOS =====
+
+    // Dados da prestação de contas
+    const statementData = {{ payout.statement.statement_content | tojson | safe }};
+
+    // Abrir modal de anexos
+    window.openAttachmentModal = function(expenseIndex, expenseType) {
+        let attachments = [];
+
+        if (expenseType === 'vehicle' && statementData.vehicle && statementData.vehicle.expenses) {
+            const expense = statementData.vehicle.expenses[expenseIndex];
+            attachments = expense.attachments || [];
+        } else if (expenseType === 'lodging' && statementData.lodging && statementData.lodging.expenses) {
+            const expense = statementData.lodging.expenses[expenseIndex];
+            attachments = expense.attachments || [];
+        } else if (expenseType === 'other' && statementData.other && statementData.other.expenses) {
+            const expense = statementData.other.expenses[expenseIndex];
+            attachments = expense.attachments || [];
+        }
+
+        renderAttachmentList(attachments);
+        $('#attachment-modal').removeClass('hidden');
+    };
+
+    // Fechar modal de anexos
+    window.closeAttachmentModal = function() {
+        $('#attachment-modal').addClass('hidden');
+    };
+
+    // Renderizar lista de anexos
+    function renderAttachmentList(attachments) {
+        const container = $('#attachment-list');
+
+        if (attachments.length === 0) {
+            container.html(`
+                <div class="text-center py-8 text-gray-400">
+                    <i class="fas fa-paperclip text-4xl mb-2"></i>
+                    <p class="text-sm">Nenhum anexo adicionado</p>
+                </div>
+            `);
+            return;
+        }
+
+        let html = '';
+        attachments.forEach(att => {
+            const sizeKB = (att.size / 1024).toFixed(1);
+            const fileType = att.type || att.mime_type;
+            const fileName = att.name || att.filename || 'Arquivo sem nome';
+            const icon = getFileIcon(fileType);
+
+            html += `
+                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded border border-gray-200">
+                    <i class="fas ${icon} text-blue-600 text-lg"></i>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 truncate">${fileName}</p>
+                        <p class="text-xs text-gray-500">${sizeKB} KB</p>
+                        ${att.uuid ? `<p class="text-xs text-gray-400 font-mono">UUID: ${att.uuid.substring(0, 8)}...</p>` : ''}
+                    </div>
+                    ${att.uuid ? `
+                        <button type="button" onclick="viewAttachment('${att.uuid}')" class="text-blue-600 hover:text-blue-800 transition-colors" title="Visualizar">
+                            <i class="fas fa-eye text-sm"></i>
+                        </button>
+                    ` : ''}
+                    ${att.uuid ? `
+                        <button type="button" onclick="downloadAttachment('${att.uuid}', '${fileName}')" class="text-blue-600 hover:text-blue-800 transition-colors" title="Baixar">
+                            <i class="fas fa-download text-sm"></i>
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+        });
+
+        container.html(html);
+    }
+
+    // Obter ícone do arquivo
+    function getFileIcon(fileType) {
+        if (!fileType) return 'fa-file';
+        if (fileType.includes('pdf')) return 'fa-file-pdf';
+        if (fileType.includes('image')) return 'fa-file-image';
+        if (fileType.includes('word') || fileType.includes('document')) return 'fa-file-word';
+        if (fileType.includes('excel') || fileType.includes('spreadsheet')) return 'fa-file-excel';
+        return 'fa-file';
+    }
+
+    // Visualizar anexo
+    window.viewAttachment = function(uuid) {
+        showToast('Carregando arquivo...', 'info');
+        fetch(`/admin/api/storage/${uuid}/view`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar arquivo');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                window.open(url, '_blank');
+                showToast('Arquivo aberto com sucesso', 'success');
+            })
+            .catch(error => {
+                console.error('Erro ao visualizar anexo:', error);
+                showToast('Erro ao visualizar anexo', 'error');
+            });
+    };
+
+    // Baixar anexo
+    window.downloadAttachment = function(uuid, fileName) {
+        showToast('Baixando arquivo...', 'info');
+        fetch(`/admin/api/storage/${uuid}/download`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao baixar arquivo');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+                showToast('Arquivo baixado com sucesso', 'success');
+            })
+            .catch(error => {
+                console.error('Erro ao baixar anexo:', error);
+                showToast('Erro ao baixar anexo', 'error');
+            });
+    };
+
+    // Fechar modal com ESC
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && !$('#attachment-modal').hasClass('hidden')) {
+            closeAttachmentModal();
+        }
+    });
+
+    // Fechar modal ao clicar fora
+    $('#attachment-modal').on('click', function(e) {
+        if (e.target.id === 'attachment-modal') {
+            closeAttachmentModal();
+        }
+    });
+
+    // ===== EMITIR RELATÓRIO =====
+
+    window.openReportModal = function() {
+        const payoutId = {{ payout.id }};
+        const reportUrl = `/admin/financial/${payoutId}/report/pdf`;
+        showToast('Abrindo relatório...', 'info');
+        window.open(reportUrl, '_blank');
     };
 });
 </script>

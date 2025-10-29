@@ -67,7 +67,13 @@ def load_sync_schedules():
         schedules = json.loads(parameter.value)
         db.close()
 
-        if not schedules or len(schedules) == 0:
+        # Se for objeto, extrair valores; se for array, usar direto
+        if isinstance(schedules, dict):
+            schedule_times = list(schedules.values())
+        else:
+            schedule_times = schedules
+
+        if not schedule_times or len(schedule_times) == 0:
             # Não logar quando lista está vazia (evita poluição de logs)
             return
 
@@ -77,7 +83,9 @@ def load_sync_schedules():
                 scheduler.remove_job(job.id)
 
         # Adicionar novo job para cada horário
-        for time_str in schedules:
+        for time_str in schedule_times:
+            if not time_str or ':' not in time_str:
+                continue
             hour, minute = time_str.split(':')
 
             scheduler.add_job(
@@ -90,7 +98,7 @@ def load_sync_schedules():
 
             logger.info(f"[SCHEDULER] Job configurado para {time_str}")
 
-        logger.info(f"[SCHEDULER] Total de {len(schedules)} horários configurados")
+        logger.info(f"[SCHEDULER] Total de {len(schedule_times)} horários configurados")
 
     except Exception as e:
         logger.error(f"[SCHEDULER] Erro ao carregar horários: {str(e)}")

@@ -80,36 +80,45 @@ def settings_create():
     return render_template('pages/settings/create.html')
 
 
-def settings_update(parameter_id):
-    """Atualiza o valor de um parâmetro inline"""
+def settings_update():
+    """Atualiza múltiplos parâmetros de uma vez"""
     user_id = session.get('user_id')
 
     if not user_id:
-        return redirect(url_for('auth.login'))
-
-    db = get_db()
-    parameter = db.query(Parameter).filter_by(id=parameter_id).first()
-
-    if not parameter:
-        flash('Parâmetro não encontrado!', 'error')
-        return redirect(url_for('admin.settings_list'))
+        return jsonify({'success': False, 'message': 'Você precisa estar autenticado'}), 401
 
     try:
-        # Atualizar valor baseado no tipo
-        if parameter.type == ParameterType.CHECKBOX:
-            # Para checkbox, se estiver marcado vem 'S', senão vem vazio
-            parameter.value = 'S' if request.form.get('value') == 'S' else 'N'
-        else:
-            parameter.value = request.form.get('value', '')
+        db = get_db()
+        data = request.get_json()
+        parameters = data.get('parameters', [])
+
+        updated_count = 0
+        for param_data in parameters:
+            param_id = param_data.get('id')
+            param_value = param_data.get('value', '')
+
+            parameter = db.query(Parameter).filter_by(id=param_id).first()
+            if parameter:
+                # Atualizar valor baseado no tipo
+                if parameter.type == ParameterType.CHECKBOX:
+                    parameter.value = 'S' if param_value == 'S' else 'N'
+                else:
+                    parameter.value = param_value
+                updated_count += 1
 
         db.commit()
-        flash('Parâmetro atualizado com sucesso!', 'success')
+
+        return jsonify({
+            'success': True,
+            'message': 'Parâmetros salvos com sucesso!'
+        })
 
     except Exception as e:
         db.rollback()
-        flash(f'Erro ao atualizar parâmetro: {str(e)}', 'error')
-
-    return redirect(url_for('admin.settings_list'))
+        return jsonify({
+            'success': False,
+            'message': f'Erro ao atualizar parâmetros: {str(e)}'
+        }), 500
 
 
 def get_parameter_api(parameter_name):

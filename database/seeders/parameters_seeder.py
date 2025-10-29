@@ -44,6 +44,13 @@ def seed_parameters():
                 'value': 'N',
                 'group_id': group_integracoes.id if group_integracoes else None
             },
+            {
+                'parameter': 'MOVIDESK_SYNC_SCHEDULES',
+                'type': ParameterType.JSON,
+                'description': 'Horários de sincronização automática do Movidesk',
+                'value': '',
+                'group_id': group_integracoes.id if group_integracoes else None
+            },
             # E-mail
             {
                 'parameter': 'SMTP_HOST',
@@ -116,6 +123,13 @@ def seed_parameters():
                 'type': ParameterType.TEXT,
                 'description': 'Número máximo de dias para uma viagem',
                 'value': '30',
+                'group_id': group_viagens.id if group_viagens else None
+            },
+            {
+                'parameter': 'MEAL_PRICES',
+                'type': ParameterType.JSON,
+                'description': 'Valores padrão das refeições',
+                'value': '{"breakfast":"15.00","lunch":"25.00","dinner":"25.00"}',
                 'group_id': group_viagens.id if group_viagens else None
             }
         ]

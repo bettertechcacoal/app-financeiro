@@ -104,11 +104,6 @@ def seed_group_permissions():
                 'notes_create',
                 'notes_edit',
                 'notes_delete',
-
-                # Relatórios
-                'reports_view',
-                'reports_generate',
-                'reports_export',
             ]
 
             manager_permissions = db.query(Permission).filter(
@@ -159,9 +154,6 @@ def seed_group_permissions():
                 'notes_create',
                 'notes_edit',
                 'notes_delete',
-
-                # Relatórios - Apenas visualizar
-                'reports_view',
             ]
 
             collab_permissions = db.query(Permission).filter(

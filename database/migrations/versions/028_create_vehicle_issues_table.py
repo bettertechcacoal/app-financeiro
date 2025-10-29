@@ -1,16 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Migration: Create vehicle_issues table
-Tabela para registrar problemas reportados nos veículos
-"""
+"""table vehicle_issues"""
 
 from alembic import op
 import sqlalchemy as sa
 
 
 # revision identifiers
-revision = '027'
-down_revision = '026'
+revision = '028'
+down_revision = '027'
 branch_labels = None
 depends_on = None
 

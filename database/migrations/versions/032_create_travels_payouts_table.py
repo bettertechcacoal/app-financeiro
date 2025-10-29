@@ -1,10 +1,4 @@
-"""create travel_payouts table
-
-Revision ID: 031
-Revises: 030
-Create Date: 2025-10-15
-
-"""
+"""table travel_payouts"""
 from typing import Sequence, Union
 
 from alembic import op
@@ -12,8 +6,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '031'
-down_revision: Union[str, None] = '030'
+revision: str = '032'
+down_revision: Union[str, None] = '031'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -50,4 +44,6 @@ def downgrade() -> None:
     """Remove tabela travel_payouts"""
     op.drop_index('idx_travel_payouts_member_id', table_name='travel_payouts')
     op.drop_index('idx_travel_payouts_travel_id', table_name='travel_payouts')
-    op.drop_table('travel_payouts')
+
+    # Usar CASCADE para dropar dependências
+    op.execute('DROP TABLE IF EXISTS travel_payouts CASCADE')

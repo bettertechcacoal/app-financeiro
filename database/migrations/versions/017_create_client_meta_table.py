@@ -1,10 +1,4 @@
-"""create client_meta table
-
-Revision ID: 017
-Revises: 016
-Create Date: 2025-10-12
-
-"""
+"""table client_meta"""
 from typing import Sequence, Union
 
 from alembic import op

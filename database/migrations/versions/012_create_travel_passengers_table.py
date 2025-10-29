@@ -1,10 +1,4 @@
-"""create travel_passengers table
-
-Revision ID: 012
-Revises: 011
-Create Date: 2025-10-11
-
-"""
+"""table travel_passengers"""
 from typing import Sequence, Union
 
 from alembic import op

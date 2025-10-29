@@ -1,10 +1,4 @@
-"""create travels table
-
-Revision ID: 006
-Revises: 005
-Create Date: 2025-10-11
-
-"""
+"""table travels"""
 from typing import Sequence, Union
 
 from alembic import op

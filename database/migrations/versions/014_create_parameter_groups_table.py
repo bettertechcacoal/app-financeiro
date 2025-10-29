@@ -1,10 +1,4 @@
-"""create_parameter_groups_table
-
-Revision ID: 014
-Revises: 013
-Create Date: 2025-10-11 22:20:00.000000
-
-"""
+"""table parameter_groups"""
 from typing import Sequence, Union
 
 from alembic import op

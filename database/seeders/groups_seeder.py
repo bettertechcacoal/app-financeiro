@@ -28,30 +28,6 @@ def seed_groups():
                 'description': 'Acesso total ao sistema',
                 'color': '#dc2626',  # Vermelho
                 'icon': 'fa-shield-alt'
-            },
-            {
-                'id': 2,
-                'name': 'Gestores',
-                'slug': 'gestores',
-                'description': 'Gerenciamento de equipes e aprovacao de viagens',
-                'color': '#2563eb',  # Azul
-                'icon': 'fa-user-tie'
-            },
-            {
-                'id': 3,
-                'name': 'Colaboradores',
-                'slug': 'colaboradores',
-                'description': 'Usuarios padrao do sistema',
-                'color': '#16a34a',  # Verde
-                'icon': 'fa-users'
-            },
-            {
-                'id': 4,
-                'name': 'Visitantes',
-                'slug': 'visitantes',
-                'description': 'Acesso somente leitura',
-                'color': '#9ca3af',  # Cinza
-                'icon': 'fa-eye'
             }
         ]
 

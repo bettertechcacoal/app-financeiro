@@ -17,6 +17,7 @@ from app.controllers.users import users_controller
 from app.controllers.permissions import permissions_controller
 from app.controllers.groups import groups_controller
 from app.controllers.vehicles import vehicles_controller
+from app.controllers import storage_controller
 from app.utils.permissions_helper import inject_user_permissions
 
 
@@ -106,6 +107,7 @@ def register_routes(app: Flask):
     admin_bp.add_url_rule('/financial/<int:payout_id>/accountability', view_func=financial_controller.financial_accountability, methods=['GET'])
     admin_bp.add_url_rule('/financial/<int:payout_id>/accountability', view_func=financial_controller.save_accountability, methods=['POST'])
     admin_bp.add_url_rule('/financial/<int:payout_id>/review', view_func=financial_controller.financial_review_accountability, methods=['GET'])
+    admin_bp.add_url_rule('/financial/<int:payout_id>/report/pdf', view_func=financial_controller.financial_accountability_report_pdf, methods=['GET'])
 
     # Rotas de Perfil
     admin_bp.add_url_rule('/profile', view_func=profile_controller.profile_view, methods=['GET'])
@@ -131,7 +133,7 @@ def register_routes(app: Flask):
 
     # Rotas de Configurações
     admin_bp.add_url_rule('/settings', view_func=settings_controller.settings_list, methods=['GET'])
-    admin_bp.add_url_rule('/settings/<int:parameter_id>/update', view_func=settings_controller.settings_update, methods=['POST'])
+    admin_bp.add_url_rule('/settings/update', view_func=settings_controller.settings_update, methods=['POST'])
 
     # API de Parâmetros
     admin_bp.add_url_rule('/api/parameters/<parameter_name>', view_func=settings_controller.get_parameter_api, methods=['GET'])
@@ -139,10 +141,12 @@ def register_routes(app: Flask):
 
     # Rotas de Notes (Sticky Notes)
     admin_bp.add_url_rule('/notes', view_func=notes_controller.notes_list, methods=['GET'])
-    admin_bp.add_url_rule('/notes/create', view_func=notes_controller.notes_create, methods=['POST'])
-    admin_bp.add_url_rule('/notes/<int:note_id>/update', view_func=notes_controller.notes_update, methods=['POST', 'PUT'])
-    admin_bp.add_url_rule('/notes/<int:note_id>/delete', view_func=notes_controller.notes_delete, methods=['POST', 'DELETE'])
+
+    # APIs de Notes
     admin_bp.add_url_rule('/api/notes', view_func=notes_controller.notes_api_list, methods=['GET'])
+    admin_bp.add_url_rule('/api/notes/create', view_func=notes_controller.notes_create, methods=['POST'])
+    admin_bp.add_url_rule('/api/notes/<int:note_id>/update', view_func=notes_controller.notes_update, methods=['PUT'])
+    admin_bp.add_url_rule('/api/notes/<int:note_id>/delete', view_func=notes_controller.notes_delete, methods=['DELETE'])
 
     # Rotas de Licenças
     admin_bp.add_url_rule('/licenses', view_func=licenses_controller.licenses_list, methods=['GET'])
@@ -192,6 +196,15 @@ def register_routes(app: Flask):
     # APIs de Configurações de Manutenção
     admin_bp.add_url_rule('/vehicles/<int:vehicle_id>/maintenance-configs', view_func=vehicles_controller.vehicles_add_maintenance_config, methods=['POST'])
     admin_bp.add_url_rule('/vehicles/<int:vehicle_id>/maintenance-configs/<int:config_id>', view_func=vehicles_controller.vehicles_remove_maintenance_config, methods=['DELETE'])
+
+    # APIs do Storage Service
+    admin_bp.add_url_rule('/api/storage/config', view_func=storage_controller.get_storage_config, methods=['GET'])
+    admin_bp.add_url_rule('/api/storage/health', view_func=storage_controller.get_storage_health, methods=['GET'])
+    admin_bp.add_url_rule('/api/storage/upload', view_func=storage_controller.upload_file, methods=['POST'])
+    admin_bp.add_url_rule('/api/storage/<string:file_uuid>/view', view_func=storage_controller.download_file, methods=['GET'])
+    admin_bp.add_url_rule('/api/storage/<string:file_uuid>/download', view_func=storage_controller.download_file, methods=['GET'])
+    admin_bp.add_url_rule('/api/storage/<string:file_uuid>/delete', view_func=storage_controller.delete_file, methods=['DELETE'])
+    admin_bp.add_url_rule('/api/storage/<string:file_uuid>', view_func=storage_controller.download_file, methods=['GET'])
 
     # Registrar Blueprints
     app.register_blueprint(auth_bp)

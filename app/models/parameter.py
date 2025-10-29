@@ -11,6 +11,7 @@ class ParameterType(enum.Enum):
     TEXT = "text"  # Campo de texto livre
     CHECKBOX = "checkbox"  # Checkbox (S/N)
     SELECT = "select"  # Select com opções pré-definidas
+    JSON = "json"  # Objeto ou array JSON
 
 
 class Parameter(Base):

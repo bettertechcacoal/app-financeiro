@@ -1,16 +1,12 @@
-# -*- coding: utf-8 -*-
-"""
-Migration: Create maintenance_types table
-Tabela para armazenar tipos de manutenção
-"""
+"""table maintenance_types"""
 
 from alembic import op
 import sqlalchemy as sa
 
 
 # revision identifiers
-revision = '025'
-down_revision = '024'
+revision = '026'
+down_revision = '025'
 branch_labels = None
 depends_on = None
 

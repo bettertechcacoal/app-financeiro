@@ -73,8 +73,7 @@ def seed_users():
 
     except Exception as e:
         db.rollback()
-        print(f"[ERRO] Erro ao executar seeder: {str(e)}")
-        raise
+        print(f"[ERRO] {type(e).__name__}: {str(e).split(chr(10))[0]}")
     finally:
         db.close()
 

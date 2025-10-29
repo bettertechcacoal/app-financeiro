@@ -2,6 +2,7 @@ import sys
 import argparse
 import json
 import logging
+import os
 from flask import Flask
 from flask_socketio import SocketIO
 from routes import register_routes
@@ -19,6 +20,7 @@ log.setLevel(logging.ERROR)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config['DEBUG'] = DEBUG
+app.config['APP_NAME'] = os.getenv('APP_NAME', 'Financeiro')
 
 # Inicializar SocketIO
 socketio = SocketIO(app, cors_allowed_origins="*", logger=False, engineio_logger=False)

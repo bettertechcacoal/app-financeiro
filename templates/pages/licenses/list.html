@@ -142,25 +142,24 @@
                         Upload de Arquivo de Licenças
                     </h2>
 
-                    <form method="POST" action="{{ url_for('admin.license_upload_process') }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ url_for('admin.license_upload_process') }}" enctype="multipart/form-data" id="uploadForm">
                         <div class="flex gap-4 items-end">
                             <div class="flex-1">
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                                     Arquivo TXT de Senhas
                                 </label>
-                                <input type="file" name="file" accept=".txt" required
-                                       class="block w-full text-sm text-gray-500
-                                              file:mr-4 file:py-3 file:px-6
-                                              file:rounded-lg file:border-0
-                                              file:text-sm file:font-semibold
-                                              file:bg-pink-50 file:text-pink-700
-                                              hover:file:bg-pink-100
-                                              cursor-pointer border border-gray-300 rounded-lg">
+                                <input type="file" name="file" id="fileInput" accept=".txt" required class="hidden">
+                                <div id="fakeInput" class="block w-full text-sm text-gray-500 px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 cursor-not-allowed">
+                                    <i class="fas fa-file-alt mr-2 text-gray-400"></i>
+                                    <span>Nenhum arquivo selecionado</span>
+                                </div>
                             </div>
-                            <button type="submit" class="px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
-                                <i class="fas fa-upload mr-2"></i>
-                                Processar Arquivo
-                            </button>
+                            <div class="relative">
+                                <button type="button" id="uploadBtn" class="px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
+                                    <i class="fas fa-folder-open mr-2"></i>
+                                    <span>Escolher</span>
+                                </button>
+                            </div>
                         </div>
                         <p class="mt-2 text-sm text-gray-500">
                             <i class="fas fa-info-circle mr-1"></i>
@@ -501,6 +500,80 @@ $(document).ready(function() {
 
     // Mostra o tab de listagem por padrão
     $('#tab-list').show();
+
+    // ===== UPLOAD DE ARQUIVO =====
+
+    let fileSelected = false;
+
+    $('#uploadBtn').on('click', function() {
+        if (!fileSelected) {
+            // Primeira vez: abre seletor de arquivo
+            $('#fileInput').click();
+        } else {
+            // Segunda vez: submete o formulário
+            $('#uploadForm').submit();
+        }
+    });
+
+    $('#fileInput').on('change', function() {
+        const file = this.files[0];
+
+        if (file) {
+            fileSelected = true;
+
+            // Atualiza o input fake com o nome do arquivo e botão remover
+            $('#fakeInput').html(
+                '<div class="flex items-center justify-between">' +
+                    '<div class="flex items-center min-w-0 flex-1">' +
+                        '<i class="fas fa-file-alt mr-2 text-pink-600 flex-shrink-0"></i>' +
+                        '<span class="text-gray-900 font-medium truncate">' + file.name + '</span>' +
+                    '</div>' +
+                    '<button type="button" id="removeFile" class="ml-3 text-gray-500 hover:text-red-600 cursor-pointer flex-shrink-0 transition-colors text-sm font-medium flex items-center gap-1" title="Remover arquivo">' +
+                        '<i class="fas fa-times"></i>' +
+                        '<span>Remover</span>' +
+                    '</button>' +
+                '</div>'
+            );
+            $('#fakeInput').removeClass('bg-gray-50 cursor-not-allowed').addClass('bg-white cursor-default');
+
+            // Muda o botão para "Processar"
+            $('#uploadBtn').html('<i class="fas fa-sync-alt mr-2"></i><span>Processar</span>');
+
+            // Mostra tooltip
+            setTimeout(function() {
+                if (!$('#processTooltip').length) {
+                    $('#uploadBtn').after(
+                        '<div id="processTooltip" class="absolute top-full right-0 mt-2 bg-pink-600 text-white text-sm px-4 py-2 rounded-lg shadow-lg animate-fade-in" style="white-space: nowrap;">' +
+                            '<div class="absolute -top-1 right-4 w-2 h-2 bg-pink-600 transform rotate-45"></div>' +
+                            'Clique aqui para iniciar o processamento' +
+                        '</div>'
+                    );
+
+                    // Remove tooltip após 10 segundos
+                    setTimeout(function() {
+                        $('#processTooltip').fadeOut(500, function() {
+                            $(this).remove();
+                        });
+                    }, 10000);
+                }
+            }, 300);
+        }
+    });
+
+    // Remover arquivo selecionado
+    $(document).on('click', '#removeFile', function() {
+        fileSelected = false;
+
+        // Limpa o input de arquivo
+        $('#fileInput').val('');
+
+        // Restaura o input fake
+        $('#fakeInput').html('<i class="fas fa-file-alt mr-2 text-gray-400"></i><span>Nenhum arquivo selecionado</span>');
+        $('#fakeInput').removeClass('bg-white cursor-default').addClass('bg-gray-50 cursor-not-allowed');
+
+        // Restaura o botão
+        $('#uploadBtn').html('<i class="fas fa-folder-open mr-2"></i><span>Escolher</span>');
+    });
 
     // ===== PESQUISA =====
 

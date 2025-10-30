@@ -54,20 +54,20 @@ def send_notification(user_id, title, message, notification_type=NotificationTyp
         db.refresh(notification)
 
         # Enviar notificação em tempo real via Socket.IO
+        # A notificação é adicionada a uma fila thread-safe que é processada
+        # por um worker eventlet em background, garantindo entrega em tempo real
         try:
-            from main import socketio
-            from app.socketio_events import send_notification_to_user
-            send_notification_to_user(socketio, user_id, notification)
-        except Exception as e:
-            # Se falhar o envio em tempo real, apenas registrar o erro
-            # A notificação já está salva no banco
-            print(f"[WARNING] Erro ao enviar notificação em tempo real: {str(e)}")
+            from app.services.notification_queue_service import add_notification
+            notification_data = notification.to_dict()
+            add_notification(notification_data)
+        except Exception:
+            # Falha silenciosa - notificação já está salva no banco
+            pass
 
         return notification
 
     except Exception as e:
         db.rollback()
-        print(f"[ERROR] Erro ao criar notificação: {str(e)}")
         raise e
 
 

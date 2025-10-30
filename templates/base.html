@@ -48,6 +48,11 @@
             animation: slideOutRight 0.3s ease-in forwards;
         }
 
+        .animate-slide-in {
+            animation: slideInRight 0.4s ease-out;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
         .toast-notification {
             transition: all 0.3s ease;
         }
@@ -74,7 +79,7 @@
                     <div class="relative" id="notificationsDropdown">
                         <button onclick="toggleNotificationsDropdown()" class="relative w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-xl transition-all">
                             <i class="far fa-bell text-lg"></i>
-                            <span id="notificationBadge" class="hidden absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1"></span>
+                            <span id="notificationBadge" class="{% if unread_notifications_count == 0 %}hidden {% endif %}absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">{{ unread_notifications_count if unread_notifications_count > 0 }}</span>
                         </button>
 
                         <!-- Dropdown Menu -->
@@ -169,10 +174,14 @@
 
         // Inicializar Socket.IO
         function initSocket() {
-            socket = io();
+            console.log('[SOCKET] Iniciando conexão Socket.IO...');
+            socket = io({
+                transports: ['websocket', 'polling']
+            });
 
             socket.on('connect', function() {
                 console.log('[SOCKET] Conectado ao servidor');
+                console.log('[SOCKET] ID da conexão:', socket.id);
                 loadNotifications();
             });
 
@@ -180,32 +189,32 @@
                 console.log('[SOCKET] Desconectado do servidor');
             });
 
+            socket.on('connect_error', function(error) {
+                console.error('[SOCKET] Erro de conexão:', error);
+            });
+
             socket.on('new_notification', function(notification) {
-                console.log('[SOCKET] Nova notificação recebida', notification);
                 notificationsData.unshift(notification);
                 updateNotificationsUI();
-                showNotificationToast(notification);
+                showToast('Você recebeu uma nova notificação', 'info', 'Nova Notificação');
+
+                const unreadCount = notificationsData.filter(n => !n.is_read).length;
+                updateBadge(unreadCount);
             });
 
             socket.on('notifications_update', function(data) {
-                console.log('[SOCKET] Notificações atualizadas', data);
                 notificationsData = data.notifications;
                 updateNotificationsUI();
                 updateBadge(data.unread_count);
             });
 
             socket.on('notification_marked_read', function(data) {
-                console.log('[SOCKET] Notificação marcada como lida', data);
                 const notification = notificationsData.find(n => n.id === data.notification_id);
                 if (notification) {
                     notification.is_read = true;
                 }
                 updateNotificationsUI();
                 updateBadge(data.unread_count);
-            });
-
-            socket.on('error', function(error) {
-                console.error('[SOCKET] Erro:', error);
             });
         }
 
@@ -345,12 +354,6 @@
             .catch(error => console.error('Erro ao marcar todas como lidas:', error));
         }
 
-        // Mostrar toast de nova notificação
-        function showNotificationToast(notification) {
-            // Você pode implementar um toast notification aqui
-            console.log('[TOAST] Nova notificação:', notification.title);
-        }
-
         // Toggle dropdown de notificações
         function toggleNotificationsDropdown() {
             const menu = document.getElementById('notificationsDropdownMenu');
@@ -385,6 +388,15 @@
         // Inicializar quando o DOM estiver pronto
         document.addEventListener('DOMContentLoaded', function() {
             initSocket();
+
+            // Inicializar badge imediatamente com valor do servidor
+            const initialBadge = document.getElementById('notificationBadge');
+            if (initialBadge && initialBadge.textContent) {
+                const count = parseInt(initialBadge.textContent);
+                if (!isNaN(count) && count > 0) {
+                    updateBadge(count);
+                }
+            }
         });
 
         // ===== SISTEMA DE TOAST =====
@@ -395,48 +407,59 @@
             const config = {
                 'success': {
                     title: title || 'Sucesso',
-                    borderColor: 'border-green-500'
+                    borderColor: 'border-green-500',
+                    iconColor: 'text-green-500'
                 },
                 'error': {
                     title: title || 'Erro',
-                    borderColor: 'border-red-500'
+                    borderColor: 'border-red-500',
+                    iconColor: 'text-red-500'
                 },
                 'warning': {
                     title: title || 'Atenção',
-                    borderColor: 'border-yellow-500'
+                    borderColor: 'border-yellow-500',
+                    iconColor: 'text-yellow-500'
                 },
                 'info': {
                     title: title || 'Informação',
-                    borderColor: 'border-blue-500'
+                    borderColor: 'border-blue-500',
+                    iconColor: 'text-blue-500'
                 }
             };
 
             const toastConfig = config[type] || config['info'];
 
-            // Criar elemento do toast
+            // Criar elemento do toast (mesmo layout do toast de notificação)
             const toast = document.createElement('div');
-            toast.className = `toast-notification bg-white shadow-2xl border-l-4 ${toastConfig.borderColor} overflow-hidden min-w-[320px] max-w-[400px] animate-slide-in-right`;
+            toast.className = `toast-notification bg-white shadow-2xl rounded-lg border-l-4 ${toastConfig.borderColor} overflow-hidden min-w-[320px] max-w-[400px] animate-slide-in-right`;
 
             toast.innerHTML = `
-                <!-- Header -->
-                <div class="flex items-center justify-between px-4 py-1 border-b border-gray-100">
-                    <h4 class="text-sm font-bold text-gray-900">${toastConfig.title}</h4>
-                    <button onclick="closeToast(this)" class="text-gray-400 hover:text-gray-600 transition-colors">
-                        <i class="fas fa-times text-sm"></i>
-                    </button>
-                </div>
-                <!-- Content -->
-                <div class="px-4 py-3">
-                    <p class="text-sm text-gray-600">${message}</p>
+                <div class="p-4">
+                    <div class="flex items-start gap-3">
+                        <div class="flex-shrink-0">
+                            <svg class="w-6 h-6 ${toastConfig.iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-gray-900">${toastConfig.title}</p>
+                            <p class="text-xs text-gray-600 mt-1">${message}</p>
+                        </div>
+                        <button onclick="closeToast(this)" class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             `;
 
             container.appendChild(toast);
 
-            // Auto-fechar após 5 segundos
+            // Auto-fechar após 10 segundos
             setTimeout(() => {
                 closeToast(toast.querySelector('button'));
-            }, 5000);
+            }, 10000);
         }
 
         function closeToast(button) {

@@ -1,3 +1,6 @@
+import eventlet
+eventlet.monkey_patch()
+
 import sys
 import argparse
 import json
@@ -23,7 +26,13 @@ app.config['DEBUG'] = DEBUG
 app.config['APP_NAME'] = os.getenv('APP_NAME', 'Financeiro')
 
 # Inicializar SocketIO
-socketio = SocketIO(app, cors_allowed_origins="*", logger=False, engineio_logger=False)
+socketio = SocketIO(
+    app,
+    cors_allowed_origins="*",
+    async_mode='eventlet',
+    logger=False,
+    engineio_logger=False
+)
 
 # Adicionar filtros Jinja customizados
 @app.template_filter('from_json')
@@ -111,6 +120,41 @@ if __name__ == '__main__':
             from app.services.scheduler_service import init_scheduler
             init_scheduler(app)
             logger.info("Scheduler de tarefas inicializado")
+
+        # Worker que processa fila de notificações em tempo real
+        # Utiliza eventlet para não bloquear o servidor
+        def notification_worker():
+            import eventlet
+            from app.services.notification_queue_service import get_queue
+
+            notification_queue = get_queue()
+
+            while True:
+                try:
+                    # Verificar fila a cada 100ms
+                    eventlet.sleep(0.1)
+
+                    # Processar todas as notificações pendentes
+                    while not notification_queue.empty():
+                        notif_data = notification_queue.get_nowait()
+                        user_id = notif_data.get('user_id')
+
+                        if user_id:
+                            # Emitir notificação para a room específica do usuário
+                            # Rooms são gerenciadas automaticamente pelo Flask-SocketIO
+                            socketio.emit(
+                                'new_notification',
+                                notif_data,
+                                room=f'user_{user_id}',
+                                namespace='/'
+                            )
+                except queue.Empty:
+                    continue
+                except Exception:
+                    continue
+
+        # Iniciar worker em background
+        socketio.start_background_task(notification_worker)
 
         # Mostrar mensagem apenas no processo principal (evitar duplicação no reloader)
         import os

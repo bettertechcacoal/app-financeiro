@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 from flask_socketio import emit, join_room, leave_room
-from flask import session
+from flask import session, request
+
 from app.models.notification import Notification
 from app.models.database import get_db
+
+# Dicionário para mapear user_id -> socket_id
+user_sockets = {}
 
 
 def register_socketio_events(socketio):
@@ -13,11 +17,12 @@ def register_socketio_events(socketio):
         """Quando um cliente se conecta"""
         user_id = session.get('user_id')
         if user_id:
-            # Adicionar o usuário a uma sala específica (room) baseada em seu ID
+            socket_id = request.sid
+            user_sockets[user_id] = socket_id
             join_room(f'user_{user_id}')
             emit('connected', {'message': 'Conectado ao servidor de notificações'})
         else:
-            return False  # Rejeitar conexão não autenticada
+            return False
 
     @socketio.on('disconnect')
     def handle_disconnect():
@@ -25,6 +30,8 @@ def register_socketio_events(socketio):
         user_id = session.get('user_id')
         if user_id:
             leave_room(f'user_{user_id}')
+            if user_id in user_sockets:
+                del user_sockets[user_id]
 
     @socketio.on('request_notifications')
     def handle_request_notifications(data):
@@ -104,10 +111,12 @@ def send_notification_to_user(socketio, user_id, notification):
     Pode ser chamada de qualquer lugar do código
     """
     try:
-        socketio.emit(
-            'new_notification',
-            notification.to_dict(),
-            room=f'user_{user_id}'
-        )
-    except Exception as e:
-        pass  # Silenciar erros de notificação em tempo real
+        if user_id in user_sockets:
+            socketio.emit(
+                'new_notification',
+                notification.to_dict(),
+                room=f'user_{user_id}',
+                namespace='/'
+            )
+    except Exception:
+        pass

@@ -79,6 +79,7 @@ def license_upload_process():
                     )
 
         # Iniciar thread para processar em background
+        import threading
         thread = threading.Thread(target=process_file_async, args=(file_content, user_id))
         thread.daemon = True
         thread.start()
@@ -88,9 +89,6 @@ def license_upload_process():
         return redirect(url_for('admin.licenses_list'))
 
     except Exception as e:
-        import traceback
-        print(f"[ERRO] Erro ao iniciar processamento: {str(e)}")
-        print(traceback.format_exc())
         flash(f'Erro ao processar arquivo: {str(e)}', 'error')
         return redirect(url_for('admin.licenses_list'))
 

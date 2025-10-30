@@ -189,11 +189,26 @@ def inject_user_permissions():
     """
     user = get_current_user()
     if user:
+        # Buscar contagem de notificações não lidas
+        unread_count = 0
+        try:
+            from app.models.database import get_db
+            from app.models.notification import Notification
+            db = get_db()
+            unread_count = db.query(Notification).filter_by(
+                user_id=user.id,
+                is_read=False
+            ).count()
+        except:
+            pass  # Se falhar, continua sem o contador
+
         return {
             'user_permissions': user.get_all_permissions(),
-            'current_user': user
+            'current_user': user,
+            'unread_notifications_count': unread_count
         }
     return {
         'user_permissions': [],
-        'current_user': None
+        'current_user': None,
+        'unread_notifications_count': 0
     }

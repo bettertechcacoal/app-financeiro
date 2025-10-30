@@ -146,6 +146,49 @@ def travels_store():
                     db.add(new_passenger)
 
         db.commit()
+
+        # Enviar notificações sobre nova viagem
+        try:
+            from app.utils.notification_helper import send_notification
+            from app.models.notification import NotificationType
+            from app.models.user import User
+
+            # Coletar IDs únicos de usuários que devem receber notificação
+            notify_user_ids = set()
+
+            # 1. Adicionar solicitante (driver)
+            notify_user_ids.add(new_travel.driver_user_id)
+
+            # 2. Adicionar passageiros
+            if passenger_ids:
+                for passenger_id in passenger_ids:
+                    if passenger_id:
+                        notify_user_ids.add(int(passenger_id))
+
+            # 3. Adicionar usuários com permissão de aprovar viagens
+            users_with_approve_permission = db.query(User).filter_by(active=True).all()
+            for user in users_with_approve_permission:
+                if user.has_permission('travels_approve'):
+                    notify_user_ids.add(user.id)
+
+            # Remover o usuário que criou o registro (para não notificar ele mesmo)
+            current_user_id = session.get('user_id')
+            notify_user_ids.discard(current_user_id)
+
+            # Enviar notificação para cada usuário
+            for user_id in notify_user_ids:
+                send_notification(
+                    user_id=user_id,
+                    title='Nova Viagem Cadastrada',
+                    message=f'Uma nova viagem para {new_travel.city.name} foi cadastrada e aguarda aprovação.',
+                    notification_type=NotificationType.TRAVEL,
+                    action_url=f'/admin/travels/{new_travel.id}/view',
+                    action_text='Ver Viagem'
+                )
+        except Exception as e:
+            # Falha silenciosa - viagem já foi criada
+            print(f"Erro ao enviar notificações: {e}")
+
         db.close()
 
         flash('Viagem cadastrada com sucesso!', 'success')

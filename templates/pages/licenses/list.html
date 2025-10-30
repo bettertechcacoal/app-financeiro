@@ -74,6 +74,25 @@
         padding: 0.5rem;
         font-size: 0.75rem;
     }
+
+    /* Estilo para tabs */
+    .tab-button {
+        color: #6b7280;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .tab-button:hover {
+        color: #ec4899;
+        border-bottom-color: #fce7f3;
+    }
+
+    .tab-button.active {
+        color: #ec4899;
+        border-bottom-color: #ec4899;
+        font-weight: 600;
+    }
 </style>
 {% endblock %}
 
@@ -102,170 +121,186 @@
     <div class="flex flex-col lg:flex-row gap-6">
         <!-- Conteúdo Principal -->
         <div class="flex-1 min-w-0">
-            <!-- Upload de Arquivo -->
-            <div class="card p-6 mb-6 animate-fade-in">
-                <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                    <i class="fas fa-upload text-pink-600 mr-2"></i>
-                    Upload de Arquivo de Licenças
-                </h2>
-
-                <form method="POST" action="{{ url_for('admin.license_upload_process') }}" enctype="multipart/form-data">
-                    <div class="flex gap-4 items-end">
-                        <div class="flex-1">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                Arquivo TXT de Senhas
-                            </label>
-                            <input type="file" name="file" accept=".txt" required
-                                   class="block w-full text-sm text-gray-500
-                                          file:mr-4 file:py-3 file:px-6
-                                          file:rounded-lg file:border-0
-                                          file:text-sm file:font-semibold
-                                          file:bg-pink-50 file:text-pink-700
-                                          hover:file:bg-pink-100
-                                          cursor-pointer border border-gray-300 rounded-lg">
-                        </div>
-                        <button type="submit" class="px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
-                            <i class="fas fa-upload mr-2"></i>
-                            Processar Arquivo
+            <!-- Tabs -->
+            <div class="rounded-xl mb-6 animate-fade-in">
+                <!-- Navegação dos Tabs -->
+                <div class="bg-white border-b border-gray-200 rounded-t-xl shadow-sm">
+                    <nav class="flex -mb-px">
+                        <button type="button" data-tab="list" class="tab-button active flex-1 px-6 py-4 text-sm font-semibold">
+                            <i class="fas fa-list mr-2"></i>Listagem
                         </button>
-                    </div>
-                    <p class="mt-2 text-sm text-gray-500">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        Formato: client_code,module_code,DD/MM/YYYY,password,client_name
-                    </p>
-                </form>
-            </div>
+                        <button type="button" data-tab="upload" class="tab-button flex-1 px-6 py-4 text-sm font-semibold">
+                            <i class="fas fa-upload mr-2"></i>Envio
+                        </button>
+                    </nav>
+                </div>
 
-            {% if clients %}
-                <!-- Barra de Pesquisa e Ações em Massa -->
-                <div class="card p-6 mb-6 animate-fade-in">
-                    <div class="flex flex-col gap-4">
-                        <!-- Linha 1: Pesquisa -->
-                        <div class="flex items-center gap-4">
+                <!-- Conteúdo do Tab Upload -->
+                <div id="tab-upload" class="tab-content hidden bg-white p-6 mb-6">
+                    <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-upload text-pink-600 mr-2"></i>
+                        Upload de Arquivo de Licenças
+                    </h2>
+
+                    <form method="POST" action="{{ url_for('admin.license_upload_process') }}" enctype="multipart/form-data">
+                        <div class="flex gap-4 items-end">
                             <div class="flex-1">
-                                <div class="relative">
-                                    <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                                    <input type="text" id="searchInput" placeholder="Pesquisar por cliente ou código..."
-                                           class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all">
-                                </div>
-                            </div>
-                            <button onclick="clearSearch()" class="px-6 py-3 text-gray-600 hover:text-gray-800 font-semibold">
-                                <i class="fas fa-times mr-2"></i>
-                                Limpar
-                            </button>
-                        </div>
-
-                        <!-- Linha 2: Ações em Massa -->
-                        <div class="flex items-center justify-between gap-4 pt-4 border-t border-gray-200">
-                            <div class="flex items-center gap-3">
-                                <label class="flex items-center cursor-pointer">
-                                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="w-5 h-5 text-pink-600 rounded border-gray-300 focus:ring-pink-500">
-                                    <span class="ml-2 text-sm font-semibold text-gray-700">Selecionar Todos</span>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Arquivo TXT de Senhas
                                 </label>
-                                <span class="text-sm text-gray-600">|</span>
-                                <span class="text-sm text-gray-600">
-                                    <span id="selectedCount" class="font-bold text-pink-600">0</span> selecionado(s)
-                                </span>
+                                <input type="file" name="file" accept=".txt" required
+                                       class="block w-full text-sm text-gray-500
+                                              file:mr-4 file:py-3 file:px-6
+                                              file:rounded-lg file:border-0
+                                              file:text-sm file:font-semibold
+                                              file:bg-pink-50 file:text-pink-700
+                                              hover:file:bg-pink-100
+                                              cursor-pointer border border-gray-300 rounded-lg">
                             </div>
-                            <button onclick="openBulkGenerateModal()" id="bulkGenerateBtn" disabled
-                                    class="px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-                                <i class="fas fa-download mr-2"></i>
-                                Gerar TXT em Massa
+                            <button type="submit" class="px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
+                                <i class="fas fa-upload mr-2"></i>
+                                Processar Arquivo
                             </button>
                         </div>
-                    </div>
+                        <p class="mt-2 text-sm text-gray-500">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Formato: client_code,module_code,DD/MM/YYYY,password,client_name
+                        </p>
+                    </form>
                 </div>
 
-                <!-- Lista de Clientes em Cards -->
-                <div class="space-y-3 animate-fade-in">
-                    {% for client in clients %}
-                    <div class="card client-row"
-                         data-search="{{ client.name|lower }} {{ client.code|lower }}"
-                         data-client-code="{{ client.code }}"
-                         data-client-name="{{ client.name }}">
+                <!-- Conteúdo do Tab Listagem -->
+                <div id="tab-list" class="tab-content">
+                    {% if clients %}
+                        <!-- Barra de Pesquisa e Ações em Massa -->
+                        <div class="bg-white p-6 mb-6 border-b border-gray-200 shadow-sm">
+                            <div class="flex flex-col gap-4">
+                                <!-- Linha 1: Pesquisa -->
+                                <div class="flex items-center gap-4">
+                                    <div class="flex-1">
+                                        <div class="relative">
+                                            <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                            <input type="text" id="searchInput" placeholder="Pesquisar por cliente ou código..."
+                                                   class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all">
+                                        </div>
+                                    </div>
+                                    <button onclick="clearSearch()" class="px-6 py-3 text-gray-600 hover:text-gray-800 font-semibold">
+                                        <i class="fas fa-times mr-2"></i>
+                                        Limpar
+                                    </button>
+                                </div>
 
-                        <!-- Header do Card -->
-                        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-3">
-                            <input type="checkbox" class="client-checkbox w-5 h-5 text-pink-600 rounded border-gray-300 focus:ring-pink-500 cursor-pointer"
-                                   data-client-code="{{ client.code }}"
-                                   data-client-name="{{ client.name }}"
-                                   onchange="updateSelectedCount()">
-                            <div class="w-8 h-8 bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg flex items-center justify-center text-white flex-shrink-0">
-                                <i class="fas fa-building text-sm"></i>
-                            </div>
-                            <div class="flex items-center text-xs text-gray-600">
-                                <span class="font-medium">Código: {{ client.code }}</span>
+                                <!-- Linha 2: Ações em Massa -->
+                                <div class="flex items-center justify-between gap-4 pt-4 border-t border-gray-200">
+                                    <div class="flex items-center gap-3">
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="w-5 h-5 text-pink-600 rounded border-gray-300 focus:ring-pink-500">
+                                            <span class="ml-2 text-sm font-semibold text-gray-700">Selecionar Todos</span>
+                                        </label>
+                                        <span class="text-sm text-gray-600">|</span>
+                                        <span class="text-sm text-gray-600">
+                                            <span id="selectedCount" class="font-bold text-pink-600">0</span> selecionado(s)
+                                        </span>
+                                    </div>
+                                    <button onclick="openBulkGenerateModal()" id="bulkGenerateBtn" disabled
+                                            class="px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fas fa-download mr-2"></i>
+                                        Gerar TXT em Massa
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Corpo do Card -->
-                        <div class="px-4 py-3">
-                            <div class="mb-3">
-                                <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
-                                    <div class="flex-1 min-w-0">
-                                        <h3 class="text-sm font-semibold text-gray-900 leading-snug mb-1">
-                                            {{ client.name }}
-                                        </h3>
-                                        <p class="text-xs text-gray-700 font-medium">
-                                            Código: {{ client.code }}
-                                        </p>
-                                    </div>
+                        <!-- Lista de Clientes em Cards -->
+                        <div class="space-y-3">
+                            {% for client in clients %}
+                            <div class="bg-white shadow-sm border border-gray-200 border-b-0 first:rounded-t-xl last:rounded-b-xl last:border-b client-row"
+                                 data-search="{{ client.name|lower }} {{ client.code|lower }}"
+                                 data-client-code="{{ client.code }}"
+                                 data-client-name="{{ client.name }}">
 
-                                    <!-- Botões de Ação -->
-                                    <div class="flex flex-wrap gap-2 lg:flex-shrink-0">
-                                        <button onclick="openPdfModal('{{ client.code }}', '{{ client.name }}')"
-                                               class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
-                                            <i class="fas fa-file-pdf mr-1.5"></i>
-                                            Visualizar PDF
-                                        </button>
-                                        <button onclick="openGenerateModal('{{ client.code }}', '{{ client.name }}')"
-                                               class="inline-flex items-center px-3 py-2 bg-pink-600 hover:bg-pink-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
-                                            <i class="fas fa-download mr-1.5"></i>
-                                            Gerar TXT
-                                        </button>
+                                <!-- Header do Card -->
+                                <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center gap-3">
+                                    <input type="checkbox" class="client-checkbox w-5 h-5 text-pink-600 rounded border-gray-300 focus:ring-pink-500 cursor-pointer"
+                                           data-client-code="{{ client.code }}"
+                                           data-client-name="{{ client.name }}"
+                                           onchange="updateSelectedCount()">
+                                    <div class="w-8 h-8 bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg flex items-center justify-center text-white flex-shrink-0">
+                                        <i class="fas fa-building text-sm"></i>
+                                    </div>
+                                    <div class="flex items-center text-xs text-gray-600">
+                                        <span class="font-medium">Código: {{ client.code }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Corpo do Card -->
+                                <div class="bg-white px-4 py-3">
+                                    <div class="mb-3">
+                                        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+                                            <div class="flex-1 min-w-0">
+                                                <h3 class="text-sm font-semibold text-gray-900 leading-snug mb-1">
+                                                    {{ client.name }}
+                                                </h3>
+                                                <p class="text-xs text-gray-700 font-medium">
+                                                    Código: {{ client.code }}
+                                                </p>
+                                            </div>
+
+                                            <!-- Botões de Ação -->
+                                            <div class="flex flex-wrap gap-2 lg:flex-shrink-0">
+                                                <button onclick="openPdfModal('{{ client.code }}', '{{ client.name }}')"
+                                                       class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
+                                                    <i class="fas fa-file-pdf mr-1.5"></i>
+                                                    Visualizar PDF
+                                                </button>
+                                                <button onclick="openGenerateModal('{{ client.code }}', '{{ client.name }}')"
+                                                       class="inline-flex items-center px-3 py-2 bg-pink-600 hover:bg-pink-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
+                                                    <i class="fas fa-download mr-1.5"></i>
+                                                    Gerar TXT
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+
+                            <!-- Rodapé da Lista -->
+                            <div class="bg-white shadow-sm border border-gray-200 rounded-xl px-4 py-3 mt-3">
+                                <div class="bg-gray-50 flex items-center justify-between text-xs sm:text-sm px-4 py-3 rounded-lg">
+                                    <div class="text-gray-600">
+                                        Total: <span class="font-bold text-gray-900" id="totalCount">{{ clients|length }}</span> cliente{% if clients|length != 1 %}s{% endif %}
+                                    </div>
+                                    <div class="text-gray-600">
+                                        Mostrando: <span class="font-bold text-gray-900" id="visibleCount">{{ clients|length }}</span> registro{% if clients|length != 1 %}s{% endif %}
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    {% endfor %}
-
-                    <!-- Rodapé da Lista -->
-                    <div class="card px-4 py-3 bg-gray-50">
-                        <div class="flex items-center justify-between text-xs sm:text-sm">
-                            <div class="text-gray-600">
-                                Total: <span class="font-bold text-gray-900" id="totalCount">{{ clients|length }}</span> cliente{% if clients|length != 1 %}s{% endif %}
+                    {% else %}
+                        <div class="text-center py-16">
+                            <div class="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                                <i class="fas fa-key text-4xl text-gray-400"></i>
                             </div>
-                            <div class="text-gray-600">
-                                Mostrando: <span class="font-bold text-gray-900" id="visibleCount">{{ clients|length }}</span> registro{% if clients|length != 1 %}s{% endif %}
-                            </div>
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">Nenhuma licença cadastrada</h3>
+                            <p class="text-gray-600">Faça upload de um arquivo TXT para começar</p>
                         </div>
-                    </div>
+                    {% endif %}
                 </div>
-            {% else %}
-                <div class="card animate-fade-in">
-                    <div class="text-center py-16">
-                        <div class="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                            <i class="fas fa-key text-4xl text-gray-400"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-2">Nenhuma licença cadastrada</h3>
-                        <p class="text-gray-600">Faça upload de um arquivo TXT para começar</p>
-                    </div>
-                </div>
-            {% endif %}
+            </div>
         </div>
 
         <!-- Sidebar de Métricas -->
         <div class="w-full lg:w-80 flex-shrink-0">
             <div class="sticky top-6 space-y-4 animate-fade-in">
                 <!-- Total de Clientes -->
-                <div class="card p-4">
+                <div class="bg-white rounded-xl shadow-sm p-4">
                     <div class="text-sm text-gray-600 mb-1">Total de Clientes</div>
                     <div class="text-2xl font-bold text-pink-600">{{ clients|length }}</div>
                 </div>
 
                 <!-- Última Atualização -->
-                <div class="card p-4">
+                <div class="bg-white rounded-xl shadow-sm p-4">
                     <div class="text-sm text-gray-600 mb-1">Última Atualização</div>
                     <div class="text-lg font-bold text-gray-900">
                         {% if dates %}
@@ -445,40 +480,52 @@
 </div>
 
 <script>
-    // Função de pesquisa
-    const searchInput = document.getElementById('searchInput');
-    const clientRows = document.querySelectorAll('.client-row');
-    const visibleCountEl = document.getElementById('visibleCount');
+$(document).ready(function() {
+    // ===== CONTROLE DE TABS =====
 
-    if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            let visibleCount = 0;
+    $('.tab-button').on('click', function() {
+        const tabName = $(this).data('tab');
 
-            clientRows.forEach(row => {
-                const searchData = row.getAttribute('data-search');
+        // Remove active de todos os botões
+        $('.tab-button').removeClass('active');
 
-                if (searchData.includes(searchTerm)) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
+        // Adiciona active no botão clicado
+        $(this).addClass('active');
 
-            if (visibleCountEl) {
-                visibleCountEl.textContent = visibleCount;
+        // Esconde todos os conteúdos
+        $('.tab-content').hide();
+
+        // Mostra o conteúdo do tab selecionado
+        $('#tab-' + tabName).show();
+    });
+
+    // Mostra o tab de listagem por padrão
+    $('#tab-list').show();
+
+    // ===== PESQUISA =====
+
+    $('#searchInput').on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        let visibleCount = 0;
+
+        $('.client-row').each(function() {
+            const searchData = $(this).data('search');
+
+            if (searchData.includes(searchTerm)) {
+                $(this).show();
+                visibleCount++;
+            } else {
+                $(this).hide();
             }
         });
-    }
 
-    function clearSearch() {
-        if (searchInput) {
-            searchInput.value = '';
-            searchInput.dispatchEvent(new Event('input'));
-            searchInput.focus();
-        }
-    }
+        $('#visibleCount').text(visibleCount);
+    });
+});
+
+function clearSearch() {
+    $('#searchInput').val('').trigger('input').focus();
+}
 
     // Funções do Modal
     let availableDates = [];

@@ -150,7 +150,6 @@ def register_routes(app: Flask):
 
     # Rotas de Licenças
     admin_bp.add_url_rule('/licenses', view_func=licenses_controller.licenses_list, methods=['GET'])
-    admin_bp.add_url_rule('/licenses/upload', view_func=licenses_controller.license_upload, methods=['GET'])
     admin_bp.add_url_rule('/licenses/upload/process', view_func=licenses_controller.license_upload_process, methods=['POST'])
     admin_bp.add_url_rule('/licenses/generate', view_func=licenses_controller.license_generate, methods=['GET'])
     admin_bp.add_url_rule('/licenses/generate-bulk', view_func=licenses_controller.license_generate_bulk, methods=['GET'])

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-from flask import render_template, request, redirect, url_for, flash, jsonify, make_response
+from flask import render_template, request, redirect, url_for, flash, jsonify, make_response, session
 from app.services.license_service import license_service
 from datetime import datetime
+import threading
 
 
 def licenses_list():
@@ -19,13 +20,8 @@ def licenses_list():
     )
 
 
-def license_upload():
-    """Página de upload de arquivos TXT"""
-    return render_template('pages/licenses/upload.html')
-
-
 def license_upload_process():
-    """Processa upload de arquivo TXT"""
+    """Processa upload de arquivo TXT de forma assíncrona"""
     try:
         if 'file' not in request.files:
             flash('Nenhum arquivo foi enviado', 'error')
@@ -45,15 +41,55 @@ def license_upload_process():
             file.seek(0)
             file_content = file.read().decode('latin-1')
 
-        # Processar e salvar
-        saved_count, dates_count = license_service.process_and_save_file(file_content)
+        # Pegar user_id da sessão
+        user_id = session.get('user_id')
 
-        flash(f'{saved_count} licenças processadas com sucesso! ({dates_count} data(s) diferentes)', 'success')
+        # Função que será executada em background
+        def process_file_async(file_content, user_id):
+            try:
+                saved_count, dates_count = license_service.process_and_save_file(file_content)
+
+                # Enviar notificação de sucesso
+                if user_id:
+                    from app.utils.notification_helper import send_notification
+                    from app.models.notification import NotificationType
+                    send_notification(
+                        user_id=user_id,
+                        title='Upload de Licenças Concluído',
+                        message=f'{saved_count} licenças processadas com sucesso! ({dates_count} data(s) diferentes)',
+                        notification_type=NotificationType.SUCCESS,
+                        action_url='/admin/licenses',
+                        action_text='Ver Licenças'
+                    )
+
+            except Exception as e:
+                import traceback
+                print(f"[ERRO] Erro ao processar arquivo: {str(e)}")
+                print(traceback.format_exc())
+
+                # Enviar notificação de erro
+                if user_id:
+                    from app.utils.notification_helper import send_notification
+                    from app.models.notification import NotificationType
+                    send_notification(
+                        user_id=user_id,
+                        title='Erro no Upload de Licenças',
+                        message=f'Erro ao processar arquivo: {str(e)}',
+                        notification_type=NotificationType.ERROR
+                    )
+
+        # Iniciar thread para processar em background
+        thread = threading.Thread(target=process_file_async, args=(file_content, user_id))
+        thread.daemon = True
+        thread.start()
+
+        # Retornar com flash message e voltar para lista
+        flash('Arquivo enviado! O processamento está sendo executado em segundo plano. Você receberá uma notificação quando terminar.', 'info')
         return redirect(url_for('admin.licenses_list'))
 
     except Exception as e:
         import traceback
-        print(f"[ERRO] Erro ao processar arquivo: {str(e)}")
+        print(f"[ERRO] Erro ao iniciar processamento: {str(e)}")
         print(traceback.format_exc())
         flash(f'Erro ao processar arquivo: {str(e)}', 'error')
         return redirect(url_for('admin.licenses_list'))

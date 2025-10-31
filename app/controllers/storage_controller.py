@@ -250,11 +250,6 @@ def upload_file():
             'Authorization': f'Bearer {storage_api_key}'
         }
 
-        # Log para debug (remover em produção)
-        print(f"[UPLOAD] Enviando arquivo: {file.filename}")
-        print(f"[UPLOAD] URL: {storage_url}/buckets/{storage_bucket}/files")
-        print(f"[UPLOAD] Data: {data}")
-
         # Fazer upload para o storage service
         response = requests.post(
             f'{storage_url}/buckets/{storage_bucket}/files',
@@ -263,10 +258,6 @@ def upload_file():
             headers=headers,
             timeout=timeout
         )
-
-        # Log da resposta
-        print(f"[UPLOAD] Status: {response.status_code}")
-        print(f"[UPLOAD] Response: {response.text[:500]}")
 
         # Verificar resposta
         if response.status_code == 201:

@@ -81,6 +81,7 @@ def register_routes(app: Flask):
 
     # Rotas de Integrações
     admin_bp.add_url_rule('/integrations', view_func=integrations_controller.integrations_list, methods=['GET'])
+    admin_bp.add_url_rule('/integrations/whatsapp', view_func=integrations_controller.whatsapp_options, methods=['GET'])
     admin_bp.add_url_rule('/integrations/movidesk', view_func=integrations_controller.movidesk_options, methods=['GET'])
     admin_bp.add_url_rule('/integrations/movidesk/tickets', view_func=integrations_controller.movidesk_tickets, methods=['GET'])
     admin_bp.add_url_rule('/integrations/movidesk/tickets/sync', view_func=integrations_controller.movidesk_sync_tickets, methods=['POST'])

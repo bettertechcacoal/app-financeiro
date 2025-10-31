@@ -249,12 +249,6 @@ def save_accountability(payout_id):
         statement_content = data.get('statement_content', {})
         status = data.get('status', 'draft')  # Status padrão é 'draft'
 
-        # Debug: imprimir dados recebidos
-        print(f"=== DEBUG SAVE ACCOUNTABILITY ===")
-        print(f"Payout ID: {payout_id}")
-        print(f"Status: {status}")
-        print(f"Statement Content Recebido: {json.dumps(statement_content, indent=2)}")
-
         # Validar status e converter para enum
         status_map = {
             'draft': StatementStatus.DRAFT,
@@ -365,7 +359,8 @@ def financial_accountability_report_pdf(payout_id):
             rightMargin=2.5*cm,
             leftMargin=2.5*cm,
             topMargin=0.8*cm,
-            bottomMargin=2*cm
+            bottomMargin=2*cm,
+            title='Relatório'
         )
 
         # Estilos
@@ -434,10 +429,11 @@ def financial_accountability_report_pdf(payout_id):
         story.append(Spacer(1, 0.5*cm))
 
         # Calcular valores a devolver e receber
-        total_food_calc = statement_data.get('food', {}).get('amount', 0)
-        total_vehicle_calc = statement_data.get('vehicle', {}).get('amount', 0)
-        total_lodging_calc = statement_data.get('lodging', {}).get('amount', 0)
-        total_other_calc = statement_data.get('other', {}).get('amount', 0)
+        from decimal import Decimal
+        total_food_calc = Decimal(str(statement_data.get('food', {}).get('amount', 0)))
+        total_vehicle_calc = Decimal(str(statement_data.get('vehicle', {}).get('amount', 0)))
+        total_lodging_calc = Decimal(str(statement_data.get('lodging', {}).get('amount', 0)))
+        total_other_calc = Decimal(str(statement_data.get('other', {}).get('amount', 0)))
         total_general_calc = total_food_calc + total_vehicle_calc + total_lodging_calc + total_other_calc
         saldo_calc = payout.amount - total_general_calc
 
@@ -451,12 +447,12 @@ def financial_accountability_report_pdf(payout_id):
             valor_devolver = 0
             valor_receber = 0
 
-        # Tabela de Informações do Colaborador (Nº, Nome, Valores a Devolver e Receber) - NO TOPO
+        # Tabela de Informações do Colaborador (Nº, Nome, Saldo Devedor e Saldo Reembolso) - NO TOPO
         member_info_data = [
             ['Nº:', str(payout.member.id).zfill(5) if payout.member else 'N/A'],  # Linha 1: Nº e valor (5 dígitos)
             ['Nome:', payout.member.name if payout.member else 'N/A'],   # Linha 2: Nome e valor
-            ['Valores a Devolver:', f"R$ {valor_devolver:.2f}".replace('.', ','),
-             'Valores a Receber:', f"R$ {valor_receber:.2f}".replace('.', ',')]  # Linha 3: 4 colunas
+            ['Saldo Devedor:', f"R$ {valor_devolver:.2f}".replace('.', ','),
+             'Saldo Reembolso:', f"R$ {valor_receber:.2f}".replace('.', ',')]  # Linha 3: 4 colunas
         ]
 
         member_table = Table(member_info_data, colWidths=[4*cm, 4*cm, 4*cm, 4*cm])
@@ -702,10 +698,10 @@ def financial_accountability_report_pdf(payout_id):
         story.append(Spacer(1, 0.5*cm))
         story.append(Paragraph("<b>RESUMO FINANCEIRO</b>", style_section))
 
-        total_food = statement_data.get('food', {}).get('amount', 0)
-        total_vehicle = statement_data.get('vehicle', {}).get('amount', 0)
-        total_lodging = statement_data.get('lodging', {}).get('amount', 0)
-        total_other = statement_data.get('other', {}).get('amount', 0)
+        total_food = Decimal(str(statement_data.get('food', {}).get('amount', 0)))
+        total_vehicle = Decimal(str(statement_data.get('vehicle', {}).get('amount', 0)))
+        total_lodging = Decimal(str(statement_data.get('lodging', {}).get('amount', 0)))
+        total_other = Decimal(str(statement_data.get('other', {}).get('amount', 0)))
         total_general = total_food + total_vehicle + total_lodging + total_other
         saldo = payout.amount - total_general
 

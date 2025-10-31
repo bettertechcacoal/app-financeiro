@@ -20,7 +20,7 @@
     <!-- Lista de Integrações -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for integration in integrations %}
-        <a href="{{ url_for('admin.movidesk_options') }}" class="block">
+        <a href="{% if integration.id == 'movidesk' %}{{ url_for('admin.movidesk_options') }}{% elif integration.id == 'whatsapp' %}{{ url_for('admin.whatsapp_options') }}{% else %}#{% endif %}" class="block">
             <div class="card p-6 hover:shadow-xl transition-all cursor-pointer animate-fade-in">
                 <div class="flex items-start justify-between mb-4">
                     <div class="w-14 h-14 bg-gradient-to-br from-{{ integration.color }}-500 to-{{ integration.color }}-600 rounded-2xl flex items-center justify-center shadow-lg">

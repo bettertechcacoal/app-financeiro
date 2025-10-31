@@ -1,0 +1,690 @@
+{% extends "base.html" %}
+{% from "components/breadcrumbs.html" import render as breadcrumbs %}
+
+{% block title %}WhatsApp - Integração{% endblock %}
+
+{% block breadcrumbs %}
+{{ breadcrumbs([
+    {'name': 'Integrações', 'url': url_for('admin.integrations_list')},
+    {'name': 'WhatsApp'}
+]) }}
+{% endblock %}
+
+{% block content %}
+<div class="py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex items-center mb-4">
+            <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg mr-4">
+                <i class="fab fa-whatsapp text-white text-3xl"></i>
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">WhatsApp</h1>
+                <p class="text-gray-600">Integração com WhatsApp via Evolution API</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layout com Sidebar -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Conteúdo Principal - Instâncias -->
+        <div class="lg:col-span-8">
+            <div class="card p-6 animate-fade-in">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-gray-900">
+                        <i class="fas fa-mobile-alt text-gray-600 mr-2"></i>
+                        Instâncias WhatsApp
+                    </h2>
+                    <button onclick="showCreateInstanceInfo()" id="createInstanceButton" class="inline-flex items-center px-8 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all shadow-md hover:shadow-lg">
+                        <i class="fas fa-plus mr-2"></i>
+                        Nova Instância
+                    </button>
+                </div>
+
+                <!-- Lista de Instâncias (vazia por enquanto) -->
+                <div id="instances-list" class="text-center py-12">
+                    <i class="fas fa-mobile-alt text-gray-300 text-5xl mb-4"></i>
+                    <p class="text-gray-500 mb-2">Nenhuma instância configurada</p>
+                    <p class="text-sm text-gray-400">Clique em "Nova Instância" para começar</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Direita -->
+        <div class="lg:col-span-4 space-y-6">
+            <!-- Status da API -->
+            <div class="card p-5 animate-fade-in">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-semibold text-gray-700">Status da API</h3>
+                    <span id="api-status" class="badge bg-gray-100 text-gray-700 text-xs">
+                        <i class="fas fa-circle mr-1"></i>
+                        Verificando...
+                    </span>
+                </div>
+                <p class="text-xs text-gray-500">Evolution API</p>
+                <p class="text-sm font-mono text-gray-600 mt-2">localhost:8080</p>
+            </div>
+
+            <!-- Configurações -->
+            <div class="card p-5 animate-fade-in">
+                <h3 class="text-sm font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-cog text-gray-600 mr-2"></i>
+                    Configurações
+                </h3>
+
+                <!-- URL da API -->
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-gray-700 mb-2">
+                        URL DA API
+                    </label>
+                    <div class="flex items-center">
+                        <input type="text"
+                               value="http://localhost:8080"
+                               class="form-input text-xs font-mono flex-1"
+                               readonly>
+                        <button type="button" class="btn-outline ml-2 py-2 px-2" onclick="copyToClipboard('http://localhost:8080')">
+                            <i class="fas fa-copy text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- API Key -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-2">
+                        API KEY
+                    </label>
+                    <div class="flex items-center">
+                        <input type="password"
+                               id="api-key-input"
+                               value="change-me-to-secure-key"
+                               class="form-input text-xs font-mono flex-1"
+                               readonly>
+                        <button type="button" class="btn-outline ml-2 py-2 px-2" onclick="toggleApiKeyVisibility()">
+                            <i id="eye-icon" class="fas fa-eye text-xs"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Arquivo .env
+                    </p>
+                </div>
+            </div>
+
+            <!-- Links Rápidos -->
+            <div class="card p-5 animate-fade-in">
+                <h3 class="text-sm font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-link text-gray-600 mr-2"></i>
+                    Links Rápidos
+                </h3>
+
+                <div class="space-y-3">
+                    <!-- Documentação -->
+                    <a href="https://doc.evolution-api.com/" target="_blank" class="flex items-center p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors group">
+                        <div class="w-8 h-8 bg-blue-100 group-hover:bg-blue-200 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-book text-blue-600 text-sm"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-gray-900">Documentação</p>
+                            <p class="text-xs text-gray-600">Guia completo</p>
+                        </div>
+                        <i class="fas fa-external-link-alt text-blue-600 text-xs"></i>
+                    </a>
+
+                    <!-- Swagger -->
+                    <a href="http://localhost:8080/docs" target="_blank" class="flex items-center p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors group">
+                        <div class="w-8 h-8 bg-green-100 group-hover:bg-green-200 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-code text-green-600 text-sm"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-gray-900">API Docs</p>
+                            <p class="text-xs text-gray-600">Swagger</p>
+                        </div>
+                        <i class="fas fa-external-link-alt text-green-600 text-xs"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botão Voltar -->
+    <div class="mt-8 animate-fade-in">
+        <a href="{{ url_for('admin.integrations_list') }}" class="text-blue-600 hover:text-blue-700 font-semibold">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Voltar para Integrações
+        </a>
+    </div>
+</div>
+
+<!-- Modal para Enviar Mensagem -->
+<div id="sendMessageModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-lg bg-white">
+        <!-- Header do Modal -->
+        <div class="pb-4 border-b">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-xl font-bold text-gray-900">
+                    <i class="fas fa-paper-plane text-blue-600 mr-2"></i>
+                    Enviar Mensagem
+                </h3>
+                <button onclick="closeSendMessageModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <p class="text-sm text-gray-600">
+                Envie uma mensagem de teste automática para verificar se a instância está funcionando corretamente. A mensagem será enviada via WhatsApp para o número informado.
+            </p>
+        </div>
+
+        <!-- Corpo do Modal -->
+        <div class="mt-6">
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    Número de Telefone
+                </label>
+                <div class="flex gap-3">
+                    <select id="countryCode" class="w-28 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm font-medium">
+                        <option value="55" selected>BR +55</option>
+                        <option value="1">US +1</option>
+                        <option value="351">PT +351</option>
+                        <option value="54">AR +54</option>
+                        <option value="56">CL +56</option>
+                        <option value="57">CO +57</option>
+                        <option value="52">MX +52</option>
+                        <option value="34">ES +34</option>
+                    </select>
+                    <input type="text"
+                           id="phoneNumber"
+                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-mono"
+                           placeholder="69999999999"
+                           maxlength="15"
+                           value="">
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Digite apenas números (ex: 69999999999)</p>
+            </div>
+        </div>
+
+        <!-- Footer do Modal -->
+        <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+            <button onclick="closeSendMessageModal()" class="btn-outline">
+                <i class="fas fa-times mr-2"></i>
+                Cancelar
+            </button>
+            <button onclick="sendTestMessage()" class="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg">
+                <i class="fas fa-paper-plane mr-2"></i>
+                Enviar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Nova Instância -->
+<div id="createInstanceModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-lg bg-white">
+        <!-- Header do Modal -->
+        <div class="flex items-center justify-between pb-4 border-b">
+            <h3 class="text-xl font-bold text-gray-900">
+                <i class="fas fa-mobile-alt text-green-600 mr-2"></i>
+                Nova Instância
+            </h3>
+            <button onclick="closeCreateInstanceModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Corpo do Modal -->
+        <div class="mt-6">
+            <!-- Botão Inicial para Gerar QR Code -->
+            <div id="initialArea" class="text-center py-8">
+                <i class="fas fa-qrcode text-gray-300 text-5xl mb-4"></i>
+                <p class="text-gray-600 mb-6">Clique no botão abaixo para gerar o QR Code</p>
+                <button onclick="startCreateInstance()" class="inline-flex items-center px-8 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all shadow-md hover:shadow-lg">
+                    <i class="fas fa-qrcode mr-2"></i>
+                    Gerar QR Code
+                </button>
+            </div>
+
+            <!-- Área do QR Code -->
+            <div id="qrcodeArea" class="hidden">
+                <div class="bg-gray-50 rounded-lg p-6 text-center">
+                    <h4 class="text-sm font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-qrcode text-green-600 mr-2"></i>
+                        Escaneie o QR Code
+                    </h4>
+
+                    <!-- QR Code Image -->
+                    <div class="flex justify-center mb-4">
+                        <div id="qrcodeImage" class="bg-white p-4 rounded-lg shadow-md">
+                            <img id="qrcode" src="" alt="QR Code" class="w-64 h-64">
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <p class="text-sm text-gray-600">
+                            <i class="fas fa-mobile-alt mr-2"></i>
+                            Abra o WhatsApp no seu celular
+                        </p>
+                        <p class="text-sm text-gray-600">
+                            <i class="fas fa-ellipsis-v mr-2"></i>
+                            Toque em <strong>Mais opções</strong> ou <strong>Configurações</strong>
+                        </p>
+                        <p class="text-sm text-gray-600">
+                            <i class="fas fa-link mr-2"></i>
+                            Selecione <strong>Aparelhos conectados</strong>
+                        </p>
+                        <p class="text-sm text-gray-600">
+                            <i class="fas fa-qrcode mr-2"></i>
+                            Toque em <strong>Conectar um aparelho</strong> e escaneie este QR Code
+                        </p>
+                    </div>
+
+                    <!-- Status -->
+                    <div id="connectionStatus" class="mt-4">
+                        <span class="badge bg-yellow-100 text-yellow-700">
+                            <i class="fas fa-clock mr-1"></i>
+                            Aguardando conexão...
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div id="loadingArea" class="hidden text-center py-8">
+                <i class="fas fa-spinner fa-spin text-4xl text-green-600 mb-4"></i>
+                <p class="text-gray-600">Gerando QR Code...</p>
+            </div>
+
+            <!-- Error -->
+            <div id="errorArea" class="hidden">
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <p class="text-sm text-red-800">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        <span id="errorMessage"></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer do Modal -->
+        <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
+            <button onclick="closeCreateInstanceModal()" class="btn-outline">
+                <i class="fas fa-times mr-2"></i>
+                Fechar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    checkApiStatus();
+    loadInstances();
+
+    // Permitir apenas números no campo de telefone
+    $('#phoneNumber').on('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+});
+
+function checkApiStatus() {
+    $.ajax({
+        url: 'http://localhost:8080',
+        method: 'GET',
+        timeout: 5000,
+        success: function() {
+            $('#api-status').html('<i class="fas fa-circle mr-1 animate-pulse"></i> Online')
+                .removeClass('bg-gray-100 text-gray-700 bg-red-100 text-red-700')
+                .addClass('bg-green-100 text-green-700');
+        },
+        error: function() {
+            $('#api-status').html('<i class="fas fa-circle mr-1"></i> Offline')
+                .removeClass('bg-gray-100 text-gray-700 bg-green-100 text-green-700')
+                .addClass('bg-red-100 text-red-700');
+        }
+    });
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('URL copiada para a área de transferência!', 'success');
+    }).catch(err => {
+        showToast('Erro ao copiar URL', 'error');
+    });
+}
+
+function toggleApiKeyVisibility() {
+    const $input = $('#api-key-input');
+    const $icon = $('#eye-icon');
+
+    if ($input.attr('type') === 'password') {
+        $input.attr('type', 'text');
+        $icon.removeClass('fa-eye').addClass('fa-eye-slash');
+    } else {
+        $input.attr('type', 'password');
+        $icon.removeClass('fa-eye-slash').addClass('fa-eye');
+    }
+}
+
+function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+function showCreateInstanceInfo() {
+    // Abrir modal e mostrar botão inicial
+    $('#createInstanceModal').removeClass('hidden');
+    $('#initialArea').removeClass('hidden');
+    $('#qrcodeArea').addClass('hidden');
+    $('#loadingArea').addClass('hidden');
+    $('#errorArea').addClass('hidden');
+}
+
+function closeCreateInstanceModal() {
+    $('#createInstanceModal').addClass('hidden');
+}
+
+function startCreateInstance() {
+    // Esconder botão inicial e iniciar criação
+    $('#initialArea').addClass('hidden');
+    $('#errorArea').addClass('hidden');
+    createInstance();
+}
+
+function createInstance() {
+    // Gerar UUID automaticamente
+    const instanceName = generateUUID();
+
+    // Mostrar loading
+    $('#loadingArea').removeClass('hidden');
+
+    $.ajax({
+        url: 'http://localhost:8080/instance/create',
+        method: 'POST',
+        contentType: 'application/json',
+        headers: {
+            'apikey': 'change-me-to-secure-key'
+        },
+        data: JSON.stringify({
+            instanceName: instanceName,
+            integration: 'WHATSAPP-BAILEYS',
+            qrcode: true
+        }),
+        success: function(data) {
+            if (data.qrcode) {
+                // Mostrar QR Code
+                $('#loadingArea').addClass('hidden');
+                $('#qrcodeArea').removeClass('hidden');
+                $('#qrcode').attr('src', data.qrcode.base64);
+
+                // Verificar status da conexão periodicamente
+                checkInstanceConnection(instanceName);
+            } else {
+                showError('Erro ao gerar QR Code');
+                $('#loadingArea').addClass('hidden');
+            }
+        },
+        error: function(xhr) {
+            $('#loadingArea').addClass('hidden');
+            const message = xhr.responseJSON?.message || 'Erro ao criar instância';
+            showError(message);
+        }
+    });
+}
+
+function showError(message) {
+    $('#errorMessage').text(message);
+    $('#errorArea').removeClass('hidden');
+}
+
+function checkInstanceConnection(instanceName) {
+    const maxAttempts = 60; // 60 tentativas (2 minutos)
+    let attempts = 0;
+
+    const interval = setInterval(function() {
+        attempts++;
+
+        $.ajax({
+            url: `http://localhost:8080/instance/connectionState/${instanceName}`,
+            method: 'GET',
+            headers: {
+                'apikey': 'change-me-to-secure-key'
+            },
+            success: function(data) {
+                console.log('Status da conexão:', data);
+
+                // Verificar diferentes formatos de resposta
+                const state = data.state || data.instance?.state;
+
+                if (state === 'open' || state === 'connected') {
+                    clearInterval(interval);
+                    $('#connectionStatus').html(`
+                        <span class="badge bg-green-100 text-green-700">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            Conectado com sucesso!
+                        </span>
+                    `);
+
+                    showToast('Instância conectada com sucesso!', 'success');
+
+                    // Recarregar lista de instâncias após 2 segundos
+                    setTimeout(function() {
+                        closeCreateInstanceModal();
+                        loadInstances();
+                    }, 2000);
+                } else {
+                    // Atualizar status atual
+                    const statusText = state || 'Aguardando...';
+                    $('#connectionStatus').html(`
+                        <span class="badge bg-yellow-100 text-yellow-700">
+                            <i class="fas fa-clock mr-1"></i>
+                            Status: ${statusText}
+                        </span>
+                    `);
+                }
+            },
+            error: function(error) {
+                console.error('Erro ao verificar conexão:', error);
+            }
+        });
+
+        if (attempts >= maxAttempts) {
+            clearInterval(interval);
+            $('#connectionStatus').html(`
+                <span class="badge bg-red-100 text-red-700">
+                    <i class="fas fa-times-circle mr-1"></i>
+                    Tempo esgotado
+                </span>
+            `);
+        }
+    }, 3000); // Verificar a cada 3 segundos
+}
+
+function loadInstances() {
+    $.ajax({
+        url: 'http://localhost:8080/instance/fetchInstances',
+        method: 'GET',
+        headers: {
+            'apikey': 'change-me-to-secure-key'
+        },
+        success: function(response) {
+            // Verificar se é um array direto ou um objeto com array
+            let instances = [];
+            if (Array.isArray(response)) {
+                instances = response;
+            } else if (response && Array.isArray(response.instances)) {
+                instances = response.instances;
+            } else if (response && typeof response === 'object') {
+                instances = Object.values(response);
+            }
+
+            if (instances.length === 0) {
+                $('#instances-list').html(`
+                    <div class="text-center py-12">
+                        <i class="fas fa-mobile-alt text-gray-300 text-5xl mb-4"></i>
+                        <p class="text-gray-500 mb-2">Nenhuma instância configurada</p>
+                        <p class="text-sm text-gray-400">Clique em "Nova Instância" para começar</p>
+                    </div>
+                `);
+            } else {
+                let html = '<div class="space-y-4">';
+
+                instances.forEach(function(instance) {
+                    const instanceName = instance.instanceName || instance.instance?.instanceName || instance.name || 'desconhecido';
+                    const state = instance.state || instance.instance?.state || instance.connectionStatus || 'unknown';
+                    const profileName = instance.profileName || instance.instance?.profileName || instance.owner || 'WhatsApp';
+
+                    // Badge de status
+                    let statusBadge = '';
+                    if (state === 'open' || state === 'connected') {
+                        statusBadge = '<span class="badge bg-green-100 text-green-700 text-xs"><i class="fas fa-check-circle mr-1"></i> Conectado</span>';
+                    } else if (state === 'close' || state === 'disconnected') {
+                        statusBadge = '<span class="badge bg-red-100 text-red-700 text-xs"><i class="fas fa-times-circle mr-1"></i> Desconectado</span>';
+                    } else {
+                        statusBadge = '<span class="badge bg-yellow-100 text-yellow-700 text-xs"><i class="fas fa-clock mr-1"></i> ' + state + '</span>';
+                    }
+
+                    html += `
+                        <div class="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fab fa-whatsapp text-green-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-left text-gray-900">${profileName}</h4>
+                                    <p class="text-sm text-left text-gray-500 font-mono">${instanceName}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                ${statusBadge}
+                                <button onclick="showSendMessageModal('${instanceName}')" class="btn-outline text-blue-600 hover:bg-blue-50 py-2 px-3" title="Enviar mensagem de teste">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                                <div class="relative">
+                                    <button onclick="toggleDeleteConfirm('${instanceName}')" id="deleteBtn-${instanceName}" class="btn-outline text-red-600 hover:bg-red-50 py-2 px-3" title="Excluir instância">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <div id="deleteConfirm-${instanceName}" class="hidden absolute top-full right-0 mt-3 bg-white rounded-lg shadow-xl border border-gray-200 p-4 w-64 z-50">
+                                        <p class="text-sm font-semibold text-gray-900 mb-3">Deseja realmente excluir esta instância?</p>
+                                        <div class="flex gap-2">
+                                            <button type="button" onclick="toggleDeleteConfirm('${instanceName}')" class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                                Cancelar
+                                            </button>
+                                            <button type="button" onclick="confirmDeleteInstance('${instanceName}')" class="flex-1 px-3 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700">
+                                                Excluir
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                $('#instances-list').html(html);
+            }
+        },
+        error: function(error) {
+            console.error('Erro ao carregar instâncias:', error);
+            $('#instances-list').html(`
+                <div class="text-center py-12">
+                    <i class="fas fa-exclamation-triangle text-red-300 text-5xl mb-4"></i>
+                    <p class="text-red-500 mb-2">Erro ao carregar instâncias</p>
+                    <p class="text-sm text-gray-400">Verifique se a API está rodando</p>
+                </div>
+            `);
+        }
+    });
+}
+
+let currentInstanceName = '';
+
+function showSendMessageModal(instanceName) {
+    currentInstanceName = instanceName;
+    $('#phoneNumber').val('');
+    $('#sendMessageModal').removeClass('hidden');
+}
+
+function closeSendMessageModal() {
+    $('#sendMessageModal').addClass('hidden');
+    currentInstanceName = '';
+}
+
+function sendTestMessage() {
+    const countryCode = $('#countryCode').val();
+    const phoneNumber = $('#phoneNumber').val().trim();
+
+    if (!phoneNumber) {
+        showToast('Por favor, informe o número de telefone', 'error');
+        return;
+    }
+
+    // Validar formato básico
+    if (!/^\d{8,15}$/.test(phoneNumber)) {
+        showToast('Número inválido. Digite apenas números', 'error');
+        return;
+    }
+
+    const fullNumber = countryCode + phoneNumber;
+
+    $.ajax({
+        url: `http://localhost:8080/message/sendText/${currentInstanceName}`,
+        method: 'POST',
+        contentType: 'application/json',
+        headers: {
+            'apikey': 'change-me-to-secure-key'
+        },
+        data: JSON.stringify({
+            number: fullNumber,
+            text: '🤖 Mensagem automática!\n\nSua instância WhatsApp está funcionando corretamente. ✅'
+        }),
+        success: function(data) {
+            showToast('Mensagem enviada com sucesso!', 'success');
+            closeSendMessageModal();
+        },
+        error: function(xhr) {
+            const message = xhr.responseJSON?.message || 'Erro ao enviar mensagem';
+            showToast(message, 'error');
+        }
+    });
+}
+
+function toggleDeleteConfirm(instanceName) {
+    const confirmBox = $(`#deleteConfirm-${instanceName}`);
+
+    // Fechar todos os outros popups abertos
+    $('[id^="deleteConfirm-"]').not(confirmBox).addClass('hidden');
+
+    // Toggle do popup atual
+    confirmBox.toggleClass('hidden');
+}
+
+function confirmDeleteInstance(instanceName) {
+    // Fechar popup
+    $(`#deleteConfirm-${instanceName}`).addClass('hidden');
+
+    $.ajax({
+        url: `http://localhost:8080/instance/delete/${instanceName}`,
+        method: 'DELETE',
+        headers: {
+            'apikey': 'change-me-to-secure-key'
+        },
+        success: function() {
+            showToast('Instância excluída com sucesso!', 'success');
+            loadInstances();
+        },
+        error: function(error) {
+            console.error('Erro ao excluir instância:', error);
+            showToast('Erro ao excluir instância', 'error');
+        }
+    });
+}
+
+// Fechar popups ao clicar fora
+$(document).on('click', function(e) {
+    if (!$(e.target).closest('[id^="deleteBtn-"], [id^="deleteConfirm-"]').length) {
+        $('[id^="deleteConfirm-"]').addClass('hidden');
+    }
+});
+</script>
+{% endblock %}

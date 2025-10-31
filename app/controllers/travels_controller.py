@@ -171,10 +171,6 @@ def travels_store():
                 if user.has_permission('travels_approve'):
                     notify_user_ids.add(user.id)
 
-            # Remover o usuário que criou o registro (para não notificar ele mesmo)
-            current_user_id = session.get('user_id')
-            notify_user_ids.discard(current_user_id)
-
             # Enviar notificação para cada usuário
             for user_id in notify_user_ids:
                 send_notification(
@@ -509,6 +505,34 @@ def travels_analyze_process(travel_id):
             db.commit()
             flash('Viagem aprovada com sucesso!', 'success')
 
+            # Enviar notificações sobre aprovação da viagem
+            try:
+                from app.utils.notification_helper import send_notification
+                from app.models.notification import NotificationType
+
+                notify_user_ids = set()
+
+                # Adicionar solicitante (driver)
+                notify_user_ids.add(travel.driver_user_id)
+
+                # Adicionar passageiros
+                passengers = db.query(TravelPassenger).filter_by(travel_id=travel.id).all()
+                for passenger in passengers:
+                    notify_user_ids.add(passenger.user_id)
+
+                # Enviar notificação para cada usuário
+                for user_id in notify_user_ids:
+                    send_notification(
+                        user_id=user_id,
+                        title='Viagem Aprovada',
+                        message=f'Sua viagem para {travel.city.name} foi aprovada!',
+                        notification_type=NotificationType.TRAVEL,
+                        action_url=f'/admin/travels/{travel.id}/view',
+                        action_text='Ver Viagem'
+                    )
+            except Exception as e:
+                print(f"Erro ao enviar notificações: {e}")
+
         elif action == 'reject':
             # Rejeitar viagem
             travel.status = TravelStatus.CANCELLED
@@ -520,6 +544,34 @@ def travels_analyze_process(travel_id):
 
             db.commit()
             flash('Viagem rejeitada', 'info')
+
+            # Enviar notificações sobre rejeição da viagem
+            try:
+                from app.utils.notification_helper import send_notification
+                from app.models.notification import NotificationType
+
+                notify_user_ids = set()
+
+                # Adicionar solicitante (driver)
+                notify_user_ids.add(travel.driver_user_id)
+
+                # Adicionar passageiros
+                passengers = db.query(TravelPassenger).filter_by(travel_id=travel.id).all()
+                for passenger in passengers:
+                    notify_user_ids.add(passenger.user_id)
+
+                # Enviar notificação para cada usuário
+                for user_id in notify_user_ids:
+                    send_notification(
+                        user_id=user_id,
+                        title='Viagem Rejeitada',
+                        message=f'Sua viagem para {travel.city.name} foi rejeitada.',
+                        notification_type=NotificationType.TRAVEL,
+                        action_url=f'/admin/travels/{travel.id}/view',
+                        action_text='Ver Viagem'
+                    )
+            except Exception as e:
+                print(f"Erro ao enviar notificações: {e}")
 
         else:
             flash('Ação inválida', 'error')

@@ -12,9 +12,21 @@ def integrations_list():
             'description': 'Sistema de helpdesk e gestão de tickets',
             'icon': 'fa-headset',
             'color': 'blue'
+        },
+        {
+            'id': 'whatsapp',
+            'name': 'WhatsApp',
+            'description': 'Integração com WhatsApp via Evolution API',
+            'icon': 'fa-whatsapp',
+            'color': 'green'
         }
     ]
     return render_template('pages/integrations/list.html', integrations=integrations)
+
+
+def whatsapp_options():
+    """Exibe opções de integração do WhatsApp"""
+    return render_template('pages/integrations/whatsapp_options.html')
 
 
 def movidesk_options():

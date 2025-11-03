@@ -24,11 +24,6 @@ def integrations_list():
     return render_template('pages/integrations/list.html', integrations=integrations)
 
 
-def whatsapp_options():
-    """Exibe opções de integração do WhatsApp"""
-    return render_template('pages/integrations/whatsapp_options.html')
-
-
 def movidesk_options():
     """Exibe opções de integração do Movidesk"""
     options = [

@@ -5,6 +5,7 @@ from app.controllers.dashboard import dashboard_controller
 from app.controllers.clients import clients_controller
 from app.controllers.tickets import tickets_controller
 from app.controllers.integrations import integrations_controller
+from app.controllers.integrations import evolutionapi_controller
 from app.controllers import travels_controller
 from app.controllers import profile_controller
 from app.controllers import notifications_controller
@@ -81,12 +82,20 @@ def register_routes(app: Flask):
 
     # Rotas de Integrações
     admin_bp.add_url_rule('/integrations', view_func=integrations_controller.integrations_list, methods=['GET'])
-    admin_bp.add_url_rule('/integrations/whatsapp', view_func=integrations_controller.whatsapp_options, methods=['GET'])
+    admin_bp.add_url_rule('/integrations/whatsapp', view_func=evolutionapi_controller.evolution_whatsapp_options, methods=['GET'])
     admin_bp.add_url_rule('/integrations/movidesk', view_func=integrations_controller.movidesk_options, methods=['GET'])
     admin_bp.add_url_rule('/integrations/movidesk/tickets', view_func=integrations_controller.movidesk_tickets, methods=['GET'])
     admin_bp.add_url_rule('/integrations/movidesk/tickets/sync', view_func=integrations_controller.movidesk_sync_tickets, methods=['POST'])
     admin_bp.add_url_rule('/integrations/movidesk/organizations', view_func=integrations_controller.movidesk_organizations, methods=['GET'])
     admin_bp.add_url_rule('/integrations/movidesk/organizations/sync', view_func=integrations_controller.movidesk_sync_organizations, methods=['POST'])
+
+    # APIs de WhatsApp (Evolution API) - Rotas protegidas
+    admin_bp.add_url_rule('/api/whatsapp/status', view_func=evolutionapi_controller.evolution_check_api_status, methods=['GET'])
+    admin_bp.add_url_rule('/api/whatsapp/instances', view_func=evolutionapi_controller.evolution_fetch_instances, methods=['GET'])
+    admin_bp.add_url_rule('/api/whatsapp/instances', view_func=evolutionapi_controller.evolution_create_instance, methods=['POST'])
+    admin_bp.add_url_rule('/api/whatsapp/instances/<string:instance_name>/connection-state', view_func=evolutionapi_controller.evolution_connection_state, methods=['GET'])
+    admin_bp.add_url_rule('/api/whatsapp/instances/<string:instance_name>/send-message', view_func=evolutionapi_controller.evolution_send_message, methods=['POST'])
+    admin_bp.add_url_rule('/api/whatsapp/instances/<string:instance_name>', view_func=evolutionapi_controller.evolution_delete_instance, methods=['DELETE'])
 
     # Rotas de Viagens
     admin_bp.add_url_rule('/travels', view_func=travels_controller.travels_list, methods=['GET'])

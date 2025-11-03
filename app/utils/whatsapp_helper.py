@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import requests
 from typing import Optional
+from config import app as app_config
 
 def send_whatsapp_message(phone_number: str, message: str, instance_name: Optional[str] = None) -> bool:
     """
@@ -15,8 +16,8 @@ def send_whatsapp_message(phone_number: str, message: str, instance_name: Option
         bool: True se enviado com sucesso, False caso contrário
     """
     try:
-        api_url = 'http://localhost:8080'
-        api_key = 'change-me-to-secure-key'
+        api_url = app_config.EVOLUTION_API_URL
+        api_key = app_config.EVOLUTION_API_KEY
 
         print(f"[WHATSAPP] Tentando enviar para: {phone_number}")
         print(f"[WHATSAPP] Instância fornecida: {instance_name}")

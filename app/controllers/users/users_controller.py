@@ -51,17 +51,19 @@ def user_create():
             'groups': request.form.getlist('groups[]')  # Capturar grupos selecionados
         }
 
-        # Criar usuário localmente (gera sid_uuid automaticamente)
+        # Primeiro cria usuário localmente para obter sid_uuid
         user = user_service.create_user(user_data)
 
-        # Sincronizar com auth-service
+        # Tenta sincronizar com auth-service
         auth_response = auth_service.register_user(user, password)
 
         if not auth_response:
-            flash('Usuário criado localmente, mas houve erro ao sincronizar com o serviço de autenticação. Verifique os logs.', 'warning')
-        else:
-            flash('Usuário cadastrado com sucesso!', 'success')
+            # Se falhar na API, deleta o usuário local (rollback)
+            user_service.delete_user(user['id'])
+            flash('Erro ao criar usuário no serviço de autenticação. O usuário não foi criado.', 'error')
+            return redirect(url_for('admin.user_new'))
 
+        flash('Usuário cadastrado com sucesso!', 'success')
         return redirect(url_for('admin.users_list'))
     except Exception as e:
         flash(f'Erro ao cadastrar usuário: {str(e)}', 'error')
@@ -144,3 +146,37 @@ def get_users_api():
         return jsonify({'success': True, 'clients': users})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+def user_change_password(user_id):
+    """Altera a senha de um usuário"""
+    try:
+        # Validar se é uma requisição JSON
+        if not request.is_json:
+            return jsonify({'success': False, 'error': 'Requisição inválida'}), 400
+
+        data = request.get_json()
+        new_password = data.get('new_password', '').strip()
+
+        # Validações
+        if not new_password:
+            return jsonify({'success': False, 'error': 'A nova senha é obrigatória'}), 400
+
+        if len(new_password) < 8:
+            return jsonify({'success': False, 'error': 'A senha deve ter no mínimo 8 caracteres'}), 400
+
+        # Buscar usuário
+        user = user_service.get_user_by_id(user_id)
+        if not user:
+            return jsonify({'success': False, 'error': 'Usuário não encontrado'}), 404
+
+        # Tentar alterar senha no auth-service
+        auth_response = auth_service.change_password(user['sid_uuid'], new_password)
+
+        if not auth_response:
+            return jsonify({'success': False, 'error': 'Erro ao alterar senha no serviço de autenticação'}), 500
+
+        return jsonify({'success': True, 'message': 'Senha alterada com sucesso!'}), 200
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Erro ao alterar senha: {str(e)}'}), 500

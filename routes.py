@@ -29,7 +29,6 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
-            flash('Você precisa estar logado para acessar esta página', 'warning')
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
 
@@ -52,7 +51,6 @@ def register_routes(app: Flask):
     def check_authentication():
         """Verifica autenticação antes de cada request no admin"""
         if 'user_id' not in session:
-            flash('Você precisa estar logado para acessar esta página', 'warning')
             return redirect(url_for('auth.login'))
 
     admin_bp.add_url_rule('/dashboard', view_func=dashboard_controller.dashboard, methods=['GET'])
@@ -181,6 +179,7 @@ def register_routes(app: Flask):
 
     # APIs de Usuários
     admin_bp.add_url_rule('/api/users', view_func=users_controller.get_users_api, methods=['GET'])
+    admin_bp.add_url_rule('/users/<int:user_id>/change-password', view_func=users_controller.user_change_password, methods=['POST'])
 
     # Rotas de Permissões
     admin_bp.add_url_rule('/permissions', view_func=permissions_controller.permissions_list, methods=['GET'])

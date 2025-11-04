@@ -127,6 +127,39 @@ class AuthService:
             print(f"Erro ao comunicar com auth-service: {e}")
             return None
 
+    def change_password(self, user_uuid: str, new_password: str) -> Optional[Dict[str, Any]]:
+        """
+        Altera a senha de um usuário no auth-service
+
+        Args:
+            user_uuid: UUID do usuário (sid_uuid)
+            new_password: Nova senha do usuário
+
+        Returns:
+            Dict com resposta do auth-service ou None em caso de erro
+        """
+        try:
+            payload = {
+                "uuid": user_uuid,
+                "password": new_password
+            }
+
+            response = requests.put(
+                f"{self.base_url}/api/auth/change-password",
+                json=payload,
+                timeout=self.timeout
+            )
+
+            if response.status_code in [200, 201]:
+                return response.json()
+            else:
+                print(f"Erro ao alterar senha no auth-service: {response.status_code} - {response.text}")
+                return None
+
+        except requests.exceptions.RequestException as e:
+            print(f"Erro ao comunicar com auth-service: {e}")
+            return None
+
 
 # Instância global do serviço
 auth_service = AuthService()

@@ -94,9 +94,9 @@ if __name__ == '__main__':
     parser.add_argument('--migrate-fresh', action='store_true', help='Recria o banco de dados do zero')
 
     # Opções do servidor
-    parser.add_argument('--host', default='0.0.0.0', help='Host do servidor (padrão: 0.0.0.0)')
-    parser.add_argument('--port', type=int, default=5000, help='Porta do servidor (padrão: 5000)')
-    parser.add_argument('--debug', action='store_true', help='Ativa o modo debug')
+    parser.add_argument('--host', default='0.0.0.0')
+    parser.add_argument('--port', type=int, default=int(os.getenv('APP_PORT', 5000)))
+    parser.add_argument('--debug', action='store_true')
 
     args = parser.parse_args()
 

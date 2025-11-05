@@ -46,11 +46,11 @@
                     <!-- Menu Dropdown -->
                     <div id="conclusionMenu" class="hidden absolute right-0 w-64 bg-white rounded-lg shadow-lg border border-gray-200">
                         <div class="py-2">
-                            <button onclick="processReview('returned')" class="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-all flex items-center">
+                            <button onclick="openReturnModal()" class="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-all flex items-center">
                                 <i class="fas fa-undo text-orange-600 mr-3"></i>
                                 <span class="font-medium">Devolver para correção</span>
                             </button>
-                            <button onclick="processReview('approved')" class="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-all flex items-center border-t border-gray-100">
+                            <button onclick="openApproveModal()" class="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 transition-all flex items-center border-t border-gray-100">
                                 <i class="fas fa-check text-green-600 mr-3"></i>
                                 <span class="font-medium">Aprovar</span>
                             </button>
@@ -448,6 +448,56 @@
     </div>
 </div>
 
+<!-- Modal de Confirmação - Aprovar -->
+<div id="approve-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 animate-fade-in">
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                    <i class="fas fa-check text-green-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900">Aprovar Prestação de Contas</h3>
+            </div>
+            <p class="text-gray-600 mb-6">
+                Tem certeza que deseja aprovar esta prestação de contas? Esta ação não poderá ser desfeita.
+            </p>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeApproveModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-semibold transition-all">
+                    Cancelar
+                </button>
+                <button type="button" onclick="confirmApprove()" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold transition-all">
+                    Aprovar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação - Devolver -->
+<div id="return-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 animate-fade-in">
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+                    <i class="fas fa-undo text-orange-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900">Devolver para Correção</h3>
+            </div>
+            <p class="text-gray-600 mb-6">
+                Tem certeza que deseja devolver esta prestação de contas para correção? O colaborador precisará revisar e reenviar.
+            </p>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeReturnModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-semibold transition-all">
+                    Cancelar
+                </button>
+                <button type="button" onclick="confirmReturn()" class="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-semibold transition-all">
+                    Devolver
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // Controle do dropdown de conclusão
 $(document).ready(function() {
@@ -521,21 +571,6 @@ $(document).ready(function() {
 
     // Função para processar a revisão (aprovar ou devolver)
     window.processReview = function(status) {
-        // Fechar o dropdown
-        closeDropdown();
-
-        // Confirmação
-        let confirmMessage = '';
-        if (status === 'returned') {
-            confirmMessage = 'Tem certeza que deseja devolver esta prestação de contas para correção?';
-        } else if (status === 'approved') {
-            confirmMessage = 'Tem certeza que deseja aprovar esta prestação de contas?';
-        }
-
-        if (!confirm(confirmMessage)) {
-            return;
-        }
-
         // Pegar os dados da prestação
         const statementData = {{ payout.statement.statement_content | tojson | safe }};
 
@@ -568,6 +603,58 @@ $(document).ready(function() {
             showToast('Erro ao processar a revisão', 'error');
         });
     };
+
+    // ===== CONTROLE DOS MODAIS DE CONFIRMAÇÃO =====
+
+    // Abrir modal de aprovação
+    window.openApproveModal = function() {
+        closeDropdown();
+        $('#approve-modal').removeClass('hidden');
+    };
+
+    // Fechar modal de aprovação
+    window.closeApproveModal = function() {
+        $('#approve-modal').addClass('hidden');
+    };
+
+    // Confirmar aprovação
+    window.confirmApprove = function() {
+        closeApproveModal();
+        processReview('approved');
+    };
+
+    // Abrir modal de devolução
+    window.openReturnModal = function() {
+        closeDropdown();
+        $('#return-modal').removeClass('hidden');
+    };
+
+    // Fechar modal de devolução
+    window.closeReturnModal = function() {
+        $('#return-modal').addClass('hidden');
+    };
+
+    // Confirmar devolução
+    window.confirmReturn = function() {
+        closeReturnModal();
+        processReview('returned');
+    };
+
+    // Fechar modais com ESC
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeApproveModal();
+            closeReturnModal();
+        }
+    });
+
+    // Fechar modais ao clicar fora
+    $('#approve-modal, #return-modal').on('click', function(e) {
+        if (e.target.id === 'approve-modal' || e.target.id === 'return-modal') {
+            closeApproveModal();
+            closeReturnModal();
+        }
+    });
 
     // ===== CONTROLE DO MODAL DE ANEXOS =====
 
@@ -721,7 +808,6 @@ $(document).ready(function() {
     window.openReportModal = function() {
         const payoutId = {{ payout.id }};
         const reportUrl = `/admin/financial/${payoutId}/report/pdf`;
-        showToast('Abrindo relatório...', 'info');
         window.open(reportUrl, '_blank');
     };
 });

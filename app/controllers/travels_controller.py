@@ -16,9 +16,16 @@ from sqlalchemy import case
 
 
 def travels_list():
-    """Lista todas as viagens do usuário logado"""
+    """Lista viagens onde o usuário é solicitante ou passageiro"""
     try:
         db = SessionLocal()
+
+        # Obter ID do usuário logado
+        user_id = session.get('user_id')
+
+        if not user_id:
+            flash('Usuário não autenticado', 'error')
+            return redirect(url_for('auth.login'))
 
         # Criar expressão CASE para traduzir os status no SQL
         status_label = case(
@@ -30,8 +37,19 @@ def travels_list():
             else_='Desconhecido'
         ).label('status_label')
 
-        # Buscar todas as viagens com o status traduzido
+        # Buscar viagens onde o usuário é solicitante OU passageiro
+        from sqlalchemy import or_
+        from sqlalchemy.orm import outerjoin
+
         results = db.query(Travel, status_label)\
+            .outerjoin(TravelPassenger, Travel.id == TravelPassenger.travel_id)\
+            .filter(
+                or_(
+                    Travel.driver_user_id == user_id,
+                    TravelPassenger.user_id == user_id
+                )
+            )\
+            .distinct()\
             .order_by(Travel.created_at.desc())\
             .all()
 
@@ -47,7 +65,8 @@ def travels_list():
         return render_template(
             'pages/travels/list.html',
             travels=travels_data,
-            total_travels=len(travels_data)
+            total_travels=len(travels_data),
+            current_user_id=user_id
         )
 
     except Exception as e:
@@ -61,11 +80,25 @@ def travels_create():
     try:
         db = SessionLocal()
 
-        # Buscar todas as cidades e usuários para os selects
+        # Buscar cidades
         cities = db.query(City).join(State).order_by(State.name, City.name).all()
-        users = db.query(User).filter_by(active=True).order_by(User.name).all()
-
         cities_data = [city.to_dict() for city in cities]
+
+        # Verificar se usuário tem permissão para aprovar viagens
+        from app.utils.permissions_helper import user_has_permission
+        can_approve_travels = user_has_permission('travels_approve')
+
+        # Buscar dados do usuário logado
+        logged_user_id = session.get('user_id')
+        logged_user = db.query(User).filter_by(id=logged_user_id).first()
+        logged_user_data = logged_user.to_dict() if logged_user else None
+
+        # Se tem permissão, busca todos os usuários; senão, apenas o próprio
+        if can_approve_travels:
+            users = db.query(User).filter_by(active=True).order_by(User.name).all()
+        else:
+            users = [logged_user] if logged_user else []
+
         users_data = [user.to_dict() for user in users]
 
         db.close()
@@ -74,7 +107,10 @@ def travels_create():
             'pages/travels/form.html',
             travel=None,
             cities=cities_data,
-            users=users_data
+            users=users_data,
+            can_approve_travels=can_approve_travels,
+            logged_user=logged_user_data,
+            can_edit=True  # Sempre pode editar ao criar
         )
 
     except Exception as e:
@@ -215,12 +251,33 @@ def travels_edit(travel_id):
             flash('Apenas viagens pendentes podem ser editadas', 'error')
             return redirect(url_for('admin.travels_list'))
 
-        # Buscar cidades e usuários para os selects
+        # Buscar cidades
         cities = db.query(City).join(State).order_by(State.name, City.name).all()
-        users = db.query(User).filter_by(active=True).order_by(User.name).all()
+        cities_data = [city.to_dict() for city in cities]
 
         travel_data = travel.to_dict()
-        cities_data = [city.to_dict() for city in cities]
+
+        # Verificar se usuário tem permissão para aprovar viagens
+        from app.utils.permissions_helper import user_has_permission
+        can_approve_travels = user_has_permission('travels_approve')
+
+        # Buscar dados do usuário logado
+        logged_user_id = session.get('user_id')
+        logged_user = db.query(User).filter_by(id=logged_user_id).first()
+        logged_user_data = logged_user.to_dict() if logged_user else None
+
+        # Verificar se o usuário pode editar (é o solicitante ou criador do registro)
+        can_edit = (travel.driver_user_id == logged_user_id or travel.record_user_id == logged_user_id)
+
+        # Se tem permissão, busca todos os usuários
+        # Se não tem permissão, busca apenas o solicitante original da viagem (para manter no select)
+        if can_approve_travels:
+            users = db.query(User).filter_by(active=True).order_by(User.name).all()
+        else:
+            # Buscar o usuário que é o solicitante da viagem (driver_user)
+            driver_user = db.query(User).filter_by(id=travel.driver_user_id).first()
+            users = [driver_user] if driver_user else []
+
         users_data = [user.to_dict() for user in users]
 
         db.close()
@@ -229,7 +286,10 @@ def travels_edit(travel_id):
             'pages/travels/form.html',
             travel=travel_data,
             cities=cities_data,
-            users=users_data
+            users=users_data,
+            can_approve_travels=can_approve_travels,
+            logged_user=logged_user_data,
+            can_edit=can_edit
         )
 
     except Exception as e:
@@ -253,6 +313,14 @@ def travels_update(travel_id):
         # Verificar se a viagem está pendente
         if travel.status != TravelStatus.PENDING:
             flash('Apenas viagens pendentes podem ser editadas', 'error')
+            return redirect(url_for('admin.travels_list'))
+
+        # Verificar se o usuário pode editar (é o solicitante ou criador do registro)
+        logged_user_id = session.get('user_id')
+        can_edit = (travel.driver_user_id == logged_user_id or travel.record_user_id == logged_user_id)
+
+        if not can_edit:
+            flash('Você não tem permissão para editar esta viagem', 'error')
             return redirect(url_for('admin.travels_list'))
 
         # Obter dados do formulário

@@ -89,7 +89,7 @@ def financial_accountability(payout_id):
 
 
 def financial_payouts_list():
-    """Lista todos os repasses financeiros do usuário logado"""
+    """Lista todos os repasses financeiros do usuário logado ou todos se tiver permissão"""
     try:
         db = SessionLocal()
 
@@ -100,20 +100,31 @@ def financial_payouts_list():
             flash('Usuário não autenticado', 'error')
             return redirect(url_for('auth.login'))
 
-        # Buscar todos os payouts do usuário logado com relacionamentos
+        # Verificar se usuário tem permissão para ver todos os registros
+        from app.utils.permissions_helper import user_has_permission
+        can_review_all = user_has_permission('financial_review_accountability')
+
+        # Buscar todos os payouts com relacionamentos
         # Fazer LEFT JOIN com travel_statements para pegar o status da prestação de contas
         from sqlalchemy.orm import outerjoin
 
-        payouts = db.query(TravelPayout, TravelStatement.status)\
+        query = db.query(TravelPayout, TravelStatement.status)\
             .outerjoin(TravelStatement, TravelPayout.id == TravelStatement.payout_id)\
-            .filter(TravelPayout.member_id == user_id)\
             .join(Travel, TravelPayout.travel_id == Travel.id)\
             .options(
                 joinedload(TravelPayout.travel).joinedload(Travel.city).joinedload(City.state),
-                joinedload(TravelPayout.travel).joinedload(Travel.driver_user)
-            )\
-            .order_by(TravelPayout.created_at.desc())\
-            .all()
+                joinedload(TravelPayout.travel).joinedload(Travel.driver_user),
+                joinedload(TravelPayout.member)
+            )
+
+        # Se não tiver permissão para ver todos, filtrar apenas do usuário logado
+        if not can_review_all:
+            query = query.filter(TravelPayout.member_id == user_id)
+        else:
+            # Se tiver permissão de análise, filtrar apenas aprovados ou enviados
+            query = query.filter(TravelStatement.status.in_([StatementStatus.APPROVED, StatementStatus.SUBMITTED]))
+
+        payouts = query.order_by(TravelPayout.created_at.desc()).all()
 
         # Converter para dicionários
         payouts_data = []
@@ -170,23 +181,24 @@ def financial_review_accountability(payout_id):
         flash('Usuário não autenticado', 'error')
         return redirect(url_for('auth.login'))
 
-    # Buscar o payout do usuário logado
+    # Buscar o payout (sem filtro de member_id pois analista pode ver qualquer prestação)
     from app.models.vehicle_travel_history import VehicleTravelHistory
     from app.models.vehicle import Vehicle
 
     payout = db.query(TravelPayout)\
-        .filter_by(id=payout_id, member_id=user_id)\
+        .filter_by(id=payout_id)\
         .join(Travel)\
         .options(
             joinedload(TravelPayout.travel).joinedload(Travel.city).joinedload(City.state),
             joinedload(TravelPayout.travel).joinedload(Travel.driver_user),
-            joinedload(TravelPayout.travel).joinedload(Travel.vehicle_history).joinedload(VehicleTravelHistory.vehicle)
+            joinedload(TravelPayout.travel).joinedload(Travel.vehicle_history).joinedload(VehicleTravelHistory.vehicle),
+            joinedload(TravelPayout.member)
         )\
         .first()
 
     if not payout:
         db.close()
-        flash('Repasse não encontrado ou você não tem permissão para acessá-lo', 'error')
+        flash('Repasse não encontrado', 'error')
         return redirect(url_for('admin.financial_payouts_list'))
 
     # Buscar prestação de contas
@@ -237,13 +249,6 @@ def save_accountability(payout_id):
         if not user_id:
             return jsonify({'success': False, 'error': 'Usuário não autenticado'}), 401
 
-        # Verificar se o payout pertence ao usuário
-        payout = db.query(TravelPayout).filter_by(id=payout_id, member_id=user_id).first()
-
-        if not payout:
-            db.close()
-            return jsonify({'success': False, 'error': 'Repasse não encontrado'}), 404
-
         # Obter dados JSON do request
         data = request.get_json()
         statement_content = data.get('statement_content', {})
@@ -262,6 +267,24 @@ def save_accountability(payout_id):
             return jsonify({'success': False, 'error': 'Status inválido'}), 400
 
         status_enum = status_map[status]
+
+        # Verificar permissão baseada no status da operação
+        from app.utils.permissions_helper import user_has_permission
+
+        # Para aprovação ou devolução, apenas verificar permissão
+        if status in ['approved', 'returned']:
+            if not user_has_permission('financial_review_accountability'):
+                db.close()
+                return jsonify({'success': False, 'error': 'Você não tem permissão para esta ação'}), 403
+            # Buscar payout sem filtro de member_id
+            payout = db.query(TravelPayout).filter_by(id=payout_id).first()
+        else:
+            # Para rascunho ou envio, usuário deve ser o dono
+            payout = db.query(TravelPayout).filter_by(id=payout_id, member_id=user_id).first()
+
+        if not payout:
+            db.close()
+            return jsonify({'success': False, 'error': 'Repasse não encontrado'}), 404
 
         # Buscar ou criar prestação de contas
         statement = db.query(TravelStatement).filter_by(payout_id=payout_id).first()

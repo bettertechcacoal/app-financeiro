@@ -24,50 +24,76 @@ def seed_users():
         # ID fixo do grupo de administradores
         admin_group_id = 1
 
-        # Verifica se o usuario ja existe
-        existing_user = db.query(User).filter_by(email='renan@bettertech.com.br').first()
+        # Lista de usuários para criar
+        users = [
+            {
+                "id": 1,
+                "sid_uuid": '019a0333-7cc7-7530-8c15-ca31ccd295d2',
+                "name": 'Renan',
+                "email": 'renan@bettertech.com.br',
+                "phone": '(69) 99999-0000'
+            },
+            {
+                "id": 2,
+                "sid_uuid": '019a0333-8dd8-8641-9d26-db42dde3a6e3',
+                "name": 'Lina Maria',
+                "email": 'lina@bettertech.com.br',
+                "phone": '(69) 99999-0001'
+            },
+            {
+                "id": 3,
+                "sid_uuid": '019a0333-9ee9-9752-ae37-ec53eef4b7f4',
+                "name": 'Eduardo Gabrio',
+                "email": 'eduardo@bettertech.com.br',
+                "phone": '(69) 99999-0002'
+            }
+        ]
 
-        if not existing_user:
-            # Criar usuario com ID fixo
-            db.execute(
-                text("""
-                    INSERT INTO users (id, sid_uuid, name, email, phone, active, email_verified_at, created_at, updated_at)
-                    VALUES (:id, :sid_uuid, :name, :email, :phone, :active, :email_verified_at, NOW(), NOW())
-                """),
-                {
-                    "id": 1,
-                    "sid_uuid": '019a0333-7cc7-7530-8c15-ca31ccd295d2',
-                    "name": 'Renan',
-                    "email": 'renan@bettertech.com.br',
-                    "phone": '(69) 99999-0000',
-                    "active": True,
-                    "email_verified_at": datetime.now()
-                }
-            )
+        for user_data in users:
+            # Verifica se o usuario ja existe
+            existing_user = db.query(User).filter_by(email=user_data['email']).first()
 
-            # Vincular ao grupo de administradores (ID fixo = 1)
-            db.execute(
-                text("INSERT INTO user_groups (user_id, group_id) VALUES (:user_id, :group_id)"),
-                {"user_id": 1, "group_id": admin_group_id}
-            )
+            if not existing_user:
+                # Criar usuario com ID fixo
+                db.execute(
+                    text("""
+                        INSERT INTO users (id, sid_uuid, name, email, phone, active, email_verified_at, created_at, updated_at)
+                        VALUES (:id, :sid_uuid, :name, :email, :phone, :active, :email_verified_at, NOW(), NOW())
+                    """),
+                    {
+                        "id": user_data['id'],
+                        "sid_uuid": user_data['sid_uuid'],
+                        "name": user_data['name'],
+                        "email": user_data['email'],
+                        "phone": user_data['phone'],
+                        "active": True,
+                        "email_verified_at": datetime.now()
+                    }
+                )
 
-            print("  [OK] Usuario criado: Renan (vinculado ao grupo Administradores - ID 1)")
-        else:
-            # Verifica se já está vinculado ao grupo de administradores
-            existing_link = db.execute(
-                text("SELECT 1 FROM user_groups WHERE user_id = :user_id AND group_id = :group_id"),
-                {"user_id": 1, "group_id": admin_group_id}
-            ).fetchone()
-
-            if not existing_link:
-                # Vincular ao grupo de administradores
+                # Vincular ao grupo de administradores (ID fixo = 1)
                 db.execute(
                     text("INSERT INTO user_groups (user_id, group_id) VALUES (:user_id, :group_id)"),
-                    {"user_id": 1, "group_id": admin_group_id}
+                    {"user_id": user_data['id'], "group_id": admin_group_id}
                 )
-                print("  [OK] Usuario ja existe: Renan (vinculado ao grupo Administradores - ID 1)")
+
+                print(f"  [OK] Usuario criado: {user_data['name']} (vinculado ao grupo Administradores - ID 1)")
             else:
-                print("  [OK] Usuario ja existe: Renan (ja vinculado ao grupo Administradores)")
+                # Verifica se já está vinculado ao grupo de administradores
+                existing_link = db.execute(
+                    text("SELECT 1 FROM user_groups WHERE user_id = :user_id AND group_id = :group_id"),
+                    {"user_id": user_data['id'], "group_id": admin_group_id}
+                ).fetchone()
+
+                if not existing_link:
+                    # Vincular ao grupo de administradores
+                    db.execute(
+                        text("INSERT INTO user_groups (user_id, group_id) VALUES (:user_id, :group_id)"),
+                        {"user_id": user_data['id'], "group_id": admin_group_id}
+                    )
+                    print(f"  [OK] Usuario ja existe: {user_data['name']} (vinculado ao grupo Administradores - ID 1)")
+                else:
+                    print(f"  [OK] Usuario ja existe: {user_data['name']} (ja vinculado ao grupo Administradores)")
 
         db.commit()
 

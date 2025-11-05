@@ -55,6 +55,22 @@ register_error_handlers(app)
 from app.socketio_events import register_socketio_events
 register_socketio_events(socketio)
 
+# Fechar sessões do banco automaticamente após cada requisição
+from app.models.database import db_session
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    """Remove a sessão do banco de dados ao final de cada requisição"""
+    try:
+        if exception:
+            db_session.rollback()
+        else:
+            db_session.commit()
+    except:
+        db_session.rollback()
+    finally:
+        db_session.remove()
+
 def run_migrations():
     """Executa as migrations pendentes"""
     from alembic.config import Config
@@ -148,16 +164,13 @@ if __name__ == '__main__':
                                 room=f'user_{user_id}',
                                 namespace='/'
                             )
-                except queue.Empty:
-                    continue
-                except Exception:
+                except:
                     continue
 
         # Iniciar worker em background
         socketio.start_background_task(notification_worker)
 
         # Mostrar mensagem apenas no processo principal (evitar duplicação no reloader)
-        import os
         if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
             print(f"\n[OK] Servidor iniciado em http://{args.host}:{args.port}")
             print(f"  Modo debug: {'Ativado' if args.debug or DEBUG else 'Desativado'}\n")
@@ -166,7 +179,6 @@ if __name__ == '__main__':
         debug_mode = args.debug or DEBUG
 
         # Desabilitar log do eventlet/wsgi
-        import os
         os.environ['EVENTLET_NO_GREENDNS'] = 'yes'
 
         socketio.run(app, debug=debug_mode, host=args.host, port=args.port, log_output=False)

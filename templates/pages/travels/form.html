@@ -129,11 +129,13 @@
                     <i class="fas fa-arrow-left mr-2"></i>
                     Voltar
                 </a>
+                {% if can_edit %}
                 <button type="submit" form="travel-form"
                         class="inline-flex items-center px-8 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg">
                     <i class="fas fa-save mr-2"></i>
                     Salvar
                 </button>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -162,12 +164,13 @@
                             </label>
                             <div class="relative">
                                 <input type="text" id="user_search" placeholder="Digite para pesquisar..."
-                                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all {% if not can_approve_travels %}bg-gray-100 cursor-not-allowed{% endif %}"
+                                       {% if not can_approve_travels %}readonly{% endif %}>
                                 <i class="fas fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                                <select name="user_id" id="user_id" required style="display: none;">
+                                <select name="user_id" id="user_id" style="display: none;">
                                     <option value="">Selecione o solicitante</option>
                                     {% for user in users %}
-                                        <option value="{{ user.id }}" {{ 'selected' if travel and travel.driver_user_id == user.id else '' }}>{{ user.name }} - {{ user.email }}</option>
+                                        <option value="{{ user.id }}" {{ 'selected' if (not can_approve_travels and logged_user and user.id == logged_user.id) or (travel and travel.driver_user_id == user.id) else '' }}>{{ user.name }} - {{ user.email }}</option>
                                     {% endfor %}
                                 </select>
                                 <!-- Dropdown de resultados -->
@@ -175,9 +178,17 @@
                                     <!-- Resultados serão inseridos aqui -->
                                 </div>
                             </div>
-                            <p class="mt-2 text-xs text-gray-500">
+                            <p class="mt-2 text-xs text-gray-500 user-info">
                                 <i class="fas fa-info-circle mr-1"></i>
+                                {% if not can_approve_travels %}
+                                Você está criando uma viagem para si mesmo
+                                {% else %}
                                 Em viagens com reserva de veículo, o solicitante será definido como motorista responsável
+                                {% endif %}
+                            </p>
+                            <p class="mt-2 text-xs text-red-600 hidden user-error">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                Por favor, selecione o solicitante
                             </p>
                         </div>
 
@@ -186,10 +197,14 @@
                             <label for="purpose" class="block text-xs font-bold text-gray-700 uppercase mb-2">
                                 Motivo da Viagem <span class="text-red-600">*</span>
                             </label>
-                            <input type="text" name="purpose" id="purpose" required
+                            <input type="text" name="purpose" id="purpose"
                                    value="{{ travel.purpose if travel else '' }}"
                                    placeholder="Ex: Reunião de negócios, Treinamento, Visita técnica..."
                                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                            <p class="mt-2 text-xs text-red-600 hidden purpose-error">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                Por favor, informe o motivo da viagem
+                            </p>
                         </div>
 
                         <!-- Observações -->
@@ -222,7 +237,7 @@
                                 <input type="text" id="city_search" placeholder="Digite para pesquisar..."
                                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                                 <i class="fas fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                                <select name="city_id" id="city_id" required style="display: none;">
+                                <select name="city_id" id="city_id" style="display: none;">
                                     <option value="">Selecione a cidade</option>
                                     {% for city in cities %}
                                         <option value="{{ city.id }}" {{ 'selected' if travel and travel.city_id == city.id else '' }}>{{ city.name }} - {{ city.state.uf if city.state else '' }}</option>
@@ -233,6 +248,10 @@
                                     <!-- Resultados serão inseridos aqui -->
                                 </div>
                             </div>
+                            <p class="mt-2 text-xs text-red-600 hidden city-error">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                Por favor, selecione o destino
+                            </p>
                         </div>
 
                         <!-- Saída -->
@@ -244,16 +263,24 @@
                                     </label>
                                     <input type="text" id="departure_date_picker" placeholder="DD/MM/AAAA" readonly
                                            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer">
+                                    <p class="mt-2 text-xs text-red-600 hidden departure-date-error">
+                                        <i class="fas fa-exclamation-circle mr-1"></i>
+                                        Por favor, selecione a data de saída
+                                    </p>
                                 </div>
                                 <div style="min-width: 140px;">
                                     <label for="departure_time" class="block text-xs font-bold text-gray-700 uppercase mb-2">
                                         Hora de Saída <span class="text-red-600">*</span>
                                     </label>
-                                    <input type="time" id="departure_time" required value="07:30"
+                                    <input type="time" id="departure_time" value="07:30"
                                            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                    <p class="mt-2 text-xs text-red-600 hidden departure-time-error">
+                                        <i class="fas fa-exclamation-circle mr-1"></i>
+                                        Obrigatório
+                                    </p>
                                 </div>
                             </div>
-                            <input type="hidden" name="departure_date" id="departure_date" required
+                            <input type="hidden" name="departure_date" id="departure_date"
                                    value="{{ travel.departure_date[:16] if travel and travel.departure_date else '' }}">
                         </div>
 
@@ -266,16 +293,24 @@
                                     </label>
                                     <input type="text" id="return_date_picker" placeholder="DD/MM/AAAA" readonly
                                            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer">
+                                    <p class="mt-2 text-xs text-red-600 hidden return-date-error">
+                                        <i class="fas fa-exclamation-circle mr-1"></i>
+                                        Por favor, selecione a data de retorno
+                                    </p>
                                 </div>
                                 <div style="min-width: 140px;">
                                     <label for="return_time" class="block text-xs font-bold text-gray-700 uppercase mb-2">
                                         Hora de Retorno <span class="text-red-600">*</span>
                                     </label>
-                                    <input type="time" id="return_time" required value="17:00"
+                                    <input type="time" id="return_time" value="17:00"
                                            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                    <p class="mt-2 text-xs text-red-600 hidden return-time-error">
+                                        <i class="fas fa-exclamation-circle mr-1"></i>
+                                        Obrigatório
+                                    </p>
                                 </div>
                             </div>
-                            <input type="hidden" name="return_date" id="return_date" required
+                            <input type="hidden" name="return_date" id="return_date"
                                    value="{{ travel.return_date[:16] if travel and travel.return_date else '' }}">
                         </div>
                     </div>
@@ -541,25 +576,109 @@ $(document).ready(function() {
         updateHiddenDateTime('return');
     }
 
+    // Flag para controlar submissão do formulário
+    let isSubmitting = false;
+
+    // Função para limpar todos os erros de validação
+    function clearValidationErrors() {
+        // Remover bordas vermelhas
+        $('#user_search, #purpose, #city_search, #departure_date_picker, #departure_time, #return_date_picker, #return_time')
+            .removeClass('border-red-500 ring-red-500');
+
+        // Esconder mensagens de erro
+        $('.user-error, .purpose-error, .city-error, .departure-date-error, .departure-time-error, .return-date-error, .return-time-error')
+            .addClass('hidden');
+
+        // Mostrar info do solicitante
+        $('.user-info').removeClass('hidden');
+    }
+
+    // Função para mostrar erro em um campo
+    function showFieldError(inputSelector, errorSelector) {
+        $(inputSelector).addClass('border-red-500 ring-red-500');
+        $(errorSelector).removeClass('hidden');
+    }
+
     // Validação ao enviar o formulário
     $('#travel-form').on('submit', function(e) {
+        // Prevenir múltiplas submissões
+        if (isSubmitting) {
+            e.preventDefault();
+            return false;
+        }
+
+        // Limpar erros anteriores
+        clearValidationErrors();
+
+        let hasErrors = false;
+
+        // Validar solicitante
+        if (!$('#user_id').val()) {
+            showFieldError('#user_search', '.user-error');
+            $('.user-info').addClass('hidden');
+            hasErrors = true;
+        }
+
+        // Validar motivo
+        if (!$('#purpose').val().trim()) {
+            showFieldError('#purpose', '.purpose-error');
+            hasErrors = true;
+        }
+
+        // Validar destino
+        if (!$('#city_id').val()) {
+            showFieldError('#city_search', '.city-error');
+            hasErrors = true;
+        }
+
+        // Validar data e hora de saída
         const departureDateTime = $('#departure_date').val();
+        if (!departureDateTime) {
+            showFieldError('#departure_date_picker', '.departure-date-error');
+            hasErrors = true;
+        }
+        if (!$('#departure_time').val()) {
+            showFieldError('#departure_time', '.departure-time-error');
+            hasErrors = true;
+        }
+
+        // Validar data e hora de retorno
         const returnDateTime = $('#return_date').val();
+        if (!returnDateTime) {
+            showFieldError('#return_date_picker', '.return-date-error');
+            hasErrors = true;
+        }
+        if (!$('#return_time').val()) {
+            showFieldError('#return_time', '.return-time-error');
+            hasErrors = true;
+        }
 
-        if (!departureDateTime || !returnDateTime) {
+        // Se houver erros, impedir submissão
+        if (hasErrors) {
             e.preventDefault();
-            alert('Por favor, preencha a data e hora de saída e retorno!');
+            // Scroll para o primeiro erro
+            $('html, body').animate({
+                scrollTop: $('.border-red-500:first').offset().top - 100
+            }, 500);
             return false;
         }
 
-        const departure = new Date(departureDateTime);
-        const returnDate = new Date(returnDateTime);
+        // Validar datas
+        if (departureDateTime && returnDateTime) {
+            const departure = new Date(departureDateTime);
+            const returnDate = new Date(returnDateTime);
 
-        if (returnDate <= departure) {
-            e.preventDefault();
-            alert('A data e hora de retorno devem ser posteriores à data e hora de saída!');
-            return false;
+            if (returnDate <= departure) {
+                e.preventDefault();
+                showToast('A data e hora de retorno devem ser posteriores à data e hora de saída!', 'error');
+                showFieldError('#return_date_picker', '.return-date-error');
+                showFieldError('#return_time', '.return-time-error');
+                return false;
+            }
         }
+
+        // Marcar como submetendo
+        isSubmitting = true;
     });
 
     // ===== CAMPO DE DESTINO PESQUISÁVEL =====
@@ -663,6 +782,11 @@ $(document).ready(function() {
         }
     }
 
+    // Se usuário não tem permissão para aprovar viagens, ocultar ícone de dropdown
+    {% if not can_approve_travels %}
+    $('#user_search').siblings('.fa-chevron-down').hide();
+    {% endif %}
+
     // Função para renderizar o dropdown
     function renderUserDropdown(users) {
         const dropdown = $('#user-dropdown');
@@ -706,7 +830,8 @@ $(document).ready(function() {
         }
     }
 
-    // Pesquisa ao digitar
+    // Pesquisa ao digitar (apenas se tiver permissão)
+    {% if can_approve_travels %}
     $('#user_search').on('input', function() {
         const searchTerm = $(this).val().toLowerCase();
 
@@ -724,17 +849,18 @@ $(document).ready(function() {
         renderUserDropdown(filteredUsers);
     });
 
-    // Mostrar todos os usuários ao focar no campo
+    // Mostrar todos os usuários ao focar no campo (apenas se tiver permissão)
     $('#user_search').on('focus', function() {
         renderUserDropdown(allUsers);
     });
 
-    // Fechar dropdown ao clicar fora
+    // Fechar dropdown ao clicar fora (apenas se tiver permissão)
     $(document).on('click', function(e) {
         if (!$(e.target).closest('#user_search, #user-dropdown').length) {
             $('#user-dropdown').addClass('hidden');
         }
     });
+    {% endif %}
 
     // ===== TOGGLE DE VEÍCULO =====
     $('#needs_vehicle').on('change', function() {
@@ -994,6 +1120,15 @@ $(document).ready(function() {
             renderPassengers();
         }
     };
+
+    // Desabilitar campos se o usuário não puder editar
+    {% if not can_edit %}
+    $('#travel-form input, #travel-form textarea, #travel-form select, #travel-form button').not('[type="button"]').prop('disabled', true);
+    $('#travel-form input, #travel-form textarea, #travel-form select').addClass('bg-gray-100 cursor-not-allowed');
+    $('#user_search, #city_search, #passenger_search').prop('readonly', true);
+    $('#btn-add-passenger').hide();
+    $('.remove-passenger').hide();
+    {% endif %}
 
     // Inicializar
     renderPassengers();

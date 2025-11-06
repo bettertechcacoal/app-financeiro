@@ -384,7 +384,7 @@
                 <button type="button" id="cancel-password-modal" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-all">
                     Cancelar
                 </button>
-                <button type="submit" form="password-form" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg">
+                <button type="submit" form="password-form" id="password-submit-btn" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg">
                     <i class="fas fa-check mr-2"></i>
                     Alterar
                 </button>
@@ -420,9 +420,21 @@
 
         $('#close-password-modal, #cancel-password-modal').on('click', closePasswordModal);
 
-        // Fechar ao clicar fora do modal
-        passwordModal.on('click', function(e) {
+        // Variável para controlar se o mousedown foi no overlay
+        let mouseDownOnOverlay = false;
+
+        // Detectar mousedown no overlay
+        passwordModal.on('mousedown', function(e) {
             if (e.target === this) {
+                mouseDownOnOverlay = true;
+            } else {
+                mouseDownOnOverlay = false;
+            }
+        });
+
+        // Fechar ao clicar fora do modal (apenas se mousedown também foi no overlay)
+        passwordModal.on('click', function(e) {
+            if (e.target === this && mouseDownOnOverlay) {
                 closePasswordModal();
             }
         });
@@ -465,6 +477,18 @@
                 return;
             }
 
+            // Desabilitar botões e adicionar loading
+            const submitBtn = $('#password-submit-btn');
+            const cancelBtn = $('#cancel-password-modal');
+            const closeBtn = $('#close-password-modal');
+
+            submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Alterando...');
+            cancelBtn.prop('disabled', true);
+            closeBtn.prop('disabled', true);
+
+            // Desabilitar clique fora do modal
+            passwordModal.off('click');
+
             // Fazer a chamada AJAX para o backend
             $.ajax({
                 url: '{{ url_for("admin.profile_change_password") }}',
@@ -487,6 +511,19 @@
                 error: function(xhr) {
                     const message = xhr.responseJSON?.error || 'Erro ao alterar senha. Tente novamente.';
                     showPasswordError(message);
+                },
+                complete: function() {
+                    // Reabilitar botões e remover loading
+                    submitBtn.prop('disabled', false).html('<i class="fas fa-check mr-2"></i>Alterar');
+                    cancelBtn.prop('disabled', false);
+                    closeBtn.prop('disabled', false);
+
+                    // Reabilitar clique fora do modal (com verificação de mousedown)
+                    passwordModal.on('click', function(e) {
+                        if (e.target === this && mouseDownOnOverlay) {
+                            closePasswordModal();
+                        }
+                    });
                 }
             });
         });

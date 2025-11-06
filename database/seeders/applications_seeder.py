@@ -10,6 +10,7 @@ sys.path.insert(0, ROOT_DIR)
 
 from app.models.database import SessionLocal
 from app.models.application import Application
+from sqlalchemy import text
 
 
 def seed_applications():
@@ -64,42 +65,16 @@ def seed_applications():
                 )
                 db.add(application)
                 created_count += 1
-                print(f"  [OK] Aplicação criada (ID={idx}): {app_data['name']}")
-            else:
-                existing_count += 1
-                print(f"  [SKIP] Aplicação já existe (ID={existing_app.id}): {app_data['name']}")
 
-        # Resetar a sequência do PostgreSQL para o próximo ID
+        # Ajustar sequência de auto incremento do PostgreSQL
         db.execute(text("SELECT setval(pg_get_serial_sequence('applications', 'id'), (SELECT COALESCE(MAX(id), 1) FROM applications))"))
-
         db.commit()
 
-        print(f"\n{'='*60}")
-        print(f"Seeder finalizado com sucesso!")
-        print(f"Aplicações criadas: {created_count}")
-        print(f"Aplicações já existentes: {existing_count}")
-        print(f"Total de aplicações processadas: {len(applications_data)}")
-        print(f"{'='*60}\n")
-
-        # Mostrar resumo por categoria
-        print("Resumo por Categoria:")
-        apice_count = len([a for a in applications_data if a['category'] == 'APICE'])
-        aise_count = len([a for a in applications_data if a['category'] == 'AISE'])
-        web_count = len([a for a in applications_data if a['category'] == 'WEB'])
-        oxy_count = len([a for a in applications_data if a['category'] == 'OXY'])
-        portal_count = len([a for a in applications_data if a['category'] == 'Portal'])
-
-        print(f"  - APICE: {apice_count} aplicações")
-        print(f"  - AISE: {aise_count} aplicações")
-        print(f"  - WEB: {web_count} aplicações")
-        print(f"  - OXY: {oxy_count} aplicações")
-        print(f"  - Portal: {portal_count} aplicações")
-        print()
+        print("[SUCCESS] Seeder de aplicações executado com sucesso")
 
     except Exception as e:
         db.rollback()
-        print(f"\n[ERRO] Erro ao executar seeder: {str(e)}\n")
-        raise
+        print(f"[ERRO] {type(e).__name__}: {str(e).split(chr(10))[0]}")
     finally:
         db.close()
 

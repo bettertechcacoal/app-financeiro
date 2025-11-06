@@ -45,6 +45,14 @@ def from_json_filter(value):
     except:
         return []
 
+# Adicionar variáveis globais aos templates
+@app.context_processor
+def inject_globals():
+    """Injeta variáveis globais em todos os templates"""
+    return {
+        'APP_NAME': app.config.get('APP_NAME', 'Financeiro')
+    }
+
 register_routes(app)
 
 # Registrar error handlers personalizados

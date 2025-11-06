@@ -11,6 +11,7 @@ sys.path.insert(0, ROOT_DIR)
 from app.models.database import SessionLocal
 from app.models.parameter import Parameter, ParameterType
 from app.models.parameter_group import ParameterGroup
+from sqlalchemy import text
 
 
 def seed_parameters():

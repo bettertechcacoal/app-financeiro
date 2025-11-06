@@ -14,6 +14,7 @@ from app.models.travel import Travel, TravelStatus
 from app.models.travel_passenger import TravelPassenger
 from app.models.user import User
 from app.models.city import City
+from sqlalchemy import text
 
 
 def seed_travels():

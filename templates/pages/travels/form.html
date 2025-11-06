@@ -128,7 +128,7 @@
                     Voltar
                 </a>
                 {% if can_edit %}
-                <button type="submit" form="travel-form"
+                <button type="submit" form="travel-form" id="save-travel-btn"
                         class="inline-flex items-center px-8 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg">
                     <i class="fas fa-save mr-2"></i>
                     Salvar
@@ -823,6 +823,11 @@ $(document).ready(function() {
             if (canSubmit) {
                 // Marcar como submetendo
                 isSubmitting = true;
+
+                // Adicionar loading no botão
+                const saveBtn = $('#save-travel-btn');
+                saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Salvando...');
+
                 // Submeter o formulário
                 $('#travel-form')[0].submit();
             }

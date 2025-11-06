@@ -117,12 +117,16 @@ def financial_payouts_list():
                 joinedload(TravelPayout.member)
             )
 
-        # Se não tiver permissão para ver todos, filtrar apenas do usuário logado
         if not can_review_all:
             query = query.filter(TravelPayout.member_id == user_id)
         else:
-            # Se tiver permissão de análise, filtrar apenas aprovados ou enviados
-            query = query.filter(TravelStatement.status.in_([StatementStatus.APPROVED, StatementStatus.SUBMITTED]))
+            from sqlalchemy import or_
+            query = query.filter(
+                or_(
+                    TravelPayout.member_id == user_id,
+                    TravelStatement.status.in_([StatementStatus.APPROVED, StatementStatus.SUBMITTED])
+                )
+            )
 
         payouts = query.order_by(TravelPayout.created_at.desc()).all()
 

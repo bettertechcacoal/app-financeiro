@@ -33,9 +33,9 @@
         </div>
     </div>
 
-    <!-- Wizard Content -->
+    <!-- Wizard de Análise de Viagem -->
     <div class="animate-fade-in">
-        <!-- Passo 1: Informações da Viagem -->
+        <!-- Passo 1: Revisão de Informações -->
         <div id="wizard-step-1" class="wizard-step-content">
             <div class="card">
                 <div class="p-6 border-b border-gray-200">
@@ -50,11 +50,10 @@
                     </div>
                 </div>
 
-                <!-- Wizard Steps Indicator -->
+                <!-- Indicador de Progresso -->
                 <div class="px-6 py-5 bg-gray-50 border-b border-gray-200">
                     <div class="flex items-center justify-center">
                         <div class="flex items-center space-x-3">
-                            <!-- Step 1 -->
                             <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(1)">
                                 <div id="step-indicator-1" class="wizard-step-active flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-info-circle"></i>
@@ -65,10 +64,8 @@
                                 </div>
                             </div>
 
-                            <!-- Arrow -->
                             <div class="w-8 h-0.5 bg-gray-300"></div>
 
-                            <!-- Step 2 -->
                             {% if travel.needs_vehicle %}
                             <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(2)">
                                 <div id="step-indicator-2" class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
@@ -80,11 +77,9 @@
                                 </div>
                             </div>
 
-                            <!-- Arrow -->
                             <div class="w-8 h-0.5 bg-gray-300"></div>
                             {% endif %}
 
-                            <!-- Step 3 (ou 2 se não precisa de veículo) - Financeiro -->
                             <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep({% if travel.needs_vehicle %}3{% else %}2{% endif %})">
                                 <div id="step-indicator-{% if travel.needs_vehicle %}3{% else %}2{% endif %}" class="wizard-step-inactive flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-600 font-bold">
                                     <i class="fas fa-dollar-sign"></i>
@@ -95,7 +90,6 @@
                                 </div>
                             </div>
 
-                            <!-- Arrow -->
                             <div class="w-8 h-0.5 bg-gray-300"></div>
 
                             <!-- Step 4 (ou 3 se não precisa de veículo) - Finalizar -->
@@ -113,8 +107,7 @@
                 </div>
 
                 <div class="p-6">
-                    <!-- Seção: Dados da Solicitação -->
-                    <div class="pt-6 pb-12 border-b border-gray-200">
+                    <div class="pt-6">
                         <div class="mb-4">
                             <span class="text-xs font-semibold text-gray-500 uppercase">Solicitante</span>
                             <p class="text-sm font-medium text-gray-900 mt-1 ml-4">
@@ -168,6 +161,13 @@
                                 </p>
                             </div>
                             <div class="md:col-span-2">
+                                <span class="text-xs font-semibold text-gray-500 uppercase">Veículo</span>
+                                <p class="text-sm font-medium text-gray-900 mt-1 ml-4">
+                                    <i class="fas fa-car text-purple-900 mr-1"></i>
+                                    {{ 'Sim' if travel.needs_vehicle else 'Não' }}
+                                </p>
+                            </div>
+                            <div class="md:col-span-2">
                                 <span class="text-xs font-semibold text-gray-500 uppercase">Motivo</span>
                                 <p class="text-sm font-medium text-gray-900 mt-1 ml-4">
                                     <i class="fas fa-clipboard-list text-purple-900 mr-1"></i>
@@ -186,40 +186,6 @@
                             {% endif %}
                         </div>
                     </div>
-
-                    <!-- Seção: Detalhes Adicionais -->
-                    <div class="py-6 border-t border-gray-200">
-                        {% if travel.passengers and travel.passengers|length > 0 %}
-                        <div class="mb-4">
-                            <span class="text-xs font-semibold text-gray-500 uppercase">Veículo</span>
-                            <div class="ml-4 mt-2 space-y-2">
-                                {% for passenger in travel.passengers %}
-                                <div class="inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
-                                    <i class="fas fa-user text-gray-600"></i>
-                                    <span class="text-gray-900 uppercase">{{ passenger.name }}</span>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% else %}
-                        <div class="mb-4">
-                            <span class="text-xs font-semibold text-gray-500 uppercase">Veículo</span>
-                            <div class="ml-4 mt-2">
-                                {% if travel.needs_vehicle %}
-                                <div class="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-300 rounded text-sm">
-                                    <i class="fas fa-car text-gray-600"></i>
-                                    <span class="text-gray-900 font-medium uppercase">Requer reserva de veículo</span>
-                                </div>
-                                {% else %}
-                                <div class="inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded text-sm">
-                                    <i class="fas fa-info-circle text-gray-400"></i>
-                                    <span class="text-gray-500 uppercase">Nenhum passageiro adicional</span>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
                 </div>
 
                 <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end">
@@ -231,7 +197,7 @@
             </div>
         </div>
 
-        <!-- Passo 2: Seleção de Veículo (apenas se necessário) -->
+        <!-- Passo 2: Seleção de Veículo (condicional) -->
         {% if travel.needs_vehicle %}
         <div id="wizard-step-2" class="wizard-step-content hidden">
             <div class="card">
@@ -247,11 +213,9 @@
                     </div>
                 </div>
 
-                <!-- Wizard Steps Indicator -->
                 <div class="px-6 py-5 bg-gray-50 border-b border-gray-200">
                     <div class="flex items-center justify-center">
                         <div class="flex items-center space-x-3">
-                            <!-- Step 1 -->
                             <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(1)">
                                 <div id="step-indicator-1-b" class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-check"></i>
@@ -262,10 +226,8 @@
                                 </div>
                             </div>
 
-                            <!-- Arrow -->
                             <div class="w-8 h-0.5 bg-purple-900"></div>
 
-                            <!-- Step 2 -->
                             <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(2)">
                                 <div id="step-indicator-2-b" class="wizard-step-active flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-car"></i>
@@ -276,7 +238,6 @@
                                 </div>
                             </div>
 
-                            <!-- Arrow -->
                             <div class="w-8 h-0.5 bg-gray-300"></div>
 
                             <!-- Step 3 - Financeiro -->
@@ -290,7 +251,6 @@
                                 </div>
                             </div>
 
-                            <!-- Arrow -->
                             <div class="w-8 h-0.5 bg-gray-300"></div>
 
                             <!-- Step 4 - Finalizar -->
@@ -352,7 +312,7 @@
         </div>
         {% endif %}
 
-        <!-- Passo 3 (ou 2): Financeiro -->
+        <!-- Passo Financeiro: Definição de Repasses -->
         <div id="wizard-step-{% if travel.needs_vehicle %}3{% else %}2{% endif %}" class="wizard-step-content hidden">
             <div class="card">
                 <div class="p-6 border-b border-gray-200">
@@ -367,11 +327,9 @@
                     </div>
                 </div>
 
-                <!-- Wizard Steps Indicator -->
                 <div class="px-6 py-5 bg-gray-50 border-b border-gray-200">
                     <div class="flex items-center justify-center">
                         <div class="flex items-center space-x-3">
-                            <!-- Step 1 -->
                             <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(1)">
                                 <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-check"></i>
@@ -382,11 +340,9 @@
                                 </div>
                             </div>
 
-                            <!-- Arrow -->
                             <div class="w-8 h-0.5 bg-purple-900"></div>
 
                             {% if travel.needs_vehicle %}
-                            <!-- Step 2 -->
                             <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(2)">
                                 <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-check"></i>
@@ -397,11 +353,9 @@
                                 </div>
                             </div>
 
-                            <!-- Arrow -->
                             <div class="w-8 h-0.5 bg-purple-900"></div>
                             {% endif %}
 
-                            <!-- Step 3 (ou 2) - Financeiro -->
                             <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep({% if travel.needs_vehicle %}3{% else %}2{% endif %})">
                                 <div class="wizard-step-active flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-dollar-sign"></i>
@@ -412,7 +366,6 @@
                                 </div>
                             </div>
 
-                            <!-- Arrow -->
                             <div class="w-8 h-0.5 bg-gray-300"></div>
 
                             <!-- Step 4 (ou 3) - Finalizar -->
@@ -562,11 +515,9 @@
                     </div>
                 </div>
 
-                <!-- Wizard Steps Indicator -->
                 <div class="px-6 py-5 bg-gray-50 border-b border-gray-200">
                     <div class="flex items-center justify-center">
                         <div class="flex items-center space-x-3">
-                            <!-- Step 1 -->
                             <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(1)">
                                 <div id="step-indicator-1-c" class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-check"></i>
@@ -577,10 +528,8 @@
                                 </div>
                             </div>
 
-                            <!-- Arrow -->
                             <div class="w-8 h-0.5 bg-purple-900"></div>
 
-                            <!-- Step 2 -->
                             {% if travel.needs_vehicle %}
                             <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep(2)">
                                 <div id="step-indicator-2-c" class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
@@ -592,11 +541,9 @@
                                 </div>
                             </div>
 
-                            <!-- Arrow -->
                             <div class="w-8 h-0.5 bg-purple-900"></div>
                             {% endif %}
 
-                            <!-- Step 3 (ou 2) - Financeiro -->
                             <div class="flex items-center cursor-pointer hover:opacity-80 transition-opacity" onclick="goToStep({% if travel.needs_vehicle %}3{% else %}2{% endif %})">
                                 <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-900 text-white font-bold">
                                     <i class="fas fa-check"></i>
@@ -607,7 +554,6 @@
                                 </div>
                             </div>
 
-                            <!-- Arrow -->
                             <div class="w-8 h-0.5 bg-purple-900"></div>
 
                             <!-- Step 4 (ou 3) - Finalizar -->
@@ -833,6 +779,7 @@
 
 <script>
 $(document).ready(function() {
+    // Configuração inicial do wizard
     const needsVehicle = {{ 'true' if travel.needs_vehicle else 'false' }};
     const totalSteps = needsVehicle ? 4 : 3;
     const financialStep = needsVehicle ? 3 : 2;
@@ -841,12 +788,16 @@ $(document).ready(function() {
     let selectedVehicleInfo = null;
     let payoutsData = [];
 
-    // Carregar veículos se necessário
+    // Dados da viagem atual
+    const travelDepartureDate = '{{ travel.departure_date }}';
+    const travelReturnDate = '{{ travel.return_date }}';
+    const travelId = {{ travel.id }};
+
+    // Inicialização de componentes
     if (needsVehicle) {
         loadVehicles();
     }
 
-    // Inicializar máscara monetária nos inputs financeiros
     $('.financial-input').mask('#.##0,00', {
         reverse: true,
         placeholder: '0,00'
@@ -854,8 +805,14 @@ $(document).ready(function() {
 
     let allVehicles = [];
 
+    // Carrega lista de veículos disponíveis via API
     function loadVehicles() {
-        $.get('{{ url_for("admin.get_available_vehicles_api") }}', function(response) {
+        const url = '{{ url_for("admin.get_available_vehicles_api") }}' +
+                    '?departure_date=' + encodeURIComponent(travelDepartureDate) +
+                    '&return_date=' + encodeURIComponent(travelReturnDate) +
+                    '&travel_id=' + travelId;
+
+        $.get(url, function(response) {
             if (response.success && response.vehicles && response.vehicles.length > 0) {
                 allVehicles = response.vehicles;
                 renderVehicles(allVehicles);
@@ -881,6 +838,7 @@ $(document).ready(function() {
         });
     }
 
+    // Renderiza tabela de veículos com indicação de reserva
     function renderVehicles(vehicles) {
         const container = $('#vehicles-list');
 
@@ -909,26 +867,34 @@ $(document).ready(function() {
         `;
 
         vehicles.forEach(function(vehicle) {
+            const isReserved = vehicle.reserved === true;
+            const rowClass = isReserved
+                ? 'vehicle-row cursor-not-allowed'
+                : 'vehicle-row cursor-pointer hover:bg-purple-50 transition-colors';
+            const textClass = isReserved ? 'text-gray-400' : 'text-gray-900';
+            const iconClass = isReserved ? 'bg-gray-100 text-gray-400' : 'bg-purple-100 text-purple-900';
+
             table += `
-                <tr class="vehicle-row cursor-pointer hover:bg-purple-50 transition-colors" data-vehicle-id="${vehicle.id}" data-vehicle-info="${vehicle.brand} ${vehicle.model} (${vehicle.plate})">
+                <tr class="${rowClass}" data-vehicle-id="${vehicle.id}" data-vehicle-info="${vehicle.brand} ${vehicle.model} (${vehicle.plate})" data-reserved="${isReserved}">
                     <td class="px-4 py-4">
                         <div class="flex items-center">
-                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
-                                <i class="fas fa-car text-purple-900"></i>
+                            <div class="w-10 h-10 ${iconClass} rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                                <i class="fas fa-car"></i>
                             </div>
                             <div>
-                                <p class="text-sm font-semibold text-gray-900">${vehicle.brand} ${vehicle.model}</p>
+                                <p class="text-sm font-semibold ${textClass}">${vehicle.brand} ${vehicle.model}</p>
+                                ${isReserved ? '<p class="text-xs text-red-600 font-semibold">* Reservado</p>' : ''}
                             </div>
                         </div>
                     </td>
                     <td class="px-4 py-4">
-                        <span class="text-sm text-gray-900 font-medium">${vehicle.plate}</span>
+                        <span class="text-sm ${textClass} font-medium">${vehicle.plate}</span>
                     </td>
                     <td class="px-4 py-4">
-                        <span class="text-sm text-gray-600">${vehicle.year}</span>
+                        <span class="text-sm ${textClass}">${vehicle.year}</span>
                     </td>
                     <td class="px-4 py-4 text-center">
-                        <input type="radio" name="vehicle_radio" value="${vehicle.id}" class="w-5 h-5 text-purple-900 focus:ring-purple-500">
+                        <input type="radio" name="vehicle_radio" value="${vehicle.id}" class="w-5 h-5 text-purple-900 focus:ring-purple-500" ${isReserved ? 'disabled' : ''}>
                     </td>
                 </tr>
             `;
@@ -944,6 +910,12 @@ $(document).ready(function() {
 
         // Event listener para seleção
         $('.vehicle-row').on('click', function() {
+            // Verificar se o veículo está reservado
+            if ($(this).data('reserved') === true) {
+                showToast('Este veículo já está reservado para o período selecionado', 'warning');
+                return;
+            }
+
             // Remover seleção anterior
             $('.vehicle-row').removeClass('bg-purple-100 border-l-4 border-purple-600');
             $('input[name="vehicle_radio"]').prop('checked', false);

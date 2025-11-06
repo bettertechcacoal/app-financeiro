@@ -4,8 +4,6 @@
 {% block title %}{{ 'Editar Viagem' if travel else 'Nova Viagem' }}{% endblock %}
 
 {% block extra_css %}
-<!-- jQuery UI CSS para Datepicker -->
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 <style>
     /* Modal styles */
     .modal {
@@ -476,8 +474,67 @@
     </div>
 </div>
 
-<!-- jQuery UI JS para Datepicker -->
-<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<!-- Modal de Confirmação: Remover Passageiro -->
+<div id="remove-passenger-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 animate-fade-in">
+        <div class="p-6">
+            <div class="flex items-center mb-4">
+                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+                    <i class="fas fa-exclamation-triangle text-orange-600 text-xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900">Solicitante já é Passageiro</h3>
+            </div>
+            <p class="text-gray-600 mb-6">
+                O usuário selecionado como solicitante já está na lista de passageiros. Deseja removê-lo da lista de passageiros?
+            </p>
+            <div class="flex gap-3">
+                <button type="button" onclick="cancelDriverChange()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-semibold transition-all">
+                    Não, manter como está
+                </button>
+                <button type="button" onclick="confirmRemovePassenger()" class="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-semibold transition-all">
+                    Sim, remover da lista
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Conflitos de Viagens -->
+<div id="conflicts-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 animate-fade-in max-h-[90vh] flex flex-col">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-200 bg-red-600 rounded-t-xl">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold text-white flex items-center">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    Conflito de Viagens
+                </h3>
+                <button type="button" onclick="closeConflictsModal()" class="text-white hover:text-gray-200 transition-all">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 overflow-y-auto flex-1">
+            <p class="text-gray-700 mb-4 font-medium">
+                Os seguintes participantes já possuem viagens aprovadas no mesmo período:
+            </p>
+
+            <!-- Lista de Conflitos -->
+            <div id="conflicts-list" class="space-y-4">
+                <!-- Conflitos serão inseridos aqui via JavaScript -->
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
+            <button type="button" onclick="closeConflictsModal()" class="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all shadow-md">
+                Entendi
+            </button>
+        </div>
+    </div>
+</div>
 
 <script>
 $(document).ready(function() {
@@ -599,11 +656,93 @@ $(document).ready(function() {
         $(errorSelector).removeClass('hidden');
     }
 
+    // Função para fechar modal de conflitos
+    window.closeConflictsModal = function() {
+        $('#conflicts-modal').addClass('hidden');
+    };
+
+    // Função para renderizar conflitos no modal
+    function renderConflicts(conflicts) {
+        const conflictsList = $('#conflicts-list');
+        conflictsList.empty();
+
+        conflicts.forEach(function(conflict) {
+            const card = `
+                <div class="border border-red-200 rounded-lg p-4 bg-red-50">
+                    <div class="flex items-start">
+                        <div class="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center text-white flex-shrink-0">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-bold text-gray-900">${conflict.user_name}</p>
+                            <div class="mt-2 space-y-1 text-xs text-gray-700">
+                                <p><i class="fas fa-map-marker-alt text-red-600 mr-1"></i><strong>Destino:</strong> ${conflict.city}</p>
+                                <p><i class="fas fa-calendar text-red-600 mr-1"></i><strong>Saída:</strong> ${conflict.departure_date}</p>
+                                <p><i class="fas fa-calendar-check text-red-600 mr-1"></i><strong>Retorno:</strong> ${conflict.return_date}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            conflictsList.append(card);
+        });
+
+        // Mostrar modal
+        $('#conflicts-modal').removeClass('hidden');
+    }
+
+    // Função para verificar conflitos de viagens
+    function checkTravelConflicts(callback) {
+        const userId = $('#user_id').val();
+        const departureDate = $('#departure_date').val();
+        const returnDate = $('#return_date').val();
+
+        // Coletar IDs dos passageiros
+        const passengerIds = passengers.map(p => p.id);
+
+        // Fazer requisição para API
+        $.ajax({
+            url: '{{ url_for("admin.travels_check_conflicts") }}',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                driver_user_id: userId,
+                passenger_ids: passengerIds,
+                departure_date: departureDate,
+                return_date: returnDate,
+                {% if travel %}travel_id: {{ travel.id }}{% endif %}
+            }),
+            success: function(response) {
+                if (response.success) {
+                    if (response.conflicts && response.conflicts.length > 0) {
+                        // Há conflitos - mostrar modal
+                        renderConflicts(response.conflicts);
+                        callback(false);
+                    } else {
+                        // Sem conflitos - permitir submissão
+                        callback(true);
+                    }
+                } else {
+                    // Erro na validação
+                    showToast(response.error || 'Erro ao verificar conflitos', 'error');
+                    callback(false);
+                }
+            },
+            error: function() {
+                // Em caso de erro na API, permitir submissão (não bloquear por erro técnico)
+                showToast('Erro ao verificar conflitos. A viagem será salva mesmo assim.', 'warning');
+                callback(true);
+            }
+        });
+    }
+
     // Validação ao enviar o formulário
     $('#travel-form').on('submit', function(e) {
+        // Sempre prevenir o submit padrão primeiro
+        e.preventDefault();
+
         // Prevenir múltiplas submissões
         if (isSubmitting) {
-            e.preventDefault();
             return false;
         }
 
@@ -669,7 +808,6 @@ $(document).ready(function() {
             const returnDate = new Date(returnDateTime);
 
             if (returnDate <= departure) {
-                e.preventDefault();
                 showToast('A data e hora de retorno devem ser posteriores à data e hora de saída!', 'error');
                 showFieldError('#return_date_picker', '.return-date-error');
                 showFieldError('#return_time', '.return-time-error');
@@ -677,8 +815,15 @@ $(document).ready(function() {
             }
         }
 
-        // Marcar como submetendo
-        isSubmitting = true;
+        // Verificar conflitos de viagens antes de submeter
+        checkTravelConflicts(function(canSubmit) {
+            if (canSubmit) {
+                // Marcar como submetendo
+                isSubmitting = true;
+                // Submeter o formulário
+                $('#travel-form')[0].submit();
+            }
+        });
     });
 
     // ===== CAMPO DE DESTINO PESQUISÁVEL =====
@@ -787,6 +932,62 @@ $(document).ready(function() {
     $('#user_search').siblings('.fa-chevron-down').hide();
     {% endif %}
 
+    // Variáveis para controlar mudança de solicitante
+    let previousDriverId = $('#user_id').val();
+    let previousDriverText = $('#user_search').val();
+    let pendingDriverId = null;
+    let pendingDriverText = null;
+
+    // Função para verificar se usuário está na lista de passageiros
+    function isUserInPassengerList(userId) {
+        return passengers.some(p => p.id == userId);
+    }
+
+    // Função para remover passageiro da lista
+    function removePassengerFromList(userId) {
+        const index = passengers.findIndex(p => p.id == userId);
+        if (index !== -1) {
+            passengers.splice(index, 1);
+            renderPassengers();
+        }
+    }
+
+    // Função para cancelar mudança de solicitante
+    window.cancelDriverChange = function() {
+        // Restaurar valores anteriores
+        $('#user_id').val(previousDriverId);
+        $('#user_search').val(previousDriverText);
+
+        // Fechar modal
+        $('#remove-passenger-modal').addClass('hidden');
+
+        // Limpar valores pendentes
+        pendingDriverId = null;
+        pendingDriverText = null;
+    };
+
+    // Função para confirmar remoção do passageiro
+    window.confirmRemovePassenger = function() {
+        // Remover da lista de passageiros
+        removePassengerFromList(pendingDriverId);
+
+        // Aplicar a mudança de solicitante
+        $('#user_id').val(pendingDriverId);
+        $('#user_search').val(pendingDriverText);
+        previousDriverId = pendingDriverId;
+        previousDriverText = pendingDriverText;
+
+        // Fechar modal
+        $('#remove-passenger-modal').addClass('hidden');
+
+        // Limpar valores pendentes
+        pendingDriverId = null;
+        pendingDriverText = null;
+
+        // Atualizar botão de adicionar passageiro
+        toggleAddPassengerButton();
+    };
+
     // Função para renderizar o dropdown
     function renderUserDropdown(users) {
         const dropdown = $('#user-dropdown');
@@ -805,10 +1006,24 @@ $(document).ready(function() {
                     <div class="text-sm font-semibold text-gray-900">${user.text}</div>
                 `)
                 .on('click', function() {
-                    $('#user_id').val(user.id);
-                    $('#user_search').val(user.text);
-                    dropdown.addClass('hidden');
-                    toggleAddPassengerButton();
+                    // Verificar se o usuário selecionado está na lista de passageiros
+                    if (isUserInPassengerList(user.id)) {
+                        // Guardar valores pendentes
+                        pendingDriverId = user.id;
+                        pendingDriverText = user.text;
+
+                        // Mostrar modal de confirmação
+                        $('#remove-passenger-modal').removeClass('hidden');
+                        dropdown.addClass('hidden');
+                    } else {
+                        // Aplicar mudança normalmente
+                        $('#user_id').val(user.id);
+                        $('#user_search').val(user.text);
+                        previousDriverId = user.id;
+                        previousDriverText = user.text;
+                        dropdown.addClass('hidden');
+                        toggleAddPassengerButton();
+                    }
                 });
             dropdown.append(item);
         });

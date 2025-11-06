@@ -109,6 +109,7 @@ def register_routes(app: Flask):
 
     # APIs de Viagens
     admin_bp.add_url_rule('/api/travels/vehicles', view_func=travels_controller.get_available_vehicles_api, methods=['GET'])
+    admin_bp.add_url_rule('/api/travels/check-conflicts', view_func=travels_controller.travels_check_conflicts, methods=['POST'])
 
     # Rotas de Financeiro
     admin_bp.add_url_rule('/financial', view_func=financial_controller.financial_payouts_list, methods=['GET'])

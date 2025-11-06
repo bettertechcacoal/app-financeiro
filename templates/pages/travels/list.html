@@ -120,7 +120,7 @@
                                     <!-- Botões de Ação -->
                                     <div class="flex flex-wrap gap-2 lg:flex-shrink-0">
                                         {% set can_edit = (travel.driver_user_id == current_user_id or travel.record_user_id == current_user_id) %}
-                                        {% if travel.status == 'approved' or not can_edit %}
+                                        {% if travel.status == 'approved' or travel.status == 'cancelled' or not can_edit %}
                                         <a href="{{ url_for('admin.travels_view', travel_id=travel.id) }}"
                                            class="inline-flex items-center px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
                                             <i class="fas fa-eye mr-1.5"></i>

@@ -12,22 +12,24 @@ from app.models.vehicle_travel_history import VehicleTravelHistory
 from app.utils.permissions_helper import permission_required
 from datetime import datetime
 from decimal import Decimal
-from sqlalchemy import case
+from sqlalchemy import case, or_, and_
+import sqlalchemy
 
 
 def travels_list():
-    """Lista viagens onde o usuário é solicitante ou passageiro"""
+    """Lista viagens do usuário ou todas se tiver permissão"""
     try:
         db = SessionLocal()
-
-        # Obter ID do usuário logado
         user_id = session.get('user_id')
 
         if not user_id:
             flash('Usuário não autenticado', 'error')
             return redirect(url_for('auth.login'))
 
-        # Criar expressão CASE para traduzir os status no SQL
+        from app.utils.permissions_helper import user_has_permission
+        can_approve_travels = user_has_permission('travels_approve')
+        can_view_all_travels = user_has_permission('travels_view_all')
+
         status_label = case(
             (Travel.status == TravelStatus.PENDING, 'Aguardando aprovação'),
             (Travel.status == TravelStatus.APPROVED, 'Aprovada'),
@@ -37,23 +39,26 @@ def travels_list():
             else_='Desconhecido'
         ).label('status_label')
 
-        # Buscar viagens onde o usuário é solicitante OU passageiro
         from sqlalchemy import or_
         from sqlalchemy.orm import outerjoin
 
-        results = db.query(Travel, status_label)\
-            .outerjoin(TravelPassenger, Travel.id == TravelPassenger.travel_id)\
-            .filter(
-                or_(
-                    Travel.driver_user_id == user_id,
-                    TravelPassenger.user_id == user_id
-                )
-            )\
-            .distinct()\
-            .order_by(Travel.created_at.desc())\
-            .all()
+        if can_approve_travels or can_view_all_travels:
+            results = db.query(Travel, status_label)\
+                .order_by(Travel.created_at.desc())\
+                .all()
+        else:
+            results = db.query(Travel, status_label)\
+                .outerjoin(TravelPassenger, Travel.id == TravelPassenger.travel_id)\
+                .filter(
+                    or_(
+                        Travel.driver_user_id == user_id,
+                        TravelPassenger.user_id == user_id
+                    )
+                )\
+                .distinct()\
+                .order_by(Travel.created_at.desc())\
+                .all()
 
-        # Converter para dicionários e adicionar o status traduzido
         travels_data = []
         for travel, status_text in results:
             travel_dict = travel.to_dict()
@@ -655,6 +660,80 @@ def travels_analyze_process(travel_id):
         return redirect(url_for('admin.travels_list'))
 
 
+def travels_check_conflicts():
+    """API para verificar conflitos de viagens aprovadas ou pendentes"""
+    try:
+        data = request.get_json()
+        driver_user_id = data.get('driver_user_id')
+        passenger_ids = data.get('passenger_ids', [])
+        departure_date = data.get('departure_date')
+        return_date = data.get('return_date')
+        current_travel_id = data.get('travel_id')
+
+        if not all([driver_user_id, departure_date, return_date]):
+            return jsonify({'success': False, 'error': 'Dados incompletos'}), 400
+
+        db = SessionLocal()
+        departure_dt = datetime.fromisoformat(departure_date)
+        return_dt = datetime.fromisoformat(return_date)
+        all_participant_ids = [int(driver_user_id)] + [int(pid) for pid in passenger_ids if pid]
+        conflicts = []
+
+        for user_id in all_participant_ids:
+            conflicting_travels = db.query(Travel)\
+                .outerjoin(TravelPassenger, Travel.id == TravelPassenger.travel_id)\
+                .filter(
+                    Travel.status.in_([TravelStatus.APPROVED, TravelStatus.PENDING]),
+                    sqlalchemy.or_(
+                        Travel.driver_user_id == user_id,
+                        TravelPassenger.user_id == user_id
+                    ),
+                    sqlalchemy.or_(
+                        sqlalchemy.and_(
+                            Travel.departure_date <= departure_dt,
+                            Travel.return_date >= departure_dt
+                        ),
+                        sqlalchemy.and_(
+                            Travel.departure_date <= return_dt,
+                            Travel.return_date >= return_dt
+                        ),
+                        sqlalchemy.and_(
+                            Travel.departure_date >= departure_dt,
+                            Travel.return_date <= return_dt
+                        )
+                    )
+                )\
+                .distinct()
+
+            if current_travel_id:
+                conflicting_travels = conflicting_travels.filter(Travel.id != current_travel_id)
+
+            conflicting_travels = conflicting_travels.all()
+
+            if conflicting_travels:
+                user = db.query(User).filter_by(id=user_id).first()
+                for travel in conflicting_travels:
+                    conflicts.append({
+                        'user_name': user.name if user else 'Usuário desconhecido',
+                        'user_id': user_id,
+                        'city': travel.city.name if travel.city else 'Cidade não informada',
+                        'state': travel.city.state.uf if travel.city and travel.city.state else '',
+                        'departure_date': travel.departure_date.strftime('%d/%m/%Y %H:%M'),
+                        'return_date': travel.return_date.strftime('%d/%m/%Y %H:%M')
+                    })
+
+        db.close()
+
+        if conflicts:
+            return jsonify({'success': True, 'has_conflicts': True, 'conflicts': conflicts}), 200
+        else:
+            return jsonify({'success': True, 'has_conflicts': False, 'conflicts': []}), 200
+
+    except Exception as e:
+        print(f"Erro ao verificar conflitos: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 def travels_view(travel_id):
     """Exibe resumo completo da viagem"""
     try:
@@ -690,16 +769,64 @@ def travels_view(travel_id):
 
 
 def get_available_vehicles_api():
-    """API para buscar veículos disponíveis"""
+    """API para buscar veículos disponíveis e verificar conflitos de reserva"""
     try:
         db = SessionLocal()
+        departure_date_str = request.args.get('departure_date')
+        return_date_str = request.args.get('return_date')
+        current_travel_id = request.args.get('travel_id')
 
-        # Buscar veículos ativos
         vehicles = db.query(Vehicle).filter_by(is_active=True).order_by(Vehicle.brand, Vehicle.model).all()
+        vehicles_data = []
 
-        vehicles_data = [vehicle.to_dict() for vehicle in vehicles]
+        for vehicle in vehicles:
+            vehicle_dict = vehicle.to_dict()
+            vehicle_dict['reserved'] = False
+
+            if departure_date_str and return_date_str:
+                try:
+                    departure_dt = datetime.fromisoformat(departure_date_str.replace('Z', '+00:00'))
+                    return_dt = datetime.fromisoformat(return_date_str.replace('Z', '+00:00'))
+
+                    if departure_dt.tzinfo is not None:
+                        departure_dt = departure_dt.replace(tzinfo=None)
+                    if return_dt.tzinfo is not None:
+                        return_dt = return_dt.replace(tzinfo=None)
+
+                    from app.models.vehicle_travel_history import VehicleTravelHistory
+
+                    conflicting_travels = db.query(Travel)\
+                        .join(VehicleTravelHistory, Travel.id == VehicleTravelHistory.travel_id)\
+                        .filter(
+                            VehicleTravelHistory.vehicle_id == vehicle.id,
+                            Travel.status == TravelStatus.APPROVED,
+                            sqlalchemy.or_(
+                                sqlalchemy.and_(
+                                    Travel.departure_date <= departure_dt,
+                                    Travel.return_date >= departure_dt
+                                ),
+                                sqlalchemy.and_(
+                                    Travel.departure_date <= return_dt,
+                                    Travel.return_date >= return_dt
+                                ),
+                                sqlalchemy.and_(
+                                    Travel.departure_date >= departure_dt,
+                                    Travel.return_date <= return_dt
+                                )
+                            )
+                        )
+
+                    if current_travel_id:
+                        conflicting_travels = conflicting_travels.filter(Travel.id != int(current_travel_id))
+
+                    if conflicting_travels.first():
+                        vehicle_dict['reserved'] = True
+                except:
+                    pass
+
+            vehicles_data.append(vehicle_dict)
+
         db.close()
-
         return jsonify({'success': True, 'vehicles': vehicles_data})
 
     except Exception as e:

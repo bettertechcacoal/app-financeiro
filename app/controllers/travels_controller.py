@@ -92,6 +92,7 @@ def travels_create():
         # Verificar se usuário tem permissão para aprovar viagens
         from app.utils.permissions_helper import user_has_permission
         can_approve_travels = user_has_permission('travels_approve')
+        can_create_retroactive = user_has_permission('travels_create_retroactive')
 
         # Buscar dados do usuário logado
         logged_user_id = session.get('user_id')
@@ -114,6 +115,7 @@ def travels_create():
             cities=cities_data,
             users=users_data,
             can_approve_travels=can_approve_travels,
+            can_create_retroactive=can_create_retroactive,
             logged_user=logged_user_data,
             can_edit=True  # Sempre pode editar ao criar
         )
@@ -265,6 +267,7 @@ def travels_edit(travel_id):
         # Verificar se usuário tem permissão para aprovar viagens
         from app.utils.permissions_helper import user_has_permission
         can_approve_travels = user_has_permission('travels_approve')
+        can_create_retroactive = user_has_permission('travels_create_retroactive')
 
         # Buscar dados do usuário logado
         logged_user_id = session.get('user_id')
@@ -293,6 +296,7 @@ def travels_edit(travel_id):
             cities=cities_data,
             users=users_data,
             can_approve_travels=can_approve_travels,
+            can_create_retroactive=can_create_retroactive,
             logged_user=logged_user_data,
             can_edit=can_edit
         )

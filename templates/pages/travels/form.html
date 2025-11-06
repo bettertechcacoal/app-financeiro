@@ -564,7 +564,11 @@ $(document).ready(function() {
     // Inicializar datepickers
     $('#departure_date_picker').datepicker({
         dateFormat: 'dd/mm/yy',
-        minDate: 0,
+        {% if can_create_retroactive %}
+        minDate: null,  // Permite qualquer data se tiver permissão
+        {% else %}
+        minDate: 0,     // Apenas datas futuras se não tiver permissão
+        {% endif %}
         onSelect: function(dateText) {
             updateHiddenDateTime('departure');
         }
@@ -572,7 +576,11 @@ $(document).ready(function() {
 
     $('#return_date_picker').datepicker({
         dateFormat: 'dd/mm/yy',
-        minDate: 0,
+        {% if can_create_retroactive %}
+        minDate: null,  // Permite qualquer data se tiver permissão
+        {% else %}
+        minDate: 0,     // Apenas datas futuras se não tiver permissão
+        {% endif %}
         onSelect: function(dateText) {
             updateHiddenDateTime('return');
         }

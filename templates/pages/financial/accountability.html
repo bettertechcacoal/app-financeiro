@@ -1194,9 +1194,11 @@ $(document).ready(function() {
         return parseFloat(value.replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
     }
 
-    // ========================================
-    // ARQUITETURA DE DADOS (Single Source of Truth)
-    // ========================================
+    /**
+     * GERENCIAMENTO DE DADOS
+     * Sistema baseado em Single Source of Truth (accountabilityData)
+     * Todas as operações modificam o modelo e re-renderizam a interface
+     */
 
     /**
      * Atualiza a visualização do JSON debug
@@ -1292,10 +1294,11 @@ $(document).ready(function() {
                         <span id="day-total-${foodDayCounter}" class="font-bold text-purple-900">R$ ${day.amount.toFixed(2).replace('.', ',')}</span>
                     </div>
 
-                    <!-- Botão Remover -->
+                    <!-- Botão Excluir -->
                     <button type="button" onclick="removeFoodDayByIndex(${foodDayCounter - 1})"
-                            class="text-red-600 hover:text-red-800 transition-colors" title="Remover">
+                            class="flex items-center gap-1.5 text-red-600 hover:text-red-800 transition-colors" title="Excluir">
                         <i class="fas fa-trash text-sm"></i>
+                        <span class="text-sm">Excluir</span>
                     </button>
                 </div>
             `;
@@ -1342,34 +1345,30 @@ $(document).ready(function() {
                     <div class="flex items-center gap-2 flex-1">
                         <i class="fas ${expenseInfo.icon} text-purple-900"></i>
                         <span class="text-gray-700">${expenseInfo.name}</span>
-                        ${expense.attachments && expense.attachments.length > 0 ? `
                         <button type="button" onclick="openAttachmentModal(${vehicleExpenseCounter}, 'vehicle')"
-                                class="flex items-center gap-1.5 ml-2 cursor-pointer hover:opacity-80 transition-opacity" title="${expense.attachments.length} anexo(s)">
+                                class="flex items-center gap-1.5 ml-2 cursor-pointer hover:opacity-80 transition-opacity" title="${expense.attachments && expense.attachments.length > 0 ? expense.attachments.length + ' anexo(s)' : 'Adicionar anexo'}">
                             <div class="relative">
                                 <i class="fas fa-paperclip text-purple-900"></i>
-                                <span class="absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">${expense.attachments.length}</span>
+                                <span class="attachment-count-${vehicleExpenseCounter} ${expense.attachments && expense.attachments.length > 0 ? '' : 'hidden'} absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">${expense.attachments && expense.attachments.length > 0 ? expense.attachments.length : '0'}</span>
                             </div>
                             <span class="text-gray-700 text-sm">Anexos</span>
                         </button>
-                        ` : `
-                        <button type="button" onclick="openAttachmentModal(${vehicleExpenseCounter}, 'vehicle')"
-                                class="flex items-center gap-1.5 ml-2 cursor-pointer hover:opacity-80 transition-opacity" title="Adicionar anexo">
-                            <div class="relative">
-                                <i class="fas fa-paperclip text-purple-900"></i>
-                                <span class="attachment-count-${vehicleExpenseCounter} hidden absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">0</span>
-                            </div>
-                            <span class="text-gray-700 text-sm">Anexos</span>
-                        </button>
-                        `}
                     </div>
 
                     <div class="w-32 text-right">
                         <span class="font-bold text-purple-900">R$ ${expense.amount.toFixed(2).replace('.', ',')}</span>
                     </div>
 
+                    <button type="button" onclick="editVehicleExpenseByIndex(${index})"
+                            class="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 transition-colors" title="Editar">
+                        <i class="fas fa-edit text-sm"></i>
+                        <span class="text-sm">Editar</span>
+                    </button>
+
                     <button type="button" onclick="removeVehicleExpenseByIndex(${index})"
-                            class="text-red-600 hover:text-red-800 transition-colors" title="Remover">
+                            class="flex items-center gap-1.5 text-red-600 hover:text-red-800 transition-colors" title="Excluir">
                         <i class="fas fa-trash text-sm"></i>
+                        <span class="text-sm">Excluir</span>
                     </button>
                 </div>
             `;
@@ -1413,9 +1412,7 @@ $(document).ready(function() {
                                 class="flex items-center gap-1.5 ml-2 cursor-pointer hover:opacity-80 transition-opacity" title="${expense.attachments && expense.attachments.length > 0 ? expense.attachments.length + ' anexo(s)' : 'Adicionar anexo'}">
                             <div class="relative">
                                 <i class="fas fa-paperclip text-purple-900"></i>
-                                ${expense.attachments && expense.attachments.length > 0 ? `
-                                <span class="absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">${expense.attachments.length}</span>
-                                ` : ''}
+                                <span class="attachment-count-${lodgingExpenseCounter} ${expense.attachments && expense.attachments.length > 0 ? '' : 'hidden'} absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">${expense.attachments && expense.attachments.length > 0 ? expense.attachments.length : '0'}</span>
                             </div>
                             <span class="text-gray-700 text-sm">Anexos</span>
                         </button>
@@ -1425,9 +1422,16 @@ $(document).ready(function() {
                         <span class="font-bold text-purple-900">R$ ${expense.amount.toFixed(2).replace('.', ',')}</span>
                     </div>
 
+                    <button type="button" onclick="editLodgingExpenseByIndex(${index})"
+                            class="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 transition-colors" title="Editar">
+                        <i class="fas fa-edit text-sm"></i>
+                        <span class="text-sm">Editar</span>
+                    </button>
+
                     <button type="button" onclick="removeLodgingExpenseByIndex(${index})"
-                            class="text-red-600 hover:text-red-800 transition-colors" title="Remover">
+                            class="flex items-center gap-1.5 text-red-600 hover:text-red-800 transition-colors" title="Excluir">
                         <i class="fas fa-trash text-sm"></i>
+                        <span class="text-sm">Excluir</span>
                     </button>
                 </div>
             `;
@@ -1471,9 +1475,7 @@ $(document).ready(function() {
                                 class="flex items-center gap-1.5 ml-2 cursor-pointer hover:opacity-80 transition-opacity" title="${expense.attachments && expense.attachments.length > 0 ? expense.attachments.length + ' anexo(s)' : 'Adicionar anexo'}">
                             <div class="relative">
                                 <i class="fas fa-paperclip text-purple-900"></i>
-                                ${expense.attachments && expense.attachments.length > 0 ? `
-                                <span class="absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">${expense.attachments.length}</span>
-                                ` : ''}
+                                <span class="attachment-count-${otherExpenseCounter} ${expense.attachments && expense.attachments.length > 0 ? '' : 'hidden'} absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">${expense.attachments && expense.attachments.length > 0 ? expense.attachments.length : '0'}</span>
                             </div>
                             <span class="text-gray-700 text-sm">Anexos</span>
                         </button>
@@ -1483,9 +1485,16 @@ $(document).ready(function() {
                         <span class="font-bold text-purple-900">R$ ${expense.amount.toFixed(2).replace('.', ',')}</span>
                     </div>
 
+                    <button type="button" onclick="editOtherExpenseByIndex(${index})"
+                            class="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 transition-colors" title="Editar">
+                        <i class="fas fa-edit text-sm"></i>
+                        <span class="text-sm">Editar</span>
+                    </button>
+
                     <button type="button" onclick="removeOtherExpenseByIndex(${index})"
-                            class="text-red-600 hover:text-red-800 transition-colors" title="Remover">
+                            class="flex items-center gap-1.5 text-red-600 hover:text-red-800 transition-colors" title="Excluir">
                         <i class="fas fa-trash text-sm"></i>
+                        <span class="text-sm">Excluir</span>
                     </button>
                 </div>
             `;
@@ -1522,9 +1531,11 @@ $(document).ready(function() {
         $('#other-total').text('R$ ' + accountabilityData.other.amount.toFixed(2).replace('.', ','));
     }
 
-    // ========================================
-    // FUNÇÕES DE ATUALIZAÇÃO DE DADOS (Update Functions)
-    // ========================================
+    /**
+     * SINCRONIZAÇÃO DOM → MODEL
+     * Funções que sincronizam alterações feitas diretamente nos inputs do DOM
+     * de volta para o modelo de dados (accountabilityData)
+     */
 
     /**
      * Sincroniza dados do DOM para o accountabilityData
@@ -1613,10 +1624,7 @@ $(document).ready(function() {
      * Sincroniza dados de veículo do DOM
      */
     function syncVehicleDataFromDOM() {
-        let total = 0;
-        accountabilityData.vehicle.expenses = [];
-
-        // Sincronizar quilometragem
+        // Sincronizar quilometragem que pode ser alterada diretamente no DOM
         const kmStart = parseInt($('#km-departure').val()) || 0;
         const kmEnd = parseInt($('#km-arrival').val()) || 0;
         const kmTraveled = Math.max(0, kmEnd - kmStart);
@@ -1629,121 +1637,90 @@ $(document).ready(function() {
             $('#km-traveled-display').text(kmTraveled + ' km');
         }
 
-        $('.vehicle-expense-item').each(function() {
+        // Sincronizar apenas as datas das despesas que podem ter sido alteradas diretamente no DOM
+        // e anexos que foram adicionados via modal
+        $('.vehicle-expense-item').each(function(index) {
             const expenseId = $(this).data('expense-id');
-            const type = $(this).data('type');
             const date = $(`#vehicle-expense-date-${expenseId}`).val();
-            const amount = parseFloat($(this).data('amount')) || 0;
-            const description = $(this).data('description') || '';
 
-            const dateObj = new Date(date + 'T00:00:00');
-            const formattedDate = dateObj.toLocaleDateString('pt-BR');
+            if (accountabilityData.vehicle.expenses[index] && date) {
+                accountabilityData.vehicle.expenses[index].date = date;
+                const dateObj = new Date(date + 'T00:00:00');
+                accountabilityData.vehicle.expenses[index].date_formatted = dateObj.toLocaleDateString('pt-BR');
 
-            const expenseInfo = getExpenseIconAndName(type, description);
-
-            // Pegar anexos desta despesa
-            const attachmentKey = `vehicle-${expenseId}`;
-            const attachments = window.expenseAttachments[attachmentKey] || [];
-
-            accountabilityData.vehicle.expenses.push({
-                type: type,
-                name: expenseInfo.name,
-                date: date,
-                date_formatted: formattedDate,
-                amount: amount,
-                attachments: attachments,
-                attachments_count: attachments.length
-            });
-
-            total += amount;
+                // Sincronizar anexos do window.expenseAttachments para o modelo
+                const attachmentKey = `vehicle-${expenseId}`;
+                if (window.expenseAttachments[attachmentKey]) {
+                    accountabilityData.vehicle.expenses[index].attachments = window.expenseAttachments[attachmentKey];
+                    accountabilityData.vehicle.expenses[index].attachments_count = window.expenseAttachments[attachmentKey].length;
+                }
+            }
         });
 
-        accountabilityData.vehicle.amount = total;
+        // Recalcular total baseado nos dados do modelo
+        accountabilityData.vehicle.amount = accountabilityData.vehicle.expenses.reduce((sum, exp) => sum + exp.amount, 0);
         accountabilityData.vehicle.expenses_count = accountabilityData.vehicle.expenses.length;
-        $('#vehicle-total').text('R$ ' + total.toFixed(2).replace('.', ','));
+        $('#vehicle-total').text('R$ ' + accountabilityData.vehicle.amount.toFixed(2).replace('.', ','));
     }
 
     /**
      * Sincroniza dados de hospedagem do DOM
      */
     function syncLodgingDataFromDOM() {
-        let total = 0;
-        accountabilityData.lodging.expenses = [];
-
-        $('.lodging-expense-item').each(function() {
+        // Sincronizar apenas as datas que podem ter sido alteradas diretamente no DOM
+        // e anexos que foram adicionados via modal
+        $('.lodging-expense-item').each(function(index) {
             const expenseId = $(this).data('expense-id');
             const date = $(`#lodging-expense-date-${expenseId}`).val();
-            const amount = parseFloat($(this).closest('.lodging-expense-item').find('.font-bold').text().replace('R$ ', '').replace(',', '.')) || 0;
-            const description = $(this).data('description') || '';
 
-            const dateObj = new Date(date + 'T00:00:00');
-            const formattedDate = dateObj.toLocaleDateString('pt-BR');
+            if (accountabilityData.lodging.expenses[index] && date) {
+                accountabilityData.lodging.expenses[index].date = date;
+                const dateObj = new Date(date + 'T00:00:00');
+                accountabilityData.lodging.expenses[index].date_formatted = dateObj.toLocaleDateString('pt-BR');
 
-            // Pegar anexos desta despesa
-            const attachmentKey = `lodging-${expenseId}`;
-            const attachments = window.expenseAttachments[attachmentKey] || [];
-
-            accountabilityData.lodging.expenses.push({
-                name: 'Hospedagem',
-                description: description,
-                date: date,
-                date_formatted: formattedDate,
-                amount: amount,
-                attachments: attachments,
-                attachments_count: attachments.length
-            });
-
-            total += amount;
+                // Sincronizar anexos do window.expenseAttachments para o modelo
+                const attachmentKey = `lodging-${expenseId}`;
+                if (window.expenseAttachments[attachmentKey]) {
+                    accountabilityData.lodging.expenses[index].attachments = window.expenseAttachments[attachmentKey];
+                    accountabilityData.lodging.expenses[index].attachments_count = window.expenseAttachments[attachmentKey].length;
+                }
+            }
         });
 
-        accountabilityData.lodging.amount = total;
+        // Recalcular total baseado nos dados do modelo
+        accountabilityData.lodging.amount = accountabilityData.lodging.expenses.reduce((sum, exp) => sum + exp.amount, 0);
         accountabilityData.lodging.expenses_count = accountabilityData.lodging.expenses.length;
-        $('#lodging-total').text('R$ ' + total.toFixed(2).replace('.', ','));
+        $('#lodging-total').text('R$ ' + accountabilityData.lodging.amount.toFixed(2).replace('.', ','));
     }
 
     /**
      * Sincroniza dados de outras despesas do DOM
      */
     function syncOtherDataFromDOM() {
-        let total = 0;
-        accountabilityData.other.expenses = [];
-
-        $('.other-expense-item').each(function() {
+        // Sincronizar apenas as datas que podem ter sido alteradas diretamente no DOM
+        // e anexos que foram adicionados via modal
+        $('.other-expense-item').each(function(index) {
             const expenseId = $(this).data('expense-id');
             const date = $(`#other-expense-date-${expenseId}`).val();
-            // Usar data-description, se não existir usar o texto do span (fallback)
-            let name = $(this).attr('data-description'); // Usar attr ao invés de data
-            if (!name || name === 'undefined') {
-                name = $(this).find('.expense-description').text().trim();
+
+            if (accountabilityData.other.expenses[index] && date) {
+                accountabilityData.other.expenses[index].date = date;
+                const dateObj = new Date(date + 'T00:00:00');
+                accountabilityData.other.expenses[index].date_formatted = dateObj.toLocaleDateString('pt-BR');
+
+                // Sincronizar anexos do window.expenseAttachments para o modelo
+                const attachmentKey = `other-${expenseId}`;
+                if (window.expenseAttachments[attachmentKey]) {
+                    accountabilityData.other.expenses[index].attachments = window.expenseAttachments[attachmentKey];
+                    accountabilityData.other.expenses[index].attachments_count = window.expenseAttachments[attachmentKey].length;
+                }
             }
-            if (!name) {
-                name = 'Despesa'; // Fallback final
-            }
-            const amount = parseFloat($(this).find('.font-bold').text().replace('R$ ', '').replace(',', '.')) || 0;
-
-            const dateObj = new Date(date + 'T00:00:00');
-            const formattedDate = dateObj.toLocaleDateString('pt-BR');
-
-            // Pegar anexos desta despesa
-            const attachmentKey = `other-${expenseId}`;
-            const attachments = window.expenseAttachments[attachmentKey] || [];
-
-            accountabilityData.other.expenses.push({
-                name: name,
-                description: name,
-                date: date,
-                date_formatted: formattedDate,
-                amount: amount,
-                attachments: attachments,
-                attachments_count: attachments.length
-            });
-
-            total += amount;
         });
 
-        accountabilityData.other.amount = total;
+        // Recalcular total baseado nos dados do modelo
+        accountabilityData.other.amount = accountabilityData.other.expenses.reduce((sum, exp) => sum + exp.amount, 0);
         accountabilityData.other.expenses_count = accountabilityData.other.expenses.length;
-        $('#other-total').text('R$ ' + total.toFixed(2).replace('.', ','));
+        $('#other-total').text('R$ ' + accountabilityData.other.amount.toFixed(2).replace('.', ','));
     }
 
     /**
@@ -1792,7 +1769,8 @@ $(document).ready(function() {
     }
 
     /**
-     * Remove dia de alimentação por índice
+     * Remove dia de alimentação do modelo de dados
+     * @param {number} index - Índice do dia no array accountabilityData.food.days
      */
     function removeFoodDayByIndex(index) {
         accountabilityData.food.days.splice(index, 1);
@@ -1806,7 +1784,8 @@ $(document).ready(function() {
     }
 
     /**
-     * Remove despesa de veículo por índice
+     * Remove despesa de veículo do modelo de dados
+     * @param {number} index - Índice da despesa no array accountabilityData.vehicle.expenses
      */
     function removeVehicleExpenseByIndex(index) {
         // Remover anexos associados
@@ -1826,7 +1805,8 @@ $(document).ready(function() {
     }
 
     /**
-     * Remove despesa de hospedagem por índice
+     * Remove despesa de hospedagem do modelo de dados
+     * @param {number} index - Índice da despesa no array accountabilityData.lodging.expenses
      */
     function removeLodgingExpenseByIndex(index) {
         // Remover anexos associados
@@ -1845,7 +1825,8 @@ $(document).ready(function() {
     }
 
     /**
-     * Remove outras despesas por índice
+     * Remove outras despesas do modelo de dados
+     * @param {number} index - Índice da despesa no array accountabilityData.other.expenses
      */
     function removeOtherExpenseByIndex(index) {
         // Remover anexos associados
@@ -1863,11 +1844,79 @@ $(document).ready(function() {
         renderFromData();
     }
 
-    // ========================================
-    // ALIASES PARA COMPATIBILIDADE COM CÓDIGO LEGADO
-    // ========================================
+    /**
+     * Abre modal de edição de despesa de veículo
+     * @param {number} index - Índice da despesa no array accountabilityData.vehicle.expenses
+     */
+    window.editVehicleExpenseByIndex = function(index) {
+        const expense = accountabilityData.vehicle.expenses[index];
+        if (!expense) return;
 
-    // Redirecionar funções antigas para as novas
+        // Armazenar índice sendo editado
+        window.editingVehicleIndex = index;
+
+        // Preencher modal
+        $('#modal-vehicle-date').val(expense.date);
+        $('#modal-vehicle-amount').val(expense.amount.toFixed(2).replace('.', ','));
+
+        // Determinar tipo e descrição
+        const type = expense.type || 'other';
+        selectVehicleType(type);
+
+        if (type === 'other') {
+            $('#modal-vehicle-other-description').val(expense.name || '');
+        }
+
+        // Abrir modal
+        $('#vehicle-expense-modal').removeClass('hidden');
+    };
+
+    /**
+     * Abre modal de edição de despesa de hospedagem
+     * @param {number} index - Índice da despesa no array accountabilityData.lodging.expenses
+     */
+    window.editLodgingExpenseByIndex = function(index) {
+        const expense = accountabilityData.lodging.expenses[index];
+        if (!expense) return;
+
+        // Armazenar índice sendo editado
+        window.editingLodgingIndex = index;
+
+        // Preencher modal
+        $('#modal-lodging-date').val(expense.date);
+        $('#modal-lodging-amount').val(expense.amount.toFixed(2).replace('.', ','));
+        $('#modal-lodging-description').val(expense.description || '');
+
+        // Abrir modal
+        $('#lodging-expense-modal').removeClass('hidden');
+    };
+
+    /**
+     * Abre modal de edição de outras despesas
+     * @param {number} index - Índice da despesa no array accountabilityData.other.expenses
+     */
+    window.editOtherExpenseByIndex = function(index) {
+        const expense = accountabilityData.other.expenses[index];
+        if (!expense) return;
+
+        // Armazenar índice sendo editado
+        window.editingOtherIndex = index;
+
+        // Preencher modal
+        $('#modal-other-description').val(expense.description || expense.name || '');
+        $('#modal-other-date').val(expense.date);
+        $('#modal-other-amount').val(expense.amount.toFixed(2).replace('.', ','));
+
+        // Abrir modal
+        $('#other-expense-modal').removeClass('hidden');
+    };
+
+    /**
+     * CALLBACKS DE SINCRONIZAÇÃO
+     * Funções expostas globalmente para serem chamadas pelos event handlers
+     * dos inputs renderizados. Sincronizam mudanças do DOM para o modelo.
+     */
+
     window.calculateFoodTotal = function() {
         syncFoodDataFromDOM();
         updateJSON();
@@ -1892,7 +1941,11 @@ $(document).ready(function() {
         renderSummary();
     };
 
-    // Expor funções globalmente
+    /**
+     * EXPOSIÇÃO DE APIs PÚBLICAS
+     * Funções disponibilizadas no escopo global para uso nos event handlers HTML
+     */
+
     window.addFoodDay = addNewFoodDay;
     window.removeFoodDayByIndex = removeFoodDayByIndex;
     window.removeVehicleExpenseByIndex = removeVehicleExpenseByIndex;
@@ -2130,6 +2183,8 @@ $(document).ready(function() {
     // Função para fechar modal
     window.closeVehicleModal = function() {
         $('#vehicle-expense-modal').addClass('hidden');
+        // Limpar flag de edição
+        window.editingVehicleIndex = null;
     };
 
     // Variável para controlar se o mousedown aconteceu no overlay
@@ -2202,20 +2257,36 @@ $(document).ready(function() {
             return;
         }
 
-        // Adicionar despesa diretamente ao modelo
         const dateObj = new Date(date + 'T00:00:00');
         const formattedDate = dateObj.toLocaleDateString('pt-BR');
         const expenseInfo = getExpenseIconAndName(type, customDescription);
 
-        accountabilityData.vehicle.expenses.push({
-            type: type,
-            name: expenseInfo.name,
-            date: date,
-            date_formatted: formattedDate,
-            amount: amount,
-            attachments: [],
-            attachments_count: 0
-        });
+        // Verificar se está editando ou adicionando
+        if (window.editingVehicleIndex !== null && window.editingVehicleIndex !== undefined) {
+            // Modo edição: atualizar item existente
+            const existingExpense = accountabilityData.vehicle.expenses[window.editingVehicleIndex];
+            accountabilityData.vehicle.expenses[window.editingVehicleIndex] = {
+                type: type,
+                name: expenseInfo.name,
+                date: date,
+                date_formatted: formattedDate,
+                amount: amount,
+                attachments: existingExpense?.attachments || [],
+                attachments_count: existingExpense?.attachments_count || 0
+            };
+            window.editingVehicleIndex = null;
+        } else {
+            // Modo adicionar: criar novo item
+            accountabilityData.vehicle.expenses.push({
+                type: type,
+                name: expenseInfo.name,
+                date: date,
+                date_formatted: formattedDate,
+                amount: amount,
+                attachments: [],
+                attachments_count: 0
+            });
+        }
 
         // Recalcular total
         accountabilityData.vehicle.amount = accountabilityData.vehicle.expenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -2265,9 +2336,16 @@ $(document).ready(function() {
                     <span class="text-gray-700 text-sm">Anexos</span>
                 </button>
 
+                <!-- Botão Editar -->
+                <button type="button" onclick="editVehicleExpense(${vehicleExpenseCounter})" class="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 transition-colors" title="Editar">
+                    <i class="fas fa-edit text-sm"></i>
+                    <span class="text-sm">Editar</span>
+                </button>
+
                 <!-- Botão Excluir -->
-                <button type="button" onclick="removeVehicleExpense(${vehicleExpenseCounter})" class="text-red-600 hover:text-red-800 transition-colors" title="Excluir">
-                    <i class="fas fa-trash text-xs"></i>
+                <button type="button" onclick="removeVehicleExpense(${vehicleExpenseCounter})" class="flex items-center gap-1.5 text-red-600 hover:text-red-800 transition-colors" title="Excluir">
+                    <i class="fas fa-trash text-sm"></i>
+                    <span class="text-sm">Excluir</span>
                 </button>
             </div>
         `;
@@ -2292,7 +2370,38 @@ $(document).ready(function() {
         calculateVehicleTotal();
     };
 
-    // ==================== FUNÇÕES DE ANEXOS ====================
+    // Função para editar despesa de veículo
+    window.editVehicleExpense = function(expenseId) {
+        const expenseItem = $(`.vehicle-expense-item[data-expense-id="${expenseId}"]`);
+        const type = expenseItem.data('type');
+        const amount = parseFloat(expenseItem.data('amount'));
+        const customDescription = expenseItem.data('custom-description') || '';
+        const date = $(`#vehicle-expense-date-${expenseId}`).val();
+
+        // Preencher modal com dados existentes
+        $('#modal-vehicle-date').val(date);
+        $('#modal-vehicle-type').val(type);
+        $('#modal-vehicle-amount').val(amount.toFixed(2));
+
+        // Mostrar/esconder campo de descrição customizada
+        if (type === 'other') {
+            $('#modal-vehicle-custom-description-group').removeClass('hidden');
+            $('#modal-vehicle-custom-description').val(customDescription);
+        } else {
+            $('#modal-vehicle-custom-description-group').addClass('hidden');
+        }
+
+        // Armazenar ID da despesa sendo editada
+        window.editingVehicleExpenseId = expenseId;
+
+        // Abrir modal
+        $('#modal-vehicle').removeClass('hidden');
+    };
+
+    /**
+     * GERENCIAMENTO DE ANEXOS
+     * Sistema de upload, visualização e remoção de anexos vinculados às despesas
+     */
 
     // Armazenar anexos de cada despesa
     window.expenseAttachments = {};
@@ -2769,12 +2878,14 @@ $(document).ready(function() {
         const key = `${expenseType}-${expenseId}`;
         const count = (window.expenseAttachments[key] || []).length;
         const badge = $(`.attachment-count-${expenseId}`);
-
+        const button = badge.closest('button');
 
         if (count > 0) {
             badge.text(count).removeClass('hidden');
+            button.attr('title', `${count} anexo(s)`);
         } else {
             badge.addClass('hidden');
+            button.attr('title', 'Adicionar anexo');
         }
     }
 
@@ -2788,7 +2899,10 @@ $(document).ready(function() {
         return 'fa-file';
     }
 
-    // ==================== FUNÇÕES DE HOSPEDAGEM ====================
+    /**
+     * DESPESAS DE HOSPEDAGEM
+     * Funções para adicionar, editar e gerenciar despesas de hospedagem
+     */
 
     // Função para limpar erros de validação de hospedagem
     function clearLodgingValidationErrors() {
@@ -2824,6 +2938,8 @@ $(document).ready(function() {
     // Função para fechar modal de hospedagem
     window.closeLodgingModal = function() {
         $('#lodging-expense-modal').addClass('hidden');
+        // Limpar flag de edição
+        window.editingLodgingIndex = null;
     };
 
     // Variável para controlar se o mousedown aconteceu no overlay de hospedagem
@@ -2875,7 +2991,8 @@ $(document).ready(function() {
         clearLodgingValidationErrors();
 
         const date = $('#modal-lodging-date').val();
-        const amount = parseMoneyValue($('#modal-lodging-amount').val());
+        const amountFieldValue = $('#modal-lodging-amount').val();
+        const amount = parseMoneyValue(amountFieldValue);
         const description = $('#modal-lodging-description').val().trim();
 
         let hasError = false;
@@ -2899,19 +3016,35 @@ $(document).ready(function() {
             return;
         }
 
-        // Adicionar despesa diretamente ao modelo
         const dateObj = new Date(date + 'T00:00:00');
         const formattedDate = dateObj.toLocaleDateString('pt-BR');
 
-        accountabilityData.lodging.expenses.push({
-            name: 'Hospedagem',
-            description: description,
-            date: date,
-            date_formatted: formattedDate,
-            amount: amount,
-            attachments: [],
-            attachments_count: 0
-        });
+        // Verificar se está editando ou adicionando
+        if (window.editingLodgingIndex !== null && window.editingLodgingIndex !== undefined) {
+            // Modo edição: atualizar item existente
+            const existingExpense = accountabilityData.lodging.expenses[window.editingLodgingIndex];
+            accountabilityData.lodging.expenses[window.editingLodgingIndex] = {
+                name: 'Hospedagem',
+                description: description,
+                date: date,
+                date_formatted: formattedDate,
+                amount: amount,
+                attachments: existingExpense?.attachments || [],
+                attachments_count: existingExpense?.attachments_count || 0
+            };
+            window.editingLodgingIndex = null;
+        } else {
+            // Modo adicionar: criar novo item
+            accountabilityData.lodging.expenses.push({
+                name: 'Hospedagem',
+                description: description,
+                date: date,
+                date_formatted: formattedDate,
+                amount: amount,
+                attachments: [],
+                attachments_count: 0
+            });
+        }
 
         // Recalcular total
         accountabilityData.lodging.amount = accountabilityData.lodging.expenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -2951,14 +3084,24 @@ $(document).ready(function() {
                 </div>
 
                 <!-- Botão Anexos -->
-                <button type="button" onclick="openAttachmentModal(${lodgingExpenseCounter}, 'lodging')" class="text-purple-600 hover:text-purple-800 transition-colors relative" title="Anexos">
-                    <i class="fas fa-paperclip text-xs"></i>
-                    <span class="attachment-count-${lodgingExpenseCounter} hidden absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">0</span>
+                <button type="button" onclick="openAttachmentModal(${lodgingExpenseCounter}, 'lodging')" class="flex items-center gap-1.5 ml-2 cursor-pointer hover:opacity-80 transition-opacity" title="Adicionar anexo">
+                    <div class="relative">
+                        <i class="fas fa-paperclip text-purple-900"></i>
+                        <span class="attachment-count-${lodgingExpenseCounter} hidden absolute -top-1 -right-1 bg-purple-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">0</span>
+                    </div>
+                    <span class="text-gray-700 text-sm">Anexos</span>
+                </button>
+
+                <!-- Botão Editar -->
+                <button type="button" onclick="editLodgingExpense(${lodgingExpenseCounter})" class="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 transition-colors" title="Editar">
+                    <i class="fas fa-edit text-sm"></i>
+                    <span class="text-sm">Editar</span>
                 </button>
 
                 <!-- Botão Excluir -->
-                <button type="button" onclick="removeLodgingExpense(${lodgingExpenseCounter})" class="text-red-600 hover:text-red-800 transition-colors" title="Excluir">
-                    <i class="fas fa-trash text-xs"></i>
+                <button type="button" onclick="removeLodgingExpense(${lodgingExpenseCounter})" class="flex items-center gap-1.5 text-red-600 hover:text-red-800 transition-colors" title="Excluir">
+                    <i class="fas fa-trash text-sm"></i>
+                    <span class="text-sm">Excluir</span>
                 </button>
             </div>
         `;
@@ -2983,7 +3126,10 @@ $(document).ready(function() {
         calculateLodgingTotal();
     };
 
-    // ==================== FUNÇÕES DE OUTRAS DESPESAS ====================
+    /**
+     * OUTRAS DESPESAS
+     * Funções para adicionar, editar e gerenciar outras despesas não categorizadas
+     */
 
     // Função para limpar erros de validação de outras despesas
     function clearOtherValidationErrors() {
@@ -3020,6 +3166,8 @@ $(document).ready(function() {
     // Função para fechar modal de outras despesas
     window.closeOtherModal = function() {
         $('#other-expense-modal').addClass('hidden');
+        // Limpar flag de edição
+        window.editingOtherIndex = null;
     };
 
     // Variável para controlar se o mousedown aconteceu no overlay de outras despesas
@@ -3120,19 +3268,35 @@ $(document).ready(function() {
             return;
         }
 
-        // Adicionar despesa diretamente ao modelo
         const dateObj = new Date(date + 'T00:00:00');
         const formattedDate = dateObj.toLocaleDateString('pt-BR');
 
-        accountabilityData.other.expenses.push({
-            name: description,
-            description: description,
-            date: date,
-            date_formatted: formattedDate,
-            amount: amount,
-            attachments: [],
-            attachments_count: 0
-        });
+        // Verificar se está editando ou adicionando
+        if (window.editingOtherIndex !== null && window.editingOtherIndex !== undefined) {
+            // Modo edição: atualizar item existente
+            const existingExpense = accountabilityData.other.expenses[window.editingOtherIndex];
+            accountabilityData.other.expenses[window.editingOtherIndex] = {
+                name: description,
+                description: description,
+                date: date,
+                date_formatted: formattedDate,
+                amount: amount,
+                attachments: existingExpense?.attachments || [],
+                attachments_count: existingExpense?.attachments_count || 0
+            };
+            window.editingOtherIndex = null;
+        } else {
+            // Modo adicionar: criar novo item
+            accountabilityData.other.expenses.push({
+                name: description,
+                description: description,
+                date: date,
+                date_formatted: formattedDate,
+                amount: amount,
+                attachments: [],
+                attachments_count: 0
+            });
+        }
 
         // Recalcular total
         accountabilityData.other.amount = accountabilityData.other.expenses.reduce((sum, exp) => sum + exp.amount, 0);
@@ -3182,9 +3346,16 @@ $(document).ready(function() {
                     <span class="text-gray-700 text-sm">Anexos</span>
                 </button>
 
+                <!-- Botão Editar -->
+                <button type="button" onclick="editOtherExpense(${otherExpenseCounter})" class="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 transition-colors" title="Editar">
+                    <i class="fas fa-edit text-sm"></i>
+                    <span class="text-sm">Editar</span>
+                </button>
+
                 <!-- Botão Excluir -->
-                <button type="button" onclick="removeOtherExpense(${otherExpenseCounter})" class="text-red-600 hover:text-red-800 transition-colors" title="Excluir">
-                    <i class="fas fa-trash text-xs"></i>
+                <button type="button" onclick="removeOtherExpense(${otherExpenseCounter})" class="flex items-center gap-1.5 text-red-600 hover:text-red-800 transition-colors" title="Excluir">
+                    <i class="fas fa-trash text-sm"></i>
+                    <span class="text-sm">Excluir</span>
                 </button>
             </div>
         `;
@@ -3665,14 +3836,20 @@ $(document).ready(function() {
         }
     };
 
-    // ===== VALIDAÇÃO DE QUILOMETRAGEM =====
-    function validateKilometers() {
+    /**
+     * Valida quilometragem do veículo
+     * @param {boolean} showMessage - Se deve exibir toast de erro (padrão: true)
+     * @returns {boolean} true se válido, false se inválido
+     */
+    function validateKilometers(showMessage = true) {
         const kmStart = parseInt($('#km-departure').val()) || 0;
         const kmEnd = parseInt($('#km-arrival').val()) || 0;
 
         if (kmEnd > 0 && kmStart > 0 && kmEnd < kmStart) {
             $('#km-arrival').addClass('border-red-500 ring-1 ring-red-500');
-            showToast('O Km de chegada não pode ser menor que o Km de saída', 'error');
+            if (showMessage) {
+                showToast('O Km de chegada não pode ser menor que o Km de saída', 'error');
+            }
             return false;
         } else {
             $('#km-arrival').removeClass('border-red-500 ring-1 ring-red-500');
@@ -3680,7 +3857,10 @@ $(document).ready(function() {
         }
     }
 
-    // Função para salvar prestação de contas (rascunho ou enviar)
+    /**
+     * Salva prestação de contas
+     * @param {string} status - Status da prestação: 'draft' (rascunho) ou 'submitted' (enviada)
+     */
     window.saveAccountability = function(status = 'draft') {
         // Impedir salvar se já foi enviada ou aprovada
         if (IS_LOCKED) {
@@ -3691,8 +3871,8 @@ $(document).ready(function() {
         // Coletar dados do passo atual antes de salvar
         collectCurrentStepData();
 
-        // Validar quilometragem
-        if (!validateKilometers()) {
+        // Validar quilometragem (sem mensagem, pois já foi mostrada no blur)
+        if (!validateKilometers(false)) {
             return;
         }
 
@@ -4011,8 +4191,8 @@ $(document).ready(function() {
     $(window).on('resize', updateSavePosition);
     $(window).on('scroll', updateSavePosition);
 
-    // Validar ao alterar os campos de km
-    $('#km-arrival, #km-departure').on('blur change', function() {
+    // Validar ao sair do campo de km
+    $('#km-arrival').on('blur', function() {
         validateKilometers();
     });
 });

@@ -561,14 +561,13 @@ $(document).ready(function() {
     };
     $.datepicker.setDefaults($.datepicker.regional['pt-BR']);
 
+    // Verificar permissão para datas retroativas
+    const canCreateRetroactive = {{ 'true' if can_create_retroactive else 'false' }};
+
     // Inicializar datepickers
     $('#departure_date_picker').datepicker({
         dateFormat: 'dd/mm/yy',
-        {% if can_create_retroactive %}
-        minDate: null,  // Permite qualquer data se tiver permissão
-        {% else %}
-        minDate: 0,     // Apenas datas futuras se não tiver permissão
-        {% endif %}
+        minDate: canCreateRetroactive ? null : 0,
         onSelect: function(dateText) {
             updateHiddenDateTime('departure');
         }
@@ -576,11 +575,7 @@ $(document).ready(function() {
 
     $('#return_date_picker').datepicker({
         dateFormat: 'dd/mm/yy',
-        {% if can_create_retroactive %}
-        minDate: null,  // Permite qualquer data se tiver permissão
-        {% else %}
-        minDate: 0,     // Apenas datas futuras se não tiver permissão
-        {% endif %}
+        minDate: canCreateRetroactive ? null : 0,
         onSelect: function(dateText) {
             updateHiddenDateTime('return');
         }

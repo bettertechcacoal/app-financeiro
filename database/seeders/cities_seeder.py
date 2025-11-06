@@ -1,42 +1,38 @@
 # -*- coding: utf-8 -*-
 """
-Seeder para popular o banco de dados com o estado de Rondonia e suas 52 cidades
+Seeder de Cidades
+Popula a tabela de estados e cidades com dados de Rondônia
 """
 import sys
 from config import ROOT_DIR
 
-# Adicionar o diretorio raiz ao path
 sys.path.insert(0, ROOT_DIR)
 
 from app.models.database import SessionLocal
 from app.models.state import State
 from app.models.city import City
-from app.models.travel import Travel  # Importar para registrar no SQLAlchemy
-from app.models.user import User  # Importar para registrar no SQLAlchemy
-from app.models.user_group import user_groups  # Importar tabela pivot para registrar no SQLAlchemy
+from app.models.travel import Travel
+from app.models.user import User
+from app.models.user_group import user_groups
+from sqlalchemy import text
 
 
 def seed_rondonia_cities():
-    """Popula o banco com o estado de Rondonia e suas 52 cidades"""
-
+    """Cria o estado de Rondônia e suas 52 cidades oficiais"""
     db = SessionLocal()
 
     try:
-        # Verifica se o estado ja existe
+        # Buscar ou criar o estado de Rondônia
         state = db.query(State).filter_by(uf='RO').first()
 
         if not state:
-            # Cria o estado de Rondonia
             state = State(
                 name='Rondonia',
                 uf='RO',
                 ibge_code='11'
             )
             db.add(state)
-            db.commit()
-            print(f"[OK] Estado criado: {state.name}")
-        else:
-            print(f"[OK] Estado ja existe: {state.name}")
+            db.flush()
 
         # Lista das 52 cidades de Rondonia com seus codigos IBGE
         cities_data = [
@@ -94,11 +90,8 @@ def seed_rondonia_cities():
             {'name': 'Vilhena', 'ibge_code': '1100304'}
         ]
 
-        created_count = 0
-        existing_count = 0
-
+        # Criar cidades não existentes
         for city_data in cities_data:
-            # Verifica se a cidade ja existe
             existing_city = db.query(City).filter_by(ibge_code=city_data['ibge_code']).first()
 
             if not existing_city:
@@ -108,31 +101,20 @@ def seed_rondonia_cities():
                     state_id=state.id
                 )
                 db.add(city)
-                created_count += 1
-                print(f"  [OK] Cidade criada: {city_data['name']}")
-            else:
-                existing_count += 1
 
+        # Ajustar sequência de auto incremento do PostgreSQL
+        db.execute(text("SELECT setval(pg_get_serial_sequence('states', 'id'), (SELECT COALESCE(MAX(id), 1) FROM states))"))
+        db.execute(text("SELECT setval(pg_get_serial_sequence('cities', 'id'), (SELECT COALESCE(MAX(id), 1) FROM cities))"))
         db.commit()
 
-        print(f"\n{'='*60}")
-        print(f"Seeder finalizado com sucesso!")
-        print(f"Estado: Rondonia (RO)")
-        print(f"Cidades criadas: {created_count}")
-        print(f"Cidades ja existentes: {existing_count}")
-        print(f"Total de cidades: {len(cities_data)}")
-        print(f"{'='*60}\n")
+        print("[SUCCESS] Seeder de cidades executado com sucesso")
 
     except Exception as e:
         db.rollback()
-        print(f"\n[ERRO] Erro ao executar seeder: {str(e)}\n")
-        raise
+        print(f"[ERRO] {type(e).__name__}: {str(e).split(chr(10))[0]}")
     finally:
         db.close()
 
 
 if __name__ == '__main__':
-    print("\n" + "="*60)
-    print("SEEDER: Cidades de Rondonia")
-    print("="*60 + "\n")
     seed_rondonia_cities()

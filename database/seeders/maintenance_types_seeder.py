@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 Seeder de Tipos de Manutenção
-Popula a tabela maintenance_types com tipos padrão de manutenção
+Popula a tabela de tipos de manutenção com categorias padrão para veículos
 """
-
 import sys
 from config import ROOT_DIR
 
-# Adicionar o diretório raiz ao path
 sys.path.insert(0, ROOT_DIR)
 
 from app.models.database import SessionLocal
@@ -16,15 +14,12 @@ from sqlalchemy import text
 
 
 def seed_maintenance_types():
-    """Popula a tabela maintenance_types com tipos padrão"""
+    """Cria tipos padrão de manutenção para gestão da frota"""
     db = SessionLocal()
 
     try:
-        print("[SEEDER] Iniciando seed de tipos de manutenção...")
-
         # Limpar tipos existentes
         db.execute(text("DELETE FROM maintenance_types"))
-        db.commit()
 
         # Lista de tipos de manutenção padrão
         maintenance_types_data = [
@@ -95,18 +90,15 @@ def seed_maintenance_types():
             maintenance_type = MaintenanceType(**type_data)
             db.add(maintenance_type)
 
+        # Ajustar sequência de auto incremento do PostgreSQL
+        db.execute(text("SELECT setval(pg_get_serial_sequence('maintenance_types', 'id'), (SELECT COALESCE(MAX(id), 1) FROM maintenance_types))"))
         db.commit()
-        print(f"[SUCCESS] {len(maintenance_types_data)} tipos de manutenção foram criados com sucesso!")
 
-        # Mostrar lista
-        print("\n[INFO] Tipos de manutenção cadastrados:")
-        for idx, mt in enumerate(maintenance_types_data, 1):
-            print(f"  {idx}. {mt['name']}")
+        print("[SUCCESS] Seeder de tipos de manutenção executado com sucesso")
 
     except Exception as e:
-        print(f"[ERROR] Erro ao criar tipos de manutenção: {str(e)}")
         db.rollback()
-        raise
+        print(f"[ERRO] {type(e).__name__}: {str(e).split(chr(10))[0]}")
     finally:
         db.close()
 

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Seeder Master - Executa todos os seeders na ordem correta
+Database Seeder Master
+Executa todos os seeders do sistema na ordem correta
 
 Uso:
   python database_seeder.py production
@@ -11,7 +12,6 @@ import os
 import argparse
 import contextlib
 
-# Adicionar o diretorio raiz ao path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(os.path.dirname(current_dir))
 sys.path.insert(0, ROOT_DIR)
@@ -35,7 +35,7 @@ from license_applications_seeder import seed_license_applications
 
 @contextlib.contextmanager
 def suppress_output():
-    """Suprime a saída padrão temporariamente"""
+    """Suprime temporariamente a saída padrão dos seeders"""
     with open(os.devnull, 'w') as devnull:
         old_stdout = sys.stdout
         sys.stdout = devnull
@@ -46,8 +46,7 @@ def suppress_output():
 
 
 def seed_production():
-    """Executa apenas seeders essenciais para produção"""
-
+    """Executa seeders essenciais para ambiente de produção"""
     seeders = [
         ('GroupsSeeder', seed_groups),
         ('PermissionsSeeder', seed_permissions),
@@ -63,19 +62,18 @@ def seed_production():
         ('ParametersSeeder', seed_parameters),
     ]
 
-    print("\nSeeding: Production")
+    print("\n[INFO] Executando seeders - Modo: Production")
 
     for name, seeder_func in seeders:
         with suppress_output():
             seeder_func()
         print(f"  [OK] {name}")
 
-    print("\nDatabase seeding completed successfully.\n")
+    print("\n[SUCCESS] Database seeding finalizado com sucesso\n")
 
 
 def seed_development():
-    """Executa todos os seeders incluindo dados de teste"""
-
+    """Executa todos os seeders incluindo dados de teste para desenvolvimento"""
     seeders = [
         ('GroupsSeeder', seed_groups),
         ('PermissionsSeeder', seed_permissions),
@@ -93,26 +91,26 @@ def seed_development():
         ('VehiclesSeeder', seed_vehicles),
     ]
 
-    print("\nSeeding: Development")
+    print("\n[INFO] Executando seeders - Modo: Development")
 
     for name, seeder_func in seeders:
         with suppress_output():
             seeder_func()
         print(f"  [OK] {name}")
 
-    print("\nDatabase seeding completed successfully.\n")
+    print("\n[SUCCESS] Database seeding finalizado com sucesso\n")
 
 
 def main():
     """Função principal com suporte a argumentos de linha de comando"""
-    parser = argparse.ArgumentParser(description='Database seeder')
+    parser = argparse.ArgumentParser(description='Database seeder do App Financeiro')
 
     parser.add_argument(
         'mode',
         nargs='?',
         choices=['production', 'development'],
         default='development',
-        help='Seeding mode'
+        help='Modo de execução dos seeders'
     )
 
     args = parser.parse_args()
@@ -123,7 +121,7 @@ def main():
         else:
             seed_development()
     except Exception as e:
-        print(f"\n[ERRO] Error: {str(e)}\n")
+        print(f"\n[ERRO] {type(e).__name__}: {str(e).split(chr(10))[0]}\n")
         sys.exit(1)
 
 

@@ -69,6 +69,9 @@ def seed_applications():
                 existing_count += 1
                 print(f"  [SKIP] Aplicação já existe (ID={existing_app.id}): {app_data['name']}")
 
+        # Resetar a sequência do PostgreSQL para o próximo ID
+        db.execute(text("SELECT setval(pg_get_serial_sequence('applications', 'id'), (SELECT COALESCE(MAX(id), 1) FROM applications))"))
+
         db.commit()
 
         print(f"\n{'='*60}")

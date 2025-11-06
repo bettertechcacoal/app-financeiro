@@ -1,26 +1,24 @@
 # -*- coding: utf-8 -*-
 """
-Seeder: Vehicles
-Popula a tabela de veículos com dados de teste
+Seeder de Veículos
+Popula a tabela de veículos com dados de teste para a frota
 """
-
 import sys
 from config import ROOT_DIR
 
-# Adicionar o diretorio raiz ao path
 sys.path.insert(0, ROOT_DIR)
 
 from app.models.database import SessionLocal
 from app.models.vehicle import Vehicle
 from datetime import datetime
+from sqlalchemy import text
 
 
 def seed_vehicles():
-    """Popula a tabela vehicles com dados de teste"""
+    """Cria veículos de teste para gestão da frota"""
     db = SessionLocal()
 
     try:
-        print("\n[SEEDER] Criando veículos de teste...")
 
         vehicles_data = [
             {
@@ -81,35 +79,23 @@ def seed_vehicles():
             }
         ]
 
-        created_count = 0
-        existing_count = 0
-
         for vehicle_data in vehicles_data:
-            # Verificar se já existe
             existing = db.query(Vehicle).filter(Vehicle.plate == vehicle_data['plate']).first()
 
             if not existing:
+                # Criar veículo
                 vehicle = Vehicle(**vehicle_data)
                 db.add(vehicle)
-                created_count += 1
-                print(f"  [OK] Veículo criado: {vehicle_data['plate']} - {vehicle_data['brand']} {vehicle_data['model']}")
-            else:
-                existing_count += 1
-                print(f"  [OK] Veículo já existe: {vehicle_data['plate']}")
 
+        # Ajustar sequência de auto incremento do PostgreSQL
+        db.execute(text("SELECT setval(pg_get_serial_sequence('vehicles', 'id'), (SELECT COALESCE(MAX(id), 1) FROM vehicles))"))
         db.commit()
 
-        print("\n" + "="*60)
-        print("Seeder finalizado com sucesso!")
-        print(f"Veículos criados: {created_count}")
-        print(f"Veículos já existentes: {existing_count}")
-        print(f"Total de veículos: {created_count + existing_count}")
-        print("="*60)
+        print("[SUCCESS] Seeder de veículos executado com sucesso")
 
     except Exception as e:
         db.rollback()
-        print(f"\n[ERRO] Falha ao executar seeder: {str(e)}")
-        raise
+        print(f"[ERRO] {type(e).__name__}: {str(e).split(chr(10))[0]}")
     finally:
         db.close()
 

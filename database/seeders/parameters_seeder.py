@@ -159,6 +159,9 @@ def seed_parameters():
                 updated_count += 1
                 print(f"  [OK] Parâmetro atualizado: {param_data['parameter']}")
 
+        # Resetar a sequência do PostgreSQL para o próximo ID
+        db.execute(text("SELECT setval(pg_get_serial_sequence('parameters', 'id'), (SELECT COALESCE(MAX(id), 1) FROM parameters))"))
+
         db.commit()
 
         print(f"\n{'='*60}")

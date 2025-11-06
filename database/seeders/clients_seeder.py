@@ -1,29 +1,27 @@
 # -*- coding: utf-8 -*-
 """
-Seeder para popular o banco de dados com clientes municipais de Rondônia
+Seeder de Clientes
+Popula a tabela de clientes com prefeituras e órgãos municipais de Rondônia
 """
 import sys
 from config import ROOT_DIR
 
-# Adicionar o diretorio raiz ao path
 sys.path.insert(0, ROOT_DIR)
 
 from app.models.database import SessionLocal
 from app.models.client import Client
 from app.models.city import City
+from sqlalchemy import text
 
 
 def seed_clients():
-    """Popula o banco com clientes municipais de Rondônia"""
-
+    """Cria clientes municipais (prefeituras, câmaras e órgãos) de Rondônia"""
     db = SessionLocal()
 
     try:
-        # Buscar cidades do banco de dados para obter os IDs
+        # Buscar cidades para mapeamento de IDs
         cities = db.query(City).all()
         cities_dict = {city.name: city.id for city in cities}
-
-        print(f"[INFO] {len(cities_dict)} cidades carregadas do banco de dados\n")
         # Definir clientes municipais
         clients_data = [
             # Alta Floresta d'Oeste
@@ -449,20 +447,16 @@ def seed_clients():
             },
         ]
 
-        created_count = 0
-        existing_count = 0
-        updated_count = 0
-
+        # Criar ou atualizar clientes
         for idx, client_data in enumerate(clients_data, start=1):
-            # Verifica se o cliente ja existe pelo ID ou CNPJ
+            # Verificar se cliente já existe pelo ID ou CNPJ
             existing_client = db.query(Client).filter_by(id=idx).first()
             if not existing_client:
                 existing_client = db.query(Client).filter_by(document=client_data['document']).first()
 
-            # Buscar o ID da cidade
+            # Buscar ID da cidade
             city_id = cities_dict.get(client_data['city'])
             if not city_id:
-                print(f"  [AVISO] Cidade não encontrada: {client_data['city']} - Cliente: {client_data['name']}")
                 continue
 
             if not existing_client:
@@ -483,8 +477,6 @@ def seed_clients():
                     fixed_start_day=client_data.get('fixed_start_day')
                 )
                 db.add(client)
-                created_count += 1
-                print(f"  [OK] Cliente criado (ID={idx}): {client_data['name']}")
             else:
                 # Atualizar cliente existente
                 existing_client.name = client_data['name']
@@ -498,45 +490,19 @@ def seed_clients():
                 existing_client.billing_day = client_data.get('billing_day')
                 existing_client.billing_cycle = client_data.get('billing_cycle')
                 existing_client.fixed_start_day = client_data.get('fixed_start_day')
-                updated_count += 1
-                print(f"  [OK] Cliente atualizado (ID={existing_client.id}): {client_data['name']}")
 
+        # Ajustar sequência de auto incremento do PostgreSQL
+        db.execute(text("SELECT setval(pg_get_serial_sequence('clients', 'id'), (SELECT COALESCE(MAX(id), 1) FROM clients))"))
         db.commit()
 
-        print(f"\n{'='*60}")
-        print(f"Seeder finalizado com sucesso!")
-        print(f"Clientes criados: {created_count}")
-        print(f"Clientes atualizados: {updated_count}")
-        print(f"Total de clientes processados: {len(clients_data)}")
-        print(f"{'='*60}\n")
-
-        # Mostrar resumo por cidade
-        print("Resumo por Cidade:")
-        print("  - Alta Floresta d'Oeste: 3 clientes (Prefeitura, Câmara, SAAE)")
-        print("  - Cacoal: 2 clientes (Prefeitura, Câmara)")
-        print("  - Castanheiras: 3 clientes (Prefeitura, Câmara, Instituto Previdência)")
-        print("  - Ministro Andreazza: 2 clientes (Prefeitura, Câmara)")
-        print("  - Nova Brasilândia d'Oeste: 3 clientes (Prefeitura, Câmara, SAAE)")
-        print("  - Rio Crespo: 2 clientes (Prefeitura, Câmara)")
-        print("  - Rolim de Moura: 3 clientes (Prefeitura, Câmara, Instituto Previdência)")
-        print("  - São Felipe d'Oeste: 2 clientes (Prefeitura, Câmara)")
-        print("  - São Miguel do Guaporé: 2 clientes (Prefeitura, Câmara)")
-        print("  - Seringueiras: 3 clientes (Prefeitura, Câmara, Fundo Previdência)")
-        print("  - Urupá: 2 clientes (Prefeitura, Câmara)")
-        print("  - Vale do Anari: 2 clientes (Prefeitura, Câmara)")
-        print("  - Vilhena: 4 clientes (Prefeitura, Câmara, SAAE, Instituto Previdência)")
-        print()
+        print("[SUCCESS] Seeder de clientes executado com sucesso")
 
     except Exception as e:
         db.rollback()
-        print(f"\n[ERRO] Erro ao executar seeder: {str(e)}\n")
-        raise
+        print(f"[ERRO] {type(e).__name__}: {str(e).split(chr(10))[0]}")
     finally:
         db.close()
 
 
 if __name__ == '__main__':
-    print("\n" + "="*60)
-    print("SEEDER: Clientes Municipais de Rondônia")
-    print("="*60 + "\n")
     seed_clients()

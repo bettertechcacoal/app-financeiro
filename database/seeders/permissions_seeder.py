@@ -3,11 +3,9 @@
 Seeder de Permissões
 Popula a tabela permissions com todas as permissões do sistema
 """
-
 import sys
 from config import ROOT_DIR
 
-# Adicionar o diretório raiz ao path
 sys.path.insert(0, ROOT_DIR)
 
 from app.models.database import SessionLocal
@@ -16,12 +14,10 @@ from sqlalchemy import text
 
 
 def seed_permissions():
-    """Popula a tabela de permissões com todas as permissões do sistema"""
+    """Cria todas as permissões disponíveis no sistema"""
     db = SessionLocal()
 
     try:
-        print("[SEEDER] Iniciando seed de permissões...")
-
         # Limpar permissões existentes
         db.execute(text("DELETE FROM permissions"))
         db.commit()
@@ -431,30 +427,20 @@ def seed_permissions():
             },
         ]
 
-        # Inserir permissões
+        # Inserir permissões no banco de dados
         for perm_data in permissions_data:
             permission = Permission(**perm_data)
             db.add(permission)
 
+        # Ajustar sequência de auto incremento do PostgreSQL
+        db.execute(text("SELECT setval(pg_get_serial_sequence('permissions', 'id'), (SELECT COALESCE(MAX(id), 1) FROM permissions))"))
         db.commit()
-        print(f"[SUCCESS] {len(permissions_data)} permissões foram criadas com sucesso!")
 
-        # Mostrar resumo por módulo
-        print("\n[INFO] Permissões criadas por módulo:")
-        modules = {}
-        for perm in permissions_data:
-            module = perm['module']
-            if module not in modules:
-                modules[module] = 0
-            modules[module] += 1
-
-        for module, count in sorted(modules.items()):
-            print(f"  - {module}: {count} permissões")
+        print("[SUCCESS] Seeder de permissões executado com sucesso")
 
     except Exception as e:
-        print(f"[ERROR] Erro ao criar permissões: {str(e)}")
         db.rollback()
-        raise
+        print(f"[ERRO] {type(e).__name__}: {str(e).split(chr(10))[0]}")
     finally:
         db.close()
 

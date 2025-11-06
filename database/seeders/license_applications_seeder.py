@@ -1,24 +1,25 @@
 # -*- coding: utf-8 -*-
 """
-Seed para popular a tabela license_applications com mapeamento de códigos → módulos
-Baseado no mapeamento real dos sistemas Elotech
+Seeder de Aplicações de Licença
+Popula a tabela de módulos de licença com códigos e nomes dos sistemas Elotech
 """
 import sys
 from config import ROOT_DIR
 
-# Adicionar o diretorio raiz ao path
 sys.path.insert(0, ROOT_DIR)
 
 from app.models.database import SessionLocal
 from app.models.license_application import LicenseApplication
+from sqlalchemy import text
 
 
 def seed_license_applications():
-    """Popula a tabela com os 22 módulos mapeados"""
+    """Cria módulos de licença com mapeamento de códigos para sistemas Elotech"""
     db = SessionLocal()
 
-    # Mapeamento completo de códigos para módulos
-    modules = [
+    try:
+        # Mapeamento completo de códigos para módulos
+        modules = [
         {'code': '002', 'name': 'APICE - Orçamento'},
         {'code': '003', 'name': 'APICE - Contabilidade'},
         {'code': '004', 'name': 'APICE - Protocolo'},
@@ -42,12 +43,8 @@ def seed_license_applications():
         {'code': '306', 'name': 'AISE - Tributos'},
     ]
 
-    try:
-        inserted_count = 0
-        updated_count = 0
-
+        # Criar ou atualizar módulos
         for module in modules:
-            # Verificar se já existe
             existing = db.query(LicenseApplication).filter(
                 LicenseApplication.code == module['code']
             ).first()
@@ -56,10 +53,6 @@ def seed_license_applications():
                 # Atualizar se o nome mudou
                 if existing.name != module['name']:
                     existing.name = module['name']
-                    updated_count += 1
-                    print(f"  [OK] Módulo atualizado: {module['code']} - {module['name']}")
-                else:
-                    print(f"  [OK] Módulo já existe: {module['code']} - {module['name']}")
             else:
                 # Inserir novo
                 app = LicenseApplication(
@@ -67,30 +60,19 @@ def seed_license_applications():
                     name=module['name']
                 )
                 db.add(app)
-                inserted_count += 1
-                print(f"  [OK] Módulo criado: {module['code']} - {module['name']}")
 
+        # Ajustar sequência de auto incremento do PostgreSQL
+        db.execute(text("SELECT setval(pg_get_serial_sequence('license_applications', 'id'), (SELECT COALESCE(MAX(id), 1) FROM license_applications))"))
         db.commit()
 
-        print(f"\n{'='*60}")
-        print(f"Seeder finalizado com sucesso!")
-        print(f"Módulos inseridos: {inserted_count}")
-        print(f"Módulos atualizados: {updated_count}")
-        print(f"Total de módulos: {len(modules)}")
-        print(f"{'='*60}\n")
-
-        return inserted_count + updated_count
+        print("[SUCCESS] Seeder de aplicações de licença executado com sucesso")
 
     except Exception as e:
         db.rollback()
-        print(f"\n[ERRO] Erro ao executar seeder: {str(e)}\n")
-        raise e
+        print(f"[ERRO] {type(e).__name__}: {str(e).split(chr(10))[0]}")
     finally:
         db.close()
 
 
 if __name__ == '__main__':
-    print("\n" + "="*60)
-    print("SEEDER: License Applications (Módulos)")
-    print("="*60 + "\n")
     seed_license_applications()

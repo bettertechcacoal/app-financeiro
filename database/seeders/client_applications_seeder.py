@@ -1,21 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-Seeder para popular o banco de dados com associações cliente-aplicação
-Usa IDs fixos para cliente e aplicação
+Seeder de Associações Cliente-Aplicação
+Popula a tabela de vínculos entre clientes e aplicações contratadas
 """
 import sys
 from config import ROOT_DIR
 
-# Adicionar o diretorio raiz ao path
 sys.path.insert(0, ROOT_DIR)
 
 from app.models.database import SessionLocal
 from app.models.client_application import ClientApplication
+from sqlalchemy import text
 
 
 def seed_client_applications():
-    """Popula o banco com associações cliente-aplicação usando IDs fixos"""
-
+    """Cria vínculos entre clientes e suas aplicações contratadas"""
     db = SessionLocal()
 
     try:
@@ -120,9 +119,7 @@ def seed_client_applications():
             30: [16, 17, 12],
         }
 
-        created_count = 0
-        skipped_count = 0
-
+        # Criar associações cliente-aplicação
         for client_id, application_ids in client_applications_map.items():
             for application_id in application_ids:
                 # Verificar se associação já existe
@@ -131,42 +128,27 @@ def seed_client_applications():
                     application_id=application_id
                 ).first()
 
-                if existing:
-                    skipped_count += 1
-                    continue
+                if not existing:
+                    # Criar associação
+                    client_app = ClientApplication(
+                        client_id=client_id,
+                        application_id=application_id,
+                        is_active=True
+                    )
+                    db.add(client_app)
 
-                # Criar associação
-                client_app = ClientApplication(
-                    client_id=client_id,
-                    application_id=application_id,
-                    is_active=True
-                )
-                db.add(client_app)
-                created_count += 1
-
-            print(f"  [OK] Cliente ID={client_id} associado com {len(application_ids)} aplicações")
-
+        # Ajustar sequência de auto incremento do PostgreSQL
+        db.execute(text("SELECT setval(pg_get_serial_sequence('client_applications', 'id'), (SELECT COALESCE(MAX(id), 1) FROM client_applications))"))
         db.commit()
 
-        print(f"\n{'='*60}")
-        print(f"Seeder finalizado com sucesso!")
-        print(f"Associações criadas: {created_count}")
-        print(f"Associações já existentes: {skipped_count}")
-        print(f"Clientes processados: {len(client_applications_map)}")
-        print(f"{'='*60}\n")
+        print("[SUCCESS] Seeder de associações cliente-aplicação executado com sucesso")
 
     except Exception as e:
         db.rollback()
-        print(f"\n[ERRO] Erro ao executar seeder: {str(e)}\n")
-        import traceback
-        traceback.print_exc()
-        raise
+        print(f"[ERRO] {type(e).__name__}: {str(e).split(chr(10))[0]}")
     finally:
         db.close()
 
 
 if __name__ == '__main__':
-    print("\n" + "="*60)
-    print("SEEDER: Associações Cliente-Aplicação")
-    print("="*60 + "\n")
     seed_client_applications()

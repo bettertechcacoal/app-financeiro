@@ -1,26 +1,34 @@
 # -*- coding: utf-8 -*-
+"""
+Seeder de Notificações
+Popula a tabela de notificações com dados de teste
+"""
+import sys
+from config import ROOT_DIR
+
+sys.path.insert(0, ROOT_DIR)
+
 from app.models.user import User
 from app.models.notification import Notification, NotificationType
-from app.models.database import get_db
+from app.models.database import SessionLocal
 from datetime import datetime, timedelta
+from sqlalchemy import text
 
 
 def seed_notifications():
-    """Criar notificações de teste"""
-    db = get_db()
+    """Cria notificações de teste para demonstração do sistema"""
+    db = SessionLocal()
 
-    print("\n[SEEDER] Criando notificações de teste...")
+    try:
+        # Buscar usuário para vincular notificações (usar primeiro usuário encontrado)
+        user = db.query(User).first()
 
-    # Buscar o usuário demo
-    user = db.query(User).filter_by(email='demo@demo.com').first()
+        if not user:
+            print("[ERRO] Nenhum usuário encontrado. Execute o users_seeder primeiro")
+            return
 
-    if not user:
-        print("[ERROR] Usuário demo@demo.com não encontrado. Execute o users_seeder primeiro.")
-        return
-
-    # Limpar notificações existentes do usuário demo (para evitar duplicatas)
-    db.query(Notification).filter_by(user_id=user.id).delete()
-    db.commit()
+        # Limpar notificações existentes do usuário
+        db.query(Notification).filter_by(user_id=user.id).delete()
 
     now = datetime.now()
 
@@ -113,20 +121,22 @@ def seed_notifications():
         }
     ]
 
-    # Inserir notificações
-    for notif_data in notifications_data:
-        notification = Notification(**notif_data)
-        db.add(notification)
+        # Inserir notificações
+        for notif_data in notifications_data:
+            notification = Notification(**notif_data)
+            db.add(notification)
 
-    db.commit()
+        # Ajustar sequência de auto incremento do PostgreSQL
+        db.execute(text("SELECT setval(pg_get_serial_sequence('notifications', 'id'), (SELECT COALESCE(MAX(id), 1) FROM notifications))"))
+        db.commit()
 
-    total = len(notifications_data)
-    unread = sum(1 for n in notifications_data if not n['is_read'])
+        print("[SUCCESS] Seeder de notificações executado com sucesso")
 
-    print(f"[SUCCESS] {total} notificações criadas com sucesso!")
-    print(f"          - {unread} não lidas")
-    print(f"          - {total - unread} lidas")
-    print(f"          (Removidas notificações de tickets e cadastro de clientes)")
+    except Exception as e:
+        db.rollback()
+        print(f"[ERRO] {type(e).__name__}: {str(e).split(chr(10))[0]}")
+    finally:
+        db.close()
 
 
 if __name__ == '__main__':

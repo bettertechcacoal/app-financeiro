@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Seeder para popular o banco de dados com grupos
+Seeder de Grupos
+Popula a tabela de grupos com perfis de acesso do sistema
 """
 import sys
 from config import ROOT_DIR
 
-# Adicionar o diretorio raiz ao path
 sys.path.insert(0, ROOT_DIR)
 
 from app.models.database import SessionLocal
@@ -14,12 +14,11 @@ from sqlalchemy import text
 
 
 def seed_groups():
-    """Popula o banco com grupos padrao"""
-
+    """Cria grupos de acesso padrão com IDs fixos"""
     db = SessionLocal()
 
     try:
-        # Definir grupos padrao com IDs fixos
+        # Grupos padrão do sistema
         groups_data = [
             {
                 'id': 1,
@@ -31,15 +30,11 @@ def seed_groups():
             }
         ]
 
-        created_count = 0
-        existing_count = 0
-
         for group_data in groups_data:
-            # Verifica se o grupo ja existe
             existing_group = db.query(Group).filter_by(id=group_data['id']).first()
 
             if not existing_group:
-                # Inserir com ID fixo usando SQL direto
+                # Criar grupo com ID fixo
                 db.execute(
                     text("""
                         INSERT INTO groups (id, name, slug, description, color, icon, is_active, created_at, updated_at)
@@ -55,31 +50,19 @@ def seed_groups():
                         "is_active": True
                     }
                 )
-                created_count += 1
-                print(f"  [OK] Grupo criado: {group_data['name']} (ID: {group_data['id']})")
-            else:
-                existing_count += 1
-                print(f"  [OK] Grupo ja existe: {group_data['name']} (ID: {group_data['id']})")
 
+        # Ajustar sequência de auto incremento do PostgreSQL
+        db.execute(text("SELECT setval(pg_get_serial_sequence('groups', 'id'), (SELECT COALESCE(MAX(id), 1) FROM groups))"))
         db.commit()
 
-        print(f"\n{'='*60}")
-        print(f"Seeder finalizado com sucesso!")
-        print(f"Grupos criados: {created_count}")
-        print(f"Grupos ja existentes: {existing_count}")
-        print(f"Total de grupos: {len(groups_data)}")
-        print(f"{'='*60}\n")
+        print("[SUCCESS] Seeder de grupos executado com sucesso")
 
     except Exception as e:
         db.rollback()
-        print(f"\n[ERRO] Erro ao executar seeder: {str(e)}\n")
-        raise
+        print(f"[ERRO] {type(e).__name__}: {str(e).split(chr(10))[0]}")
     finally:
         db.close()
 
 
 if __name__ == '__main__':
-    print("\n" + "="*60)
-    print("SEEDER: Grupos")
-    print("="*60 + "\n")
     seed_groups()

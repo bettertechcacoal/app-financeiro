@@ -145,6 +145,9 @@ def seed_travels():
                 existing_count += 1
                 print(f"  [OK] Viagem já existe: {travel_data['purpose']}")
 
+        # Resetar a sequência do PostgreSQL para o próximo ID
+        db.execute(text("SELECT setval(pg_get_serial_sequence('travels', 'id'), (SELECT COALESCE(MAX(id), 1) FROM travels))"))
+
         db.commit()
 
         print(f"\n{'='*60}")

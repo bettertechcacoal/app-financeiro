@@ -71,6 +71,9 @@ def seed_parameter_groups():
                 existing_count += 1
                 print(f"  [OK] Grupo atualizado: {group_data['name']}")
 
+        # Resetar a sequência do PostgreSQL para o próximo ID
+        db.execute(text("SELECT setval(pg_get_serial_sequence('parameter_groups', 'id'), (SELECT COALESCE(MAX(id), 1) FROM parameter_groups))"))
+
         db.commit()
 
         print(f"\n{'='*60}")

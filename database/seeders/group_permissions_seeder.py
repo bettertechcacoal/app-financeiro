@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Script para Atribuir Permissões Padrão aos Grupos
-Configura permissões adequadas para cada grupo do sistema
+Seeder de Permissões de Grupos
+Atribui permissões padrão aos grupos de acesso do sistema
 """
-
 import sys
 from config import ROOT_DIR
 
-# Adicionar o diretório raiz ao path
 sys.path.insert(0, ROOT_DIR)
 
 from app.models.database import SessionLocal
@@ -16,25 +14,17 @@ from app.models.permission import Permission
 
 
 def seed_group_permissions():
-    """Atribui permissões padrão aos grupos do sistema"""
+    """Vincula permissões padrão aos grupos de acesso do sistema"""
     db = SessionLocal()
 
     try:
-        print("[SEEDER] Iniciando atribuição de permissões aos grupos...")
-
-        # ========== GRUPO: ADMINISTRADORES ==========
-        print("\n[INFO] Configurando grupo: Administradores...")
+        # Configurar grupo Administradores
         admin_group = db.query(Group).filter(Group.slug == 'administradores').first()
         if admin_group:
-            # Administradores têm TODAS as permissões
             all_permissions = db.query(Permission).all()
             admin_group.permissions_rel = all_permissions
-            print(f"  [OK] {len(all_permissions)} permissoes atribuidas aos Administradores")
-        else:
-            print("  [X] Grupo 'administradores' nao encontrado!")
 
-        # ========== GRUPO: GESTORES ==========
-        print("\n[INFO] Configurando grupo: Gestores...")
+        # Configurar grupo Gestores
         manager_group = db.query(Group).filter(Group.slug == 'gestores').first()
         if manager_group:
             manager_permission_slugs = [
@@ -110,12 +100,8 @@ def seed_group_permissions():
                 Permission.slug.in_(manager_permission_slugs)
             ).all()
             manager_group.permissions_rel = manager_permissions
-            print(f"  [OK] {len(manager_permissions)} permissoes atribuidas aos Gestores")
-        else:
-            print("  [X] Grupo 'gestores' nao encontrado!")
 
-        # ========== GRUPO: COLABORADORES ==========
-        print("\n[INFO] Configurando grupo: Colaboradores...")
+        # Configurar grupo Colaboradores
         collab_group = db.query(Group).filter(Group.slug == 'colaboradores').first()
         if collab_group:
             collab_permission_slugs = [
@@ -160,22 +146,13 @@ def seed_group_permissions():
                 Permission.slug.in_(collab_permission_slugs)
             ).all()
             collab_group.permissions_rel = collab_permissions
-            print(f"  [OK] {len(collab_permissions)} permissoes atribuidas aos Colaboradores")
-        else:
-            print("  [X] Grupo 'colaboradores' nao encontrado!")
 
-        # ========== GRUPO: VISITANTES ==========
-        print("\n[INFO] Configurando grupo: Visitantes...")
+        # Configurar grupo Visitantes
         visitor_group = db.query(Group).filter(Group.slug == 'visitantes').first()
         if visitor_group:
             visitor_permission_slugs = [
-                # Dashboard
                 'dashboard_view',
-
-                # Perfil - Apenas visualizar
                 'profile_view',
-
-                # Notificações - Apenas visualizar
                 'notifications_view',
             ]
 
@@ -183,29 +160,14 @@ def seed_group_permissions():
                 Permission.slug.in_(visitor_permission_slugs)
             ).all()
             visitor_group.permissions_rel = visitor_permissions
-            print(f"  [OK] {len(visitor_permissions)} permissoes atribuidas aos Visitantes")
-        else:
-            print("  [X] Grupo 'visitantes' nao encontrado!")
 
         db.commit()
-        print("\n[SUCCESS] Permissões atribuídas aos grupos com sucesso!\n")
 
-        # Mostrar resumo
-        print("=" * 60)
-        print("RESUMO DAS PERMISSÕES POR GRUPO")
-        print("=" * 60)
-
-        all_groups = db.query(Group).order_by(Group.name).all()
-        for group in all_groups:
-            perm_count = len(group.permissions_rel)
-            print(f"{group.name:20} | {perm_count:3} permissões")
-
-        print("=" * 60)
+        print("[SUCCESS] Seeder de permissões de grupos executado com sucesso")
 
     except Exception as e:
-        print(f"\n[ERROR] Erro ao atribuir permissões: {str(e)}")
         db.rollback()
-        raise
+        print(f"[ERRO] {type(e).__name__}: {str(e).split(chr(10))[0]}")
     finally:
         db.close()
 

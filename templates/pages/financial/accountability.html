@@ -1313,16 +1313,17 @@ $(document).ready(function() {
      * Renderiza as despesas de veículo a partir do accountabilityData
      */
     function renderVehicleExpenses() {
-        if (!IS_DRIVER || !accountabilityData.vehicle.expenses || accountabilityData.vehicle.expenses.length === 0) {
-            return;
-        }
-
-        // Atualizar quilometragem
+        // Atualizar quilometragem sempre (se existir no modelo)
         if (accountabilityData.vehicle.km_start) {
             $('#km-departure').val(accountabilityData.vehicle.km_start);
         }
         if (accountabilityData.vehicle.km_end) {
             $('#km-arrival').val(accountabilityData.vehicle.km_end);
+        }
+
+        // Se não há despesas ou não é motorista, não precisa renderizar a lista
+        if (!IS_DRIVER || !accountabilityData.vehicle.expenses || accountabilityData.vehicle.expenses.length === 0) {
+            return;
         }
 
         accountabilityData.vehicle.expenses.forEach((expense, index) => {
@@ -3386,6 +3387,13 @@ $(document).ready(function() {
      * Sincroniza apenas a seção relevante para evitar re-renderizações desnecessárias
      */
     function collectCurrentStepData() {
+        // Sempre sincronizar KM, independente do step ou ser motorista
+        const kmStart = parseInt($('#km-departure').val()) || 0;
+        const kmEnd = parseInt($('#km-arrival').val()) || 0;
+        accountabilityData.vehicle.km_start = kmStart;
+        accountabilityData.vehicle.km_end = kmEnd;
+        accountabilityData.vehicle.km_traveled = Math.max(0, kmEnd - kmStart);
+
         if (currentStep === 1) {
             syncFoodDataFromDOM();
         } else if (currentStep === 2 && IS_DRIVER) {

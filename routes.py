@@ -121,6 +121,7 @@ def register_routes(app: Flask):
     # Rotas de Perfil
     admin_bp.add_url_rule('/profile', view_func=profile_controller.profile_view, methods=['GET'])
     admin_bp.add_url_rule('/profile/update', view_func=profile_controller.profile_update, methods=['POST'])
+    admin_bp.add_url_rule('/profile/change-password', view_func=profile_controller.profile_change_password, methods=['POST'])
 
     # Rotas de Notificações
     admin_bp.add_url_rule('/notifications', view_func=notifications_controller.notifications_list, methods=['GET'])

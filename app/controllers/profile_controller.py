@@ -2,7 +2,7 @@
 """
 Controller para gerenciar o perfil do usuário
 """
-from flask import render_template, session, redirect, url_for, flash, request
+from flask import render_template, session, redirect, url_for, flash, request, jsonify
 from app.models.database import SessionLocal
 from app.models.user import User
 
@@ -86,3 +86,44 @@ def profile_update():
         return redirect(url_for('admin.profile_view'))
     finally:
         db.close()
+
+
+def profile_change_password():
+    """Altera a senha do usuário logado"""
+    try:
+        # Validar se o usuário está logado
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Você precisa estar logado'}), 401
+
+        # Validar se é uma requisição JSON
+        if not request.is_json:
+            return jsonify({'success': False, 'error': 'Requisição inválida'}), 400
+
+        data = request.get_json()
+        new_password = data.get('new_password', '').strip()
+
+        # Validações
+        if not new_password:
+            return jsonify({'success': False, 'error': 'A nova senha é obrigatória'}), 400
+
+        if len(new_password) < 8:
+            return jsonify({'success': False, 'error': 'A senha deve ter no mínimo 8 caracteres'}), 400
+
+        # Buscar usuário logado
+        from app.services import user_service, auth_service
+
+        user = user_service.get_user_by_id(session['user_id'])
+        if not user:
+            return jsonify({'success': False, 'error': 'Usuário não encontrado'}), 404
+
+        # Alterar senha no auth-service
+        auth_response = auth_service.change_password(user['sid_uuid'], new_password)
+
+        if not auth_response:
+            return jsonify({'success': False, 'error': 'Erro ao alterar senha no serviço de autenticação'}), 500
+
+        return jsonify({'success': True, 'message': 'Senha alterada com sucesso!'}), 200
+
+    except Exception as e:
+        print(f"Erro ao alterar senha: {str(e)}")
+        return jsonify({'success': False, 'error': f'Erro ao alterar senha: {str(e)}'}), 500

@@ -201,7 +201,7 @@
                                     <p class="text-xs text-gray-500">Última alteração há 30 dias</p>
                                 </div>
                             </div>
-                            <button type="button" class="px-4 py-2 text-sm font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all">
+                            <button type="button" id="open-password-modal" class="px-4 py-2 text-sm font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all">
                                 Alterar Senha
                             </button>
                         </div>
@@ -312,12 +312,189 @@
 
         </div>
     </form>
+
+    <!-- Modal: Alterar Senha -->
+    <div id="password-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-fade-in" style="max-height: 90vh; overflow-y: auto;">
+            <!-- Header -->
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-key text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">Alterar Senha</h3>
+                            <p class="text-sm text-gray-500">Defina uma nova senha segura</p>
+                        </div>
+                    </div>
+                    <button type="button" id="close-password-modal" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <form id="password-form" class="px-6 py-6 space-y-5">
+                <!-- Nova Senha -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-2">
+                        Nova Senha *
+                    </label>
+                    <div class="relative">
+                        <input
+                            type="password"
+                            id="new-password"
+                            name="new_password"
+                            required
+                            class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <button type="button" class="toggle-password absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600" data-target="new-password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Confirmar Nova Senha -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-2">
+                        Confirmar Nova Senha *
+                    </label>
+                    <div class="relative">
+                        <input
+                            type="password"
+                            id="confirm-password"
+                            name="confirm_password"
+                            required
+                            class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <button type="button" class="toggle-password absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600" data-target="confirm-password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mensagem de erro -->
+                <div id="password-error" class="hidden p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    <span id="password-error-text"></span>
+                </div>
+            </form>
+
+            <!-- Footer -->
+            <div class="p-6 border-t border-gray-200 flex justify-end gap-3">
+                <button type="button" id="cancel-password-modal" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-all">
+                    Cancelar
+                </button>
+                <button type="submit" form="password-form" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg">
+                    <i class="fas fa-check mr-2"></i>
+                    Alterar
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-    // Máscara de telefone
     $(document).ready(function(){
+        // Máscara de telefone
         $('#phone').mask('(00) 00000-0000');
+
+        // ===== MODAL DE SENHA =====
+        const passwordModal = $('#password-modal');
+        const passwordForm = $('#password-form');
+        const passwordError = $('#password-error');
+        const passwordErrorText = $('#password-error-text');
+
+        // Abrir modal
+        $('#open-password-modal').on('click', function() {
+            passwordModal.removeClass('hidden');
+            passwordForm[0].reset();
+            passwordError.addClass('hidden');
+        });
+
+        // Fechar modal
+        function closePasswordModal() {
+            passwordModal.addClass('hidden');
+            passwordForm[0].reset();
+            passwordError.addClass('hidden');
+        }
+
+        $('#close-password-modal, #cancel-password-modal').on('click', closePasswordModal);
+
+        // Fechar ao clicar fora do modal
+        passwordModal.on('click', function(e) {
+            if (e.target === this) {
+                closePasswordModal();
+            }
+        });
+
+        // Toggle mostrar/ocultar senha
+        $('.toggle-password').on('click', function() {
+            const targetId = $(this).data('target');
+            const input = $('#' + targetId);
+            const icon = $(this).find('i');
+
+            if (input.attr('type') === 'password') {
+                input.attr('type', 'text');
+                icon.removeClass('fa-eye').addClass('fa-eye-slash');
+            } else {
+                input.attr('type', 'password');
+                icon.removeClass('fa-eye-slash').addClass('fa-eye');
+            }
+        });
+
+        // Validar e submeter formulário
+        passwordForm.on('submit', function(e) {
+            e.preventDefault();
+
+            const newPassword = $('#new-password').val();
+            const confirmPassword = $('#confirm-password').val();
+
+            // Validações
+            if (!newPassword || !confirmPassword) {
+                showPasswordError('Todos os campos são obrigatórios');
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                showPasswordError('A nova senha deve ter no mínimo 8 caracteres');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showPasswordError('As senhas não coincidem');
+                return;
+            }
+
+            // Fazer a chamada AJAX para o backend
+            $.ajax({
+                url: '{{ url_for("admin.profile_change_password") }}',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    new_password: newPassword
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        showToast(response.message || 'Senha alterada com sucesso!', 'success');
+                        closePasswordModal();
+                        // Limpar os campos do formulário
+                        $('#new-password').val('');
+                        $('#confirm-password').val('');
+                    } else {
+                        showPasswordError(response.error || 'Erro ao alterar senha');
+                    }
+                },
+                error: function(xhr) {
+                    const message = xhr.responseJSON?.error || 'Erro ao alterar senha. Tente novamente.';
+                    showPasswordError(message);
+                }
+            });
+        });
+
+        function showPasswordError(message) {
+            passwordErrorText.text(message);
+            passwordError.removeClass('hidden');
+        }
     });
 </script>
 {% endblock %}

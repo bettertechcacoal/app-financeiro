@@ -110,7 +110,8 @@ def profile_change_password():
             return jsonify({'success': False, 'error': 'A senha deve ter no mínimo 8 caracteres'}), 400
 
         # Buscar usuário logado
-        from app.services import user_service, auth_service
+        from app.services.user_service import user_service
+        from app.services.auth_service import auth_service
 
         user = user_service.get_user_by_id(session['user_id'])
         if not user:

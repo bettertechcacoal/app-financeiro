@@ -44,7 +44,7 @@ def travels_list():
 
         if can_approve_travels or can_view_all_travels:
             results = db.query(Travel, status_label)\
-                .order_by(Travel.created_at.desc())\
+                .order_by(Travel.departure_date.desc())\
                 .all()
         else:
             results = db.query(Travel, status_label)\
@@ -56,13 +56,30 @@ def travels_list():
                     )
                 )\
                 .distinct()\
-                .order_by(Travel.created_at.desc())\
+                .order_by(Travel.departure_date.desc())\
                 .all()
+
+        from datetime import datetime
+        import pytz
+
+        # Usar timezone aware para comparação
+        now = datetime.now(pytz.UTC)
 
         travels_data = []
         for travel, status_text in results:
             travel_dict = travel.to_dict()
             travel_dict['status_label'] = status_text
+
+            # Verificar se pode editar baseado na data de saída
+            can_edit_by_date = True
+            if travel.departure_date:
+                # Se departure_date for naive, torná-lo aware
+                departure = travel.departure_date
+                if departure.tzinfo is None:
+                    departure = pytz.UTC.localize(departure)
+                can_edit_by_date = departure > now
+            travel_dict['can_edit_by_date'] = can_edit_by_date
+
             travels_data.append(travel_dict)
 
         db.close()
@@ -203,10 +220,14 @@ def travels_store():
             notify_user_ids.add(new_travel.driver_user_id)
 
             # 2. Adicionar passageiros
+            passengers_list = []
             if passenger_ids:
                 for passenger_id in passenger_ids:
                     if passenger_id:
                         notify_user_ids.add(int(passenger_id))
+                        passenger = db.query(User).filter_by(id=int(passenger_id)).first()
+                        if passenger:
+                            passengers_list.append(passenger.name)
 
             # 3. Adicionar usuários com permissão de aprovar viagens
             users_with_approve_permission = db.query(User).filter_by(active=True).all()
@@ -214,12 +235,27 @@ def travels_store():
                 if user.has_permission('travels_approve'):
                     notify_user_ids.add(user.id)
 
+            # Formatar mensagem com detalhes
+            departure_str = new_travel.departure_date.strftime('%d/%m/%Y às %H:%M')
+            return_str = new_travel.return_date.strftime('%d/%m/%Y às %H:%M')
+
+            # Motorista e passageiros separados
+            driver_name = new_travel.driver_user.name if new_travel.driver_user else 'Não informado'
+            passengers_str = ', '.join(passengers_list) if passengers_list else 'Não'
+
+            message = f"""Uma nova viagem para {new_travel.city.name} foi solicitada e aguarda aprovação.
+
+📅 Saída: {departure_str}
+📅 Retorno: {return_str}
+🚘 Motorista: {driver_name}
+👥 Passageiros: {passengers_str}"""
+
             # Enviar notificação para cada usuário
             for user_id in notify_user_ids:
                 send_notification(
                     user_id=user_id,
-                    title='Nova Viagem Cadastrada',
-                    message=f'Uma nova viagem para {new_travel.city.name} foi cadastrada e aguarda aprovação.',
+                    title='Nova Solicitação de Viagem',
+                    message=message,
                     notification_type=NotificationType.TRAVEL,
                     action_url=f'/admin/travels/{new_travel.id}/view',
                     action_text='Ver Viagem'
@@ -253,10 +289,23 @@ def travels_edit(travel_id):
             flash('Viagem não encontrada', 'error')
             return redirect(url_for('admin.travels_list'))
 
-        # Verificar se a viagem está pendente
+        # Verificar se a viagem pode ser editada
+        from datetime import datetime
+        import pytz
+        now = datetime.now(pytz.UTC)
+
+        # Permitir edição se pendente OU se aprovada mas data de saída ainda não passou
         if travel.status != TravelStatus.PENDING:
-            flash('Apenas viagens pendentes podem ser editadas', 'error')
-            return redirect(url_for('admin.travels_list'))
+            if travel.departure_date:
+                departure = travel.departure_date
+                if departure.tzinfo is None:
+                    departure = pytz.UTC.localize(departure)
+                if departure <= now:
+                    flash('Esta viagem não pode mais ser editada pois a data de saída já passou', 'error')
+                    return redirect(url_for('admin.travels_list'))
+            else:
+                flash('Apenas viagens pendentes podem ser editadas', 'error')
+                return redirect(url_for('admin.travels_list'))
 
         # Buscar cidades
         cities = db.query(City).join(State).order_by(State.name, City.name).all()
@@ -319,10 +368,23 @@ def travels_update(travel_id):
             flash('Viagem não encontrada', 'error')
             return redirect(url_for('admin.travels_list'))
 
-        # Verificar se a viagem está pendente
+        # Verificar se a viagem pode ser editada
+        from datetime import datetime
+        import pytz
+        now = datetime.now(pytz.UTC)
+
+        # Permitir edição se pendente OU se aprovada mas data de saída ainda não passou
         if travel.status != TravelStatus.PENDING:
-            flash('Apenas viagens pendentes podem ser editadas', 'error')
-            return redirect(url_for('admin.travels_list'))
+            if travel.departure_date:
+                departure = travel.departure_date
+                if departure.tzinfo is None:
+                    departure = pytz.UTC.localize(departure)
+                if departure <= now:
+                    flash('Esta viagem não pode mais ser editada pois a data de saída já passou', 'error')
+                    return redirect(url_for('admin.travels_list'))
+            else:
+                flash('Apenas viagens pendentes podem ser editadas', 'error')
+                return redirect(url_for('admin.travels_list'))
 
         # Verificar se o usuário pode editar (é o solicitante ou criador do registro)
         logged_user_id = session.get('user_id')
@@ -372,7 +434,12 @@ def travels_update(travel_id):
         travel.notes = notes
         travel.needs_vehicle = needs_vehicle
 
-        if status:
+        # Se a viagem foi aprovada e está sendo editada, voltar para pendente
+        if travel.status == TravelStatus.APPROVED:
+            travel.status = TravelStatus.PENDING
+            travel.approved_by = None
+            travel.approved_at = None
+        elif status:
             travel.status = TravelStatus(status)
 
         # Processar passageiros
@@ -392,6 +459,64 @@ def travels_update(travel_id):
                     db.add(new_passenger)
 
         db.commit()
+
+        # Enviar notificações sobre viagem editada
+        try:
+            from app.utils.notification_helper import send_notification
+            from app.models.notification import NotificationType
+            from app.models.user import User
+
+            # Coletar IDs únicos de usuários que devem receber notificação
+            notify_user_ids = set()
+
+            # 1. Adicionar solicitante (driver)
+            notify_user_ids.add(travel.driver_user_id)
+
+            # 2. Adicionar passageiros
+            passengers_list = []
+            if passenger_ids:
+                for passenger_id in passenger_ids:
+                    if passenger_id:
+                        notify_user_ids.add(int(passenger_id))
+                        passenger = db.query(User).filter_by(id=int(passenger_id)).first()
+                        if passenger:
+                            passengers_list.append(passenger.name)
+
+            # 3. Adicionar usuários com permissão de aprovar viagens
+            users_with_approve_permission = db.query(User).filter_by(active=True).all()
+            for user in users_with_approve_permission:
+                if user.has_permission('travels_approve'):
+                    notify_user_ids.add(user.id)
+
+            # Formatar mensagem com detalhes
+            departure_str = travel.departure_date.strftime('%d/%m/%Y às %H:%M')
+            return_str = travel.return_date.strftime('%d/%m/%Y às %H:%M')
+
+            # Motorista e passageiros separados
+            driver_name = travel.driver_user.name if travel.driver_user else 'Não informado'
+            passengers_str = ', '.join(passengers_list) if passengers_list else 'Não'
+
+            message = f"""A viagem para {travel.city.name} foi atualizada e aguarda aprovação.
+
+📅 Saída: {departure_str}
+📅 Retorno: {return_str}
+🚘 Motorista: {driver_name}
+👥 Passageiros: {passengers_str}"""
+
+            # Enviar notificação para cada usuário
+            for user_id in notify_user_ids:
+                send_notification(
+                    user_id=user_id,
+                    title='Atualização de Viagem',
+                    message=message,
+                    notification_type=NotificationType.TRAVEL,
+                    action_url=f'/admin/travels/{travel_id}/view',
+                    action_text='Ver Viagem'
+                )
+        except Exception as e:
+            # Falha silenciosa - viagem já foi atualizada
+            print(f"Erro ao enviar notificações: {e}")
+
         db.close()
 
         flash('Viagem atualizada com sucesso!', 'success')
@@ -484,11 +609,6 @@ def travels_analyze(travel_id):
         flash('Viagem não encontrada', 'error')
         return redirect(url_for('admin.travels_list'))
 
-    # Verificar se já foi aprovada/rejeitada
-    if travel.status != TravelStatus.PENDING:
-        flash('Esta viagem já foi analisada', 'warning')
-        return redirect(url_for('admin.travels_list'))
-
     travel_data = travel.to_dict()
 
     # Calcular dias de viagem
@@ -498,11 +618,47 @@ def travels_analyze(travel_id):
     else:
         travel_data['days'] = 0
 
+    # Buscar veículo alocado (se houver)
+    allocated_vehicle = None
+    vehicle_history = db.query(VehicleTravelHistory).filter_by(travel_id=travel_id).first()
+    if vehicle_history:
+        allocated_vehicle = vehicle_history.vehicle_id
+
+    # Buscar repasses financeiros já cadastrados
+    from app.models.user import User
+    payouts = db.query(TravelPayout).filter_by(travel_id=travel_id).all()
+    payouts_dict = {payout.member_id: float(payout.amount) for payout in payouts}
+
+    # Buscar passageiros para montar lista de membros
+    passengers = db.query(TravelPassenger).filter_by(travel_id=travel_id).all()
+    members = []
+
+    # Adicionar motorista (driver)
+    if travel.driver_user:
+        members.append({
+            'id': travel.driver_user.id,
+            'name': travel.driver_user.name,
+            'email': travel.driver_user.email,
+            'amount': payouts_dict.get(travel.driver_user.id, 0)
+        })
+
+    # Adicionar passageiros
+    for passenger in passengers:
+        if passenger.user:
+            members.append({
+                'id': passenger.user.id,
+                'name': passenger.user.name,
+                'email': passenger.user.email,
+                'amount': payouts_dict.get(passenger.user.id, 0)
+            })
+
     db.close()
 
     return render_template(
         'pages/travels/analyze.html',
-        travel=travel_data
+        travel=travel_data,
+        allocated_vehicle=allocated_vehicle,
+        members=members
     )
 
 
@@ -519,11 +675,6 @@ def travels_analyze_process(travel_id):
             flash('Viagem não encontrada', 'error')
             return redirect(url_for('admin.travels_list'))
 
-        # Verificar se já foi aprovada/rejeitada
-        if travel.status != TravelStatus.PENDING:
-            flash('Esta viagem já foi analisada', 'warning')
-            return redirect(url_for('admin.travels_list'))
-
         # Obter dados do formulário
         action = request.form.get('action')  # 'approve' ou 'reject'
         vehicle_id = request.form.get('vehicle_id')
@@ -535,25 +686,39 @@ def travels_analyze_process(travel_id):
             travel.approved_by = session.get('user_id')
             travel.approved_at = datetime.now()
 
-            # Se solicitou veículo e foi selecionado um, criar registro no histórico
+            # Se solicitou veículo e foi selecionado um, criar/atualizar registro no histórico
             if travel.needs_vehicle and vehicle_id:
                 # Buscar a quilometragem atual do veículo
                 vehicle = db.query(Vehicle).filter_by(id=int(vehicle_id)).first()
                 if vehicle:
                     current_km = vehicle.get_current_km(db)
 
-                    # Criar registro de alocação de veículo
-                    vehicle_history = VehicleTravelHistory(
-                        vehicle_id=int(vehicle_id),
-                        travel_id=travel.id,
-                        user_id=session.get('user_id'),
-                        previous_km=current_km,
-                        current_km=current_km,  # Será atualizado após a viagem
-                        km_traveled=0  # Será calculado após a viagem
-                    )
-                    db.add(vehicle_history)
+                    # Verificar se já existe um registro de alocação para esta viagem
+                    existing_history = db.query(VehicleTravelHistory).filter_by(travel_id=travel.id).first()
+
+                    if existing_history:
+                        # Atualizar o registro existente
+                        existing_history.vehicle_id = int(vehicle_id)
+                        existing_history.user_id = session.get('user_id')
+                        existing_history.previous_km = current_km
+                        existing_history.current_km = current_km
+                        existing_history.km_traveled = 0
+                    else:
+                        # Criar novo registro de alocação de veículo
+                        vehicle_history = VehicleTravelHistory(
+                            vehicle_id=int(vehicle_id),
+                            travel_id=travel.id,
+                            user_id=session.get('user_id'),
+                            previous_km=current_km,
+                            current_km=current_km,  # Será atualizado após a viagem
+                            km_traveled=0  # Será calculado após a viagem
+                        )
+                        db.add(vehicle_history)
 
             # Processar repasses financeiros
+            # Primeiro, remover todos os payouts existentes desta viagem para recriá-los
+            db.query(TravelPayout).filter_by(travel_id=travel.id).delete()
+
             # Buscar todos os campos que começam com 'financial_amount_user_'
             for key in request.form.keys():
                 if key.startswith('financial_amount_user_'):
@@ -586,6 +751,7 @@ def travels_analyze_process(travel_id):
             try:
                 from app.utils.notification_helper import send_notification
                 from app.models.notification import NotificationType
+                from app.models.user import User
 
                 notify_user_ids = set()
 
@@ -597,12 +763,39 @@ def travels_analyze_process(travel_id):
                 for passenger in passengers:
                     notify_user_ids.add(passenger.user_id)
 
+                # Adicionar usuários com permissão de aprovar viagens
+                users_with_approve_permission = db.query(User).filter_by(active=True).all()
+                for user in users_with_approve_permission:
+                    if user.has_permission('travels_approve'):
+                        notify_user_ids.add(user.id)
+
+                # Formatar mensagem com detalhes
+                departure_str = travel.departure_date.strftime('%d/%m/%Y às %H:%M')
+                return_str = travel.return_date.strftime('%d/%m/%Y às %H:%M')
+
+                # Buscar nomes dos passageiros
+                passengers_list = []
+                for passenger in passengers:
+                    if passenger.user:
+                        passengers_list.append(passenger.user.name)
+
+                # Motorista e passageiros separados
+                driver_name = travel.driver_user.name if travel.driver_user else 'Não informado'
+                passengers_str = ', '.join(passengers_list) if passengers_list else 'Não'
+
+                message = f"""A viagem para {travel.city.name} foi aprovada!
+
+📅 Saída: {departure_str}
+📅 Retorno: {return_str}
+🚘 Motorista: {driver_name}
+👥 Passageiros: {passengers_str}"""
+
                 # Enviar notificação para cada usuário
                 for user_id in notify_user_ids:
                     send_notification(
                         user_id=user_id,
                         title='Viagem Aprovada',
-                        message=f'Sua viagem para {travel.city.name} foi aprovada!',
+                        message=message,
                         notification_type=NotificationType.TRAVEL,
                         action_url=f'/admin/travels/{travel.id}/view',
                         action_text='Ver Viagem'

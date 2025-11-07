@@ -403,81 +403,52 @@
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                <!-- Solicitante -->
-                                <tr class="hover:bg-purple-50 transition-colors">
-                                    <td class="px-4 py-4">
-                                        <div class="flex items-center">
-                                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
-                                                <i class="fas fa-user text-purple-900"></i>
-                                            </div>
-                                            <div>
-                                                <p class="text-sm font-semibold text-gray-900">{{ travel.driver_user.name if travel.driver_user else 'N/A' }}</p>
-                                                <p class="text-xs text-gray-500">{{ travel.driver_user.email if travel.driver_user else '' }}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-4">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
-                                            Solicitante
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-4">
-                                        <div class="relative">
-                                            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
-                                            <input type="text"
-                                                   name="financial_amount_user_{{ travel.driver_user_id }}"
-                                                   id="financial_amount_user_{{ travel.driver_user_id }}"
-                                                   value="0,00"
-                                                   class="financial-input w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-4 text-center">
-                                        <button type="button"
-                                                disabled
-                                                class="px-3 py-1.5 bg-gray-100 text-gray-400 border border-gray-200 rounded-lg font-medium cursor-not-allowed inline-flex items-center text-xs">
-                                            <i class="fas fa-trash mr-1"></i>
-                                            Remover
-                                        </button>
-                                    </td>
-                                </tr>
-
-                                <!-- Passageiros -->
-                                {% if travel.passengers and travel.passengers|length > 0 %}
-                                    {% for passenger in travel.passengers %}
-                                    <tr class="hover:bg-purple-50 transition-colors" data-participant-id="{{ passenger.id }}">
+                                <!-- Lista de membros (driver + passageiros) -->
+                                {% if members and members|length > 0 %}
+                                    {% for member in members %}
+                                    <tr class="hover:bg-purple-50 transition-colors" {% if loop.index > 1 %}data-participant-id="{{ member.id }}"{% endif %}>
                                         <td class="px-4 py-4">
                                             <div class="flex items-center">
-                                                <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
-                                                    <i class="fas fa-user text-gray-600"></i>
+                                                <div class="w-10 h-10 {% if loop.first %}bg-purple-100{% else %}bg-gray-100{% endif %} rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                                                    <i class="fas fa-user {% if loop.first %}text-purple-900{% else %}text-gray-600{% endif %}"></i>
                                                 </div>
                                                 <div>
-                                                    <p class="text-sm font-semibold text-gray-900">{{ passenger.name }}</p>
-                                                    <p class="text-xs text-gray-500">{{ passenger.email if passenger.email else 'N/A' }}</p>
+                                                    <p class="text-sm font-semibold text-gray-900">{{ member.name }}</p>
+                                                    <p class="text-xs text-gray-500">{{ member.email if member.email else 'N/A' }}</p>
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="px-4 py-4">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
-                                                Passageiro
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {% if loop.first %}bg-purple-100 text-purple-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                {% if loop.first %}Solicitante{% else %}Passageiro{% endif %}
                                             </span>
                                         </td>
                                         <td class="px-4 py-4">
                                             <div class="relative">
                                                 <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
                                                 <input type="text"
-                                                       name="financial_amount_user_{{ passenger.id }}"
-                                                       id="financial_amount_user_{{ passenger.id }}"
-                                                       value="0,00"
+                                                       name="financial_amount_user_{{ member.id }}"
+                                                       id="financial_amount_user_{{ member.id }}"
+                                                       value="{{ '{:,.2f}'.format(member.amount).replace(',', 'X').replace('.', ',').replace('X', '.') }}"
                                                        class="financial-input w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                                             </div>
                                         </td>
                                         <td class="px-4 py-4 text-center">
+                                            {% if loop.first %}
                                             <button type="button"
-                                                    onclick="removeParticipant({{ passenger.id }})"
+                                                    disabled
+                                                    class="px-3 py-1.5 bg-gray-100 text-gray-400 border border-gray-200 rounded-lg font-medium cursor-not-allowed inline-flex items-center text-xs">
+                                                <i class="fas fa-trash mr-1"></i>
+                                                Remover
+                                            </button>
+                                            {% else %}
+                                            <button type="button"
+                                                    onclick="removeParticipant({{ member.id }})"
                                                     class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg font-medium transition-all inline-flex items-center text-xs">
                                                 <i class="fas fa-trash mr-1"></i>
                                                 Remover
                                             </button>
+                                            {% endif %}
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -792,6 +763,7 @@ $(document).ready(function() {
     const travelDepartureDate = '{{ travel.departure_date }}';
     const travelReturnDate = '{{ travel.return_date }}';
     const travelId = {{ travel.id }};
+    const allocatedVehicleId = {% if allocated_vehicle %}{{ allocated_vehicle }}{% else %}null{% endif %};
 
     // Inicialização de componentes
     if (needsVehicle) {
@@ -934,6 +906,25 @@ $(document).ready(function() {
                 ${selectedVehicleInfo}
             `);
         });
+
+        // Pre-selecionar veículo alocado (se houver)
+        if (allocatedVehicleId) {
+            const allocatedRow = $(`.vehicle-row[data-vehicle-id="${allocatedVehicleId}"]`);
+            if (allocatedRow.length > 0 && allocatedRow.data('reserved') !== true) {
+                allocatedRow.addClass('bg-purple-100');
+                allocatedRow.find('input[name="vehicle_radio"]').prop('checked', true);
+
+                selectedVehicleId = allocatedRow.data('vehicle-id');
+                selectedVehicleInfo = allocatedRow.data('vehicle-info');
+                $('#vehicle_id_field').val(selectedVehicleId);
+
+                // Atualizar resumo
+                $('#selected-vehicle-summary').html(`
+                    <i class="fas fa-check-circle mr-1"></i>
+                    ${selectedVehicleInfo}
+                `);
+            }
+        }
     }
 
     function updateVehicleCount(showing, total) {

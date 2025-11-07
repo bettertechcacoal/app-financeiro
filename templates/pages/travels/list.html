@@ -63,7 +63,6 @@
                         <!-- Header do Card -->
                         <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between flex-wrap gap-2">
                             <div class="flex items-center gap-3">
-                                <span class="text-xs font-bold text-blue-600">#{{ travel.id }}</span>
                                 <div class="flex items-center text-xs text-gray-600">
                                     <i class="fas fa-user text-blue-600 mr-1"></i>
                                     <span class="font-medium">{{ travel.driver_user.name if travel.driver_user else '-' }}</span>
@@ -120,17 +119,19 @@
                                     <!-- Botões de Ação -->
                                     <div class="flex flex-wrap gap-2 lg:flex-shrink-0">
                                         {% set can_edit = (travel.driver_user_id == current_user_id or travel.record_user_id == current_user_id) %}
-                                        {% if travel.status == 'approved' or travel.status == 'cancelled' or not can_edit %}
-                                        <a href="{{ url_for('admin.travels_view', travel_id=travel.id) }}"
-                                           class="inline-flex items-center px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
-                                            <i class="fas fa-eye mr-1.5"></i>
-                                            Ver Resumo
-                                        </a>
-                                        {% elif travel.status == 'pending' and can_edit %}
+                                        {% set can_edit_approved = travel.status == 'approved' and travel.can_edit_by_date and can_edit %}
+
+                                        {% if (travel.status == 'pending' and can_edit) or can_edit_approved %}
                                         <a href="{{ url_for('admin.travels_edit', travel_id=travel.id) }}"
                                            class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
                                             <i class="fas fa-edit mr-1.5"></i>
                                             Editar
+                                        </a>
+                                        {% else %}
+                                        <a href="{{ url_for('admin.travels_view', travel_id=travel.id) }}"
+                                           class="inline-flex items-center px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
+                                            <i class="fas fa-eye mr-1.5"></i>
+                                            Ver Resumo
                                         </a>
                                         {% endif %}
                                         {% if travel.status in ['pending', 'approved'] and can_edit %}

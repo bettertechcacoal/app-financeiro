@@ -42,9 +42,22 @@ def movidesk_options():
             'icon': 'fa-building',
             'color': 'purple',
             'route': 'admin.movidesk_organizations'
+        },
+        {
+            'id': 'modules',
+            'name': 'Módulos',
+            'description': 'Gerencie módulos personalizados',
+            'icon': 'fa-cubes',
+            'color': 'orange',
+            'route': 'admin.movidesk_modules'
         }
     ]
     return render_template('pages/integrations/movidesk_options.html', options=options)
+
+
+def movidesk_modules():
+    """Tela de gerenciamento de módulos Movidesk"""
+    return render_template('pages/integrations/movidesk_modules.html')
 
 
 def movidesk_organizations():

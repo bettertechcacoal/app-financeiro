@@ -3,6 +3,11 @@
 
 {% block title %}{% if client %}Editar{% else %}Nova{% endif %} Pessoa{% endblock %}
 
+{# Macro para obter valor do campo #}
+{% macro field_value(field_name) -%}
+    {% if form_data %}{{ form_data.get(field_name, '') }}{% elif client %}{{ client[field_name] if client[field_name] else '' }}{% else %}{% endif %}
+{%- endmacro %}
+
 {% block breadcrumbs %}
 {{ breadcrumbs([
     {'name': 'Clientes', 'url': url_for('admin.clients_list')},
@@ -173,7 +178,7 @@
                         <!-- Nome - linha completa -->
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Nome / Razão Social <span class="text-red-600">*</span></label>
-                            <input type="text" id="name" name="name" value="{{ client.name if client else '' }}"
+                            <input type="text" id="name" name="name" value="{{ field_value('name') }}"
                                    placeholder="Nome da Organização"
                                    class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all">
                         </div>
@@ -182,13 +187,13 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">CNPJ / CPF <span class="text-red-600">*</span></label>
-                                <input type="text" id="document" name="document" value="{{ client.document if client else '' }}"
+                                <input type="text" id="document" name="document" value="{{ field_value('document') }}"
                                        placeholder="00.000.000/0000-00"
                                        class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all">
                             </div>
                             <div class="md:col-span-2">
                                 <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Email</label>
-                                <input type="email" id="email" name="email" value="{{ client.email if client else '' }}"
+                                <input type="email" id="email" name="email" value="{{ field_value('email') }}"
                                        placeholder="contato@empresa.com"
                                        class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all">
                             </div>
@@ -198,7 +203,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Telefone</label>
-                                <input type="tel" id="phone" name="phone" value="{{ client.phone if client else '' }}"
+                                <input type="tel" id="phone" name="phone" value="{{ field_value('phone') }}"
                                        placeholder="(00) 00000-0000"
                                        class="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all">
                             </div>
@@ -324,8 +329,8 @@
                     <select id="billing_cycle_type" name="billing_cycle_type"
                             class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         <option value="">Selecione o tipo de ciclo</option>
-                        <option value="fixo" {% if client and client.billing_cycle_type == 'fixo' %}selected{% endif %}>Ciclo Fixo</option>
-                        <option value="mensal" {% if client and client.billing_cycle_type == 'mensal' %}selected{% endif %}>Ciclo Mensal</option>
+                        <option value="fixo" {% if field_value('billing_cycle_type') == 'fixo' %}selected{% endif %}>Ciclo Fixo</option>
+                        <option value="mensal" {% if field_value('billing_cycle_type') == 'mensal' %}selected{% endif %}>Ciclo Mensal</option>
                     </select>
                     <p class="mt-2 text-xs text-gray-500">
                         <i class="fas fa-info-circle mr-1"></i>
@@ -378,7 +383,7 @@
                                 <div class="relative">
                                     <input type="text" id="fixed_start_day" name="fixed_start_day"
                                            readonly
-                                           value="{{ client.fixed_start_day if client and client.fixed_start_day else '' }}"
+                                           value="{{ field_value('fixed_start_day') }}"
                                            placeholder="Selecione o dia"
                                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer">
                                     <i class="fas fa-calendar-day absolute right-4 top-1/2 transform -translate-y-1/2 text-blue-600 pointer-events-none"></i>
@@ -450,7 +455,7 @@
 
                 <div class="mb-6">
                     <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Endereço Completo</label>
-                    <input type="text" id="address" name="address" value="{{ client.address if client else '' }}"
+                    <input type="text" id="address" name="address" value="{{ field_value('address') }}"
                            placeholder="Rua, Número, Complemento"
                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                 </div>
@@ -458,19 +463,19 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Cidade</label>
-                        <input type="text" id="city" name="city" value="{{ client.city if client else '' }}"
+                        <input type="text" id="city" name="city" value="{{ field_value('city') }}"
                                placeholder="Cidade"
                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-2">Estado</label>
-                        <input type="text" id="state" name="state" value="{{ client.state if client else '' }}"
+                        <input type="text" id="state" name="state" value="{{ field_value('state') }}"
                                maxlength="2" placeholder="UF"
                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-2">CEP</label>
-                        <input type="text" id="zipcode" name="zipcode" value="{{ client.zipcode if client else '' }}"
+                        <input type="text" id="zipcode" name="zipcode" value="{{ field_value('zipcode') }}"
                                placeholder="00000-000"
                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                     </div>
@@ -930,6 +935,9 @@ $(document).ready(function() {
                 field.after('<p class="text-red-600 text-xs mt-1"><i class="fas fa-exclamation-circle mr-1"></i>' + error.message + '</p>');
             });
 
+            // Mostrar toast com primeiro erro
+            showToast(errors[0].message, 'error');
+
             // Navegar para a aba do PRIMEIRO campo com erro
             var firstErrorField = $(errors[0].field);
             var firstErrorTab = firstErrorField.closest('.tab-content').attr('id');
@@ -947,6 +955,13 @@ $(document).ready(function() {
 
             return false;
         }
+
+        // Se não houver erros, adicionar loading no botão
+        const saveBtn = $('button[type="submit"][form="client-form"]');
+        saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Salvando...');
+
+        // Permitir que o formulário seja enviado
+        return true;
     });
 
     // Remover estilo de erro ao digitar

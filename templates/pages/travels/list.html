@@ -140,11 +140,11 @@
                                             Cancelar
                                         </button>
                                         {% endif %}
-                                        {% if travel.status == 'pending' and 'travels_approve' in user_permissions %}
+                                        {% if 'travels_approve' in user_permissions %}
                                         <a href="{{ url_for('admin.travels_analyze', travel_id=travel.id) }}"
                                            class="inline-flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap">
                                             <i class="fas fa-search mr-1.5"></i>
-                                            Analisar
+                                            Análise
                                         </a>
                                         {% endif %}
                                     </div>

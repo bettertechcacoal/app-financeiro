@@ -84,6 +84,7 @@ def register_routes(app: Flask):
     admin_bp.add_url_rule('/integrations/movidesk', view_func=integrations_controller.movidesk_options, methods=['GET'])
     admin_bp.add_url_rule('/integrations/movidesk/tickets', view_func=integrations_controller.movidesk_tickets, methods=['GET'])
     admin_bp.add_url_rule('/integrations/movidesk/tickets/sync', view_func=integrations_controller.movidesk_sync_tickets, methods=['POST'])
+    admin_bp.add_url_rule('/integrations/movidesk/modules', view_func=integrations_controller.movidesk_modules, methods=['GET'])
     admin_bp.add_url_rule('/integrations/movidesk/organizations', view_func=integrations_controller.movidesk_organizations, methods=['GET'])
     admin_bp.add_url_rule('/integrations/movidesk/organizations/sync', view_func=integrations_controller.movidesk_sync_organizations, methods=['POST'])
 

@@ -43,7 +43,8 @@ def client_create():
         if errors:
             for error in errors:
                 flash(error, 'error')
-            return redirect(url_for('admin.client_new'))
+            # Retornar para o formulário mantendo os dados preenchidos
+            return render_template('pages/clients/form.html', client=None, form_data=request.form)
 
         client_data = {
             'name': name,
@@ -77,10 +78,11 @@ def client_create():
             client_service.update_client_metas(client['id'], meta_data)
 
         flash('Organização cadastrada com sucesso!', 'success')
-        return redirect(url_for('admin.clients_list'))
+        return redirect(url_for('admin.client_edit', client_id=client['id']))
     except Exception as e:
         flash(f'Erro ao cadastrar organização: {str(e)}', 'error')
-        return redirect(url_for('admin.client_new'))
+        # Retornar para o formulário mantendo os dados preenchidos
+        return render_template('pages/clients/form.html', client=None, form_data=request.form)
 
 
 def client_edit(client_id):

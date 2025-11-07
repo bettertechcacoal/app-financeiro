@@ -854,14 +854,15 @@ $(document).ready(function() {
     // ===== MÁSCARAS DE ENTRADA =====
 
     // Máscara de CPF/CNPJ com alternância automática
-    var options = {
+    var SPMaskBehavior = function (val) {
+        return val.replace(/\D/g, '').length <= 11 ? '000.000.000-009' : '00.000.000/0000-00';
+    };
+    var spOptions = {
         onKeyPress: function(val, e, field, options) {
-            var masks = ['000.000.000-000', '00.000.000/0000-00'];
-            var mask = (val.replace(/\D/g, '').length > 11) ? masks[1] : masks[0];
-            $('#document').mask(mask, options);
+            field.mask(SPMaskBehavior.apply({}, arguments), options);
         }
     };
-    $('#document').mask('000.000.000-000', options);
+    $('#document').mask(SPMaskBehavior, spOptions);
 
     // Máscara de telefone com alternância celular/fixo
     var phoneBehavior = function (val) {

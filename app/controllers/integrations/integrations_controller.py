@@ -59,14 +59,21 @@ def movidesk_modules():
     """Tela de gerenciamento de módulos Movidesk"""
     from app.models.application import Application
     from app.models.ticket_module import TicketModule
+    from app.models.application_ticket_module import ApplicationTicketModule
     from app.models.database import db_session
-    from sqlalchemy import or_
+    from sqlalchemy import or_, func
 
     # Parâmetros de pesquisa
     search = request.args.get('search', '').strip()
 
-    # Query base para applications
-    query = db_session.query(Application)
+    # Query base para applications com contagem de módulos
+    query = db_session.query(
+        Application,
+        func.count(ApplicationTicketModule.ticket_module_id).label('ticket_modules_count')
+    ).outerjoin(
+        ApplicationTicketModule,
+        Application.id == ApplicationTicketModule.application_id
+    ).group_by(Application.id)
 
     # Aplicar filtro de pesquisa
     if search:
@@ -82,10 +89,14 @@ def movidesk_modules():
     query = query.order_by(Application.name)
 
     # Buscar todos os registros
-    applications = query.all()
+    results = query.all()
 
-    # Converter para dicionários
-    applications_data = [app.to_dict() for app in applications]
+    # Converter para dicionários incluindo a contagem
+    applications_data = []
+    for app, count in results:
+        app_dict = app.to_dict()
+        app_dict['ticket_modules_count'] = count
+        applications_data.append(app_dict)
 
     # Contar totais
     total_applications = len(applications_data)

@@ -85,6 +85,13 @@ def register_routes(app: Flask):
     admin_bp.add_url_rule('/integrations/movidesk/tickets', view_func=integrations_controller.movidesk_tickets, methods=['GET'])
     admin_bp.add_url_rule('/integrations/movidesk/tickets/sync', view_func=integrations_controller.movidesk_sync_tickets, methods=['POST'])
     admin_bp.add_url_rule('/integrations/movidesk/modules', view_func=integrations_controller.movidesk_modules, methods=['GET'])
+    admin_bp.add_url_rule('/integrations/movidesk/applications/create', view_func=integrations_controller.application_create, methods=['POST'])
+    admin_bp.add_url_rule('/integrations/movidesk/modules/<int:app_id>/edit', view_func=integrations_controller.application_edit, methods=['GET'])
+    admin_bp.add_url_rule('/integrations/movidesk/modules/<int:app_id>/update', view_func=integrations_controller.application_update, methods=['POST'])
+    admin_bp.add_url_rule('/integrations/movidesk/modules/<int:app_id>/toggle', view_func=integrations_controller.toggle_application_status, methods=['POST'])
+    admin_bp.add_url_rule('/integrations/movidesk/modules/<int:app_id>/ticket-modules', view_func=integrations_controller.get_application_ticket_modules, methods=['GET'])
+    admin_bp.add_url_rule('/integrations/movidesk/modules/ticket-modules/create', view_func=integrations_controller.create_ticket_module, methods=['POST'])
+    admin_bp.add_url_rule('/integrations/movidesk/modules/ticket-modules/list', view_func=integrations_controller.list_ticket_modules, methods=['GET'])
     admin_bp.add_url_rule('/integrations/movidesk/organizations', view_func=integrations_controller.movidesk_organizations, methods=['GET'])
     admin_bp.add_url_rule('/integrations/movidesk/organizations/sync', view_func=integrations_controller.movidesk_sync_organizations, methods=['POST'])
 

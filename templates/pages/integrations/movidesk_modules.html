@@ -11,43 +11,936 @@
 ]) }}
 {% endblock %}
 
+{% block extra_head %}
+<style>
+    /* Estilo para tabs */
+    .tab-button {
+        color: #6b7280;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s;
+        position: relative;
+    }
+
+    .tab-button:hover {
+        color: #ea580c;
+        border-bottom-color: #fed7aa;
+    }
+
+    .tab-button.active {
+        color: #ea580c;
+        border-bottom-color: #ea580c;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="py-8">
     <!-- Header -->
     <div class="mb-8 animate-fade-in">
         <div class="flex items-center mb-4">
-            <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg mr-4">
-                <i class="fas fa-cubes text-white text-3xl"></i>
+            <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
+                <i class="fas fa-cubes text-white text-2xl sm:text-3xl"></i>
             </div>
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-1">Módulos Movidesk</h1>
-                <p class="text-gray-600">Gerencie módulos personalizados do Movidesk</p>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Módulos Movidesk</h1>
+                <p class="text-sm sm:text-base text-gray-600">Gerencie módulos e integrações personalizadas</p>
             </div>
         </div>
     </div>
 
-    <!-- Conteúdo em construção -->
-    <div class="card p-12 animate-fade-in text-center">
-        <div class="w-24 h-24 bg-orange-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
-            <i class="fas fa-tools text-orange-600 text-5xl"></i>
+    <!-- Layout com Sidebar -->
+    <div class="flex flex-col lg:flex-row gap-6">
+        <!-- Conteúdo Principal -->
+        <div class="flex-1 min-w-0">
+            <!-- Tabs -->
+            <div class="rounded-xl mb-6 animate-fade-in">
+                <!-- Navegação dos Tabs -->
+                <div class="bg-white border-b border-gray-200 rounded-t-xl shadow-sm">
+                    <nav class="flex -mb-px">
+                        <button type="button" data-tab="applications" class="tab-button active flex-1 px-6 py-4 text-sm font-semibold">
+                            <i class="fas fa-cube mr-2"></i>Aplicações
+                        </button>
+                        <button type="button" data-tab="ticket-modules" class="tab-button flex-1 px-6 py-4 text-sm font-semibold">
+                            <i class="fas fa-puzzle-piece mr-2"></i>Módulos de Tickets
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Conteúdo do Tab Aplicações -->
+                <div id="tab-applications" class="tab-content">
+                    <!-- Barra de Pesquisa e Ações -->
+                    <div class="bg-white p-6 mb-6 border-b border-gray-200 shadow-sm">
+                        <div class="grid grid-cols-2 gap-6">
+                            <!-- Coluna Esquerda - Pesquisa -->
+                            <div>
+                                <form method="GET" action="{{ url_for('admin.movidesk_modules') }}" class="flex items-center gap-4">
+                                    <div class="flex-1">
+                                        <div class="relative">
+                                            <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                            <input type="text" name="search" value="{{ search }}" placeholder="Pesquisar por nome, descrição ou categoria..."
+                                                   class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all">
+                                        </div>
+                                    </div>
+                                    {% if search %}
+                                    <a href="{{ url_for('admin.movidesk_modules') }}" class="px-6 py-3 text-gray-600 hover:text-gray-800 font-semibold">
+                                        <i class="fas fa-times mr-2"></i>
+                                        Limpar
+                                    </a>
+                                    {% endif %}
+                                </form>
+                            </div>
+
+                            <!-- Coluna Direita - Botão Nova Aplicação -->
+                            <div class="flex justify-end items-center">
+                                <button type="button" onclick="openCreateModal()" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold rounded-lg transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2">
+                                    <i class="fas fa-plus-circle"></i>
+                                    <span>Adicionar</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Aplicações -->
+                    {% if applications %}
+                    <div class="bg-white shadow-sm rounded-b-xl overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        Módulo
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        Categoria
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        Status
+                                    </th>
+                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                        Ações
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for app in applications %}
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center">
+                                            <div class="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                                                <i class="fas fa-cube text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-semibold text-gray-900">{{ app.name }}</div>
+                                                <div class="text-xs text-gray-500">{{ app.description or 'Sem descrição' }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded">
+                                            {{ app.category or 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        {% if app.is_active %}
+                                        <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            <i class="fas fa-check-circle mr-1"></i>
+                                            Ativo
+                                        </span>
+                                        {% else %}
+                                        <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                            <i class="fas fa-times-circle mr-1"></i>
+                                            Inativo
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                                        <div class="flex justify-end gap-2">
+                                            <button onclick="openEditModal({{ app.id }}, '{{ app.name }}', '{{ app.description or '' }}', '{{ app.category or '' }}', {{ 'true' if app.is_active else 'false' }})"
+                                                   class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm">
+                                                <i class="fas fa-edit mr-1.5"></i>
+                                                Editar
+                                            </button>
+                                            <button onclick="toggleApplicationStatus({{ app.id }}, {{ 'false' if app.is_active else 'true' }})"
+                                                   class="px-4 py-2 {{ 'bg-amber-600 hover:bg-amber-700' if app.is_active else 'bg-emerald-600 hover:bg-emerald-700' }} text-white text-xs font-semibold rounded-lg transition-all shadow-sm">
+                                                <i class="fas fa-{{ 'ban' if app.is_active else 'check' }} mr-1.5"></i>
+                                                {{ 'Desativar' if app.is_active else 'Ativar' }}
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        <!-- Rodapé -->
+                        <div class="bg-gray-50 px-6 py-3 border-t border-gray-200">
+                            <div class="flex items-center justify-between text-xs text-gray-600">
+                                <div>
+                                    Total: <span class="font-bold text-gray-900">{{ applications|length }}</span> aplicaç{{ 'ão' if applications|length == 1 else 'ões' }}
+                                </div>
+                                <div>
+                                    Ativos: <span class="font-bold text-green-600">{{ active_applications }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="bg-white shadow-sm rounded-xl p-8 text-center">
+                        <div class="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-cube text-4xl text-gray-400"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Nenhuma aplicação encontrada</h3>
+                        <p class="text-gray-600">{{ 'Tente ajustar os filtros de pesquisa' if search else 'Não há aplicações cadastradas' }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Conteúdo do Tab Módulos de Tickets -->
+                <div id="tab-ticket-modules" class="tab-content hidden">
+                    <!-- Header com botão adicionar -->
+                    <div class="bg-white p-6 mb-6 border-b border-gray-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-900 flex items-center">
+                                <i class="fas fa-puzzle-piece text-orange-600 mr-2"></i>
+                                Módulos de Tickets
+                            </h2>
+                            <p class="text-sm text-gray-600 mt-1">Gerencie os módulos vinculados às aplicações</p>
+                        </div>
+                        <button onclick="openTicketModuleModal()"
+                                class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold rounded-lg transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Adicionar Módulo</span>
+                        </button>
+                    </div>
+
+                    <!-- Lista de Módulos -->
+                    <div id="ticket-modules-list">
+                        {% if ticket_modules and ticket_modules|length > 0 %}
+                        <div class="bg-white shadow-sm rounded-b-xl overflow-hidden">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                            ID
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                            Descrição
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% for module in ticket_modules %}
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                                                    <i class="fas fa-hashtag text-orange-600 text-xs"></i>
+                                                </div>
+                                                <span class="text-sm font-semibold text-gray-900">{{ module.id }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-700">{{ module.description if module.description else 'Sem descrição' }}</div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+
+                            <!-- Rodapé -->
+                            <div class="bg-gray-50 px-6 py-3 border-t border-gray-200">
+                                <div class="text-xs text-gray-600 text-center">
+                                    Total: <span class="font-bold text-gray-900">{{ ticket_modules|length }}</span> módulo{{ 's' if ticket_modules|length != 1 else '' }}
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="bg-white shadow-sm rounded-xl p-8 text-center">
+                            <div class="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                                <i class="fas fa-puzzle-piece text-4xl text-gray-400"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">Nenhum módulo de ticket cadastrado</h3>
+                            <p class="text-gray-600 mb-4">Adicione módulos para vincular às aplicações</p>
+                            <button onclick="openTicketModuleModal()"
+                                    class="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2">
+                                <i class="fas fa-plus-circle"></i>
+                                <span>Adicionar Primeiro Módulo</span>
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         </div>
-        <h2 class="text-2xl font-bold text-gray-900 mb-3">Funcionalidade em Desenvolvimento</h2>
-        <p class="text-gray-600 max-w-md mx-auto mb-6">
-            A gestão de módulos personalizados do Movidesk estará disponível em breve.
-        </p>
-        <a href="{{ url_for('admin.movidesk_options') }}"
-           class="inline-flex items-center px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg transition-all shadow-md hover:shadow-lg">
-            <i class="fas fa-arrow-left mr-2"></i>
-            Voltar às Opções
-        </a>
+
+        <!-- Sidebar de Métricas -->
+        <div class="w-full lg:w-80 flex-shrink-0">
+            <div class="sticky top-6 space-y-4 animate-fade-in">
+                <!-- Total de Aplicações -->
+                <div class="bg-white rounded-xl shadow-sm p-4">
+                    <div class="text-sm text-gray-600 mb-1">Total de Aplicações</div>
+                    <div class="text-2xl font-bold text-orange-600">{{ total_applications }}</div>
+                </div>
+
+                <!-- Aplicações Ativas -->
+                <div class="bg-white rounded-xl shadow-sm p-4">
+                    <div class="text-sm text-gray-600 mb-1">Aplicações Ativas</div>
+                    <div class="text-2xl font-bold text-green-600">{{ active_applications }}</div>
+                </div>
+
+                <!-- Total de Módulos -->
+                <div class="bg-white rounded-xl shadow-sm p-4">
+                    <div class="text-sm text-gray-600 mb-1">Módulos de Tickets</div>
+                    <div class="text-2xl font-bold text-orange-600">{{ ticket_modules|length if ticket_modules else 0 }}</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Botão Voltar -->
     <div class="mt-8 animate-fade-in">
-        <a href="{{ url_for('admin.movidesk_options') }}" class="text-blue-600 hover:text-blue-700 font-semibold">
+        <a href="{{ url_for('admin.movidesk_options') }}" class="text-orange-600 hover:text-orange-700 font-semibold">
             <i class="fas fa-arrow-left mr-2"></i>
             Voltar ao Movidesk
         </a>
     </div>
 </div>
+
+<!-- Modal de Criação/Edição de Aplicação -->
+<div id="editModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full animate-fade-in">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div id="modal_icon_container" class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mr-4">
+                        <i id="modal_icon" class="fas fa-plus text-orange-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 id="modal_title" class="text-xl font-bold text-gray-900">Editar Módulo</h3>
+                        <p id="modal_subtitle" class="text-sm text-gray-500">Atualize as informações do módulo</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <form id="editForm" onsubmit="saveApplication(event)">
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="edit_app_id" name="app_id">
+
+                <!-- Status -->
+                <div class="flex items-center">
+                    <label for="edit_is_active" class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="edit_is_active" name="is_active" class="sr-only peer" onchange="updateStatusLabel()">
+                        <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                        <span id="status_label" class="ml-3 text-sm font-medium text-gray-700">
+                            Módulo Ativo
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Nome -->
+                <div>
+                    <label for="edit_name" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-cube text-orange-600 mr-1"></i>
+                        Nome do Módulo <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="edit_name" name="name" required
+                           class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all">
+                    <div id="name_feedback" class="hidden mt-2 text-sm text-red-600">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        <span>O nome do módulo é obrigatório</span>
+                    </div>
+                </div>
+
+                <!-- Descrição -->
+                <div>
+                    <label for="edit_description" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-align-left text-orange-600 mr-1"></i>
+                        Descrição
+                    </label>
+                    <textarea id="edit_description" name="description" rows="3"
+                              class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all"></textarea>
+                </div>
+
+                <!-- Categoria -->
+                <div>
+                    <label for="edit_category" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-tag text-orange-600 mr-1"></i>
+                        Categoria <span class="text-red-500">*</span>
+                    </label>
+                    <select id="edit_category" name="category" required
+                            class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all">
+                        <option value="">Selecione uma categoria</option>
+                        <option value="APICE">APICE</option>
+                        <option value="WEB">WEB</option>
+                        <option value="AISE">AISE</option>
+                        <option value="OXY">OXY</option>
+                        <option value="Portal">Portal</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                    <div id="category_feedback" class="hidden mt-2 text-sm text-red-600">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        <span>A categoria é obrigatória</span>
+                    </div>
+                </div>
+
+                <!-- Integração (Módulos de Tickets) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-puzzle-piece text-orange-600 mr-1"></i>
+                        Integração
+                    </label>
+
+                    <!-- Campo de busca -->
+                    <div class="relative mb-3">
+                        <input type="text" id="module_search"
+                               placeholder="Buscar módulos..."
+                               class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all"
+                               autocomplete="off">
+                        <i class="fas fa-search absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+
+                        <!-- Lista de sugestões -->
+                        <div id="module_suggestions" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            {% for module in ticket_modules %}
+                            <div class="module-suggestion px-4 py-2.5 hover:bg-orange-50 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0"
+                                 data-id="{{ module.id }}"
+                                 data-description="{{ module.description }}">
+                                <div class="flex items-center">
+                                    <i class="fas fa-puzzle-piece text-orange-600 mr-2 text-xs"></i>
+                                    <span class="text-sm text-gray-700">{{ module.description }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Badges dos módulos selecionados -->
+                    <div id="selected_modules" class="flex flex-wrap gap-2 mb-2"></div>
+
+                    <p class="text-xs text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Busque e clique para adicionar módulos
+                    </p>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3 rounded-b-xl">
+                <button type="button" onclick="closeEditModal()"
+                        class="px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-all">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg">
+                    <i class="fas fa-save mr-2"></i>
+                    Salvar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de Adicionar Módulo de Ticket -->
+<div id="ticketModuleModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full animate-fade-in">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mr-4">
+                        <i class="fas fa-plus text-orange-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Novo Módulo de Ticket</h3>
+                        <p class="text-sm text-gray-500">Adicione um novo módulo de ticket</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeTicketModuleModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <form id="ticketModuleForm" onsubmit="saveTicketModule(event)">
+            <div class="p-6 space-y-4">
+                <!-- Descrição -->
+                <div>
+                    <label for="module_description" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-align-left text-orange-600 mr-1"></i>
+                        Descrição
+                    </label>
+                    <textarea id="module_description" name="description" rows="3" required
+                              class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all"
+                              placeholder="Digite a descrição do módulo de ticket"></textarea>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3 rounded-b-xl">
+                <button type="button" onclick="closeTicketModuleModal()"
+                        class="px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-semibold transition-all">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg">
+                    <i class="fas fa-save mr-2"></i>
+                    Salvar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Array para armazenar os módulos selecionados
+let selectedModulesData = [];
+
+// ===== CONTROLE DE TABS =====
+document.addEventListener('DOMContentLoaded', function() {
+    const tabButtons = document.querySelectorAll('.tab-button');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const tabName = this.dataset.tab;
+
+            // Remove active de todos os botões
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+
+            // Adiciona active no botão clicado
+            this.classList.add('active');
+
+            // Esconde todos os conteúdos
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Mostra o conteúdo do tab selecionado
+            document.getElementById('tab-' + tabName).classList.remove('hidden');
+        });
+    });
+
+    // ===== BUSCA DE MÓDULOS =====
+    const moduleSearch = document.getElementById('module_search');
+    const moduleSuggestions = document.getElementById('module_suggestions');
+
+    // Mostrar sugestões ao focar no campo
+    moduleSearch.addEventListener('focus', function() {
+        moduleSuggestions.classList.remove('hidden');
+    });
+
+    // Buscar módulos
+    moduleSearch.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const suggestions = document.querySelectorAll('.module-suggestion');
+
+        suggestions.forEach(suggestion => {
+            const description = suggestion.dataset.description.toLowerCase();
+            if (description.includes(searchTerm)) {
+                suggestion.classList.remove('hidden');
+            } else {
+                suggestion.classList.add('hidden');
+            }
+        });
+    });
+
+    // Adicionar módulo ao clicar
+    document.querySelectorAll('.module-suggestion').forEach(suggestion => {
+        suggestion.addEventListener('click', function() {
+            const moduleId = parseInt(this.dataset.id);
+            const moduleDescription = this.dataset.description;
+
+            addModuleBadge(moduleId, moduleDescription);
+            moduleSearch.value = '';
+            moduleSuggestions.classList.add('hidden');
+
+            // Resetar filtro
+            document.querySelectorAll('.module-suggestion').forEach(s => {
+                s.classList.remove('hidden');
+            });
+        });
+    });
+
+    // Fechar sugestões ao clicar fora
+    document.addEventListener('click', function(e) {
+        if (!moduleSearch.contains(e.target) && !moduleSuggestions.contains(e.target)) {
+            moduleSuggestions.classList.add('hidden');
+        }
+    });
+
+    // Remover feedback de erro ao digitar no nome
+    $('#edit_name').on('input', function() {
+        if ($(this).val().trim()) {
+            $(this).removeClass('border-red-500');
+            $('#name_feedback').addClass('hidden');
+        }
+    });
+
+    // Remover feedback de erro ao selecionar categoria
+    $('#edit_category').on('change', function() {
+        if ($(this).val()) {
+            $(this).removeClass('border-red-500');
+            $('#category_feedback').addClass('hidden');
+        }
+    });
+});
+
+// Adicionar badge de módulo
+function addModuleBadge(id, description) {
+    // Verificar se já está adicionado
+    if (selectedModulesData.find(m => m.id === id)) {
+        return;
+    }
+
+    // Adicionar ao array
+    selectedModulesData.push({ id, description });
+
+    // Atualizar UI
+    updateModuleBadges();
+}
+
+// Remover badge de módulo
+function removeModuleBadge(id) {
+    selectedModulesData = selectedModulesData.filter(m => m.id !== id);
+    updateModuleBadges();
+}
+
+// Atualizar badges na interface
+function updateModuleBadges() {
+    const container = document.getElementById('selected_modules');
+
+    let html = '';
+    selectedModulesData.forEach(module => {
+        html += `
+            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 text-orange-800 rounded-full text-xs font-semibold">
+                <i class="fas fa-puzzle-piece"></i>
+                <span>${module.description}</span>
+                <button type="button" onclick="removeModuleBadge(${module.id})" class="ml-1 hover:text-orange-900 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+// ===== FUNÇÕES DO MODAL DE EDIÇÃO =====
+function updateStatusLabel() {
+    const checkbox = document.getElementById('edit_is_active');
+    const label = document.getElementById('status_label');
+    label.textContent = checkbox.checked ? 'Módulo Ativo' : 'Módulo Inativo';
+}
+
+function openCreateModal() {
+    // Limpar campos
+    $('#edit_app_id').val('');
+    $('#edit_name').val('');
+    $('#edit_description').val('');
+    $('#edit_category').val('');
+    $('#edit_is_active').prop('checked', true);
+    updateStatusLabel();
+
+    // Limpar badges
+    selectedModulesData = [];
+    updateModuleBadges();
+
+    // Atualizar título e ícone do modal para modo criação
+    $('#modal_title').text('Nova Aplicação');
+    $('#modal_subtitle').text('Adicione uma nova aplicação ao sistema');
+    $('#modal_icon_container').removeClass().addClass('w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mr-4');
+    $('#modal_icon').removeClass().addClass('fas fa-plus text-orange-600 text-xl');
+
+    $('#editModal').removeClass('hidden');
+}
+
+function openEditModal(appId, name, description, category, isActive) {
+    $('#edit_app_id').val(appId);
+    $('#edit_name').val(name);
+    $('#edit_description').val(description);
+    $('#edit_category').val(category);
+    $('#edit_is_active').prop('checked', isActive);
+    updateStatusLabel();
+
+    // Atualizar título e ícone do modal para modo edição
+    $('#modal_title').text('Editar Módulo');
+    $('#modal_subtitle').text('Atualize as informações do módulo');
+    $('#modal_icon_container').removeClass().addClass('w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mr-4');
+    $('#modal_icon').removeClass().addClass('fas fa-edit text-orange-600 text-xl');
+
+    // Carregar módulos vinculados
+    loadTicketModules(appId);
+
+    $('#editModal').removeClass('hidden');
+}
+
+function loadTicketModules(appId) {
+    // Limpar badges anteriores
+    selectedModulesData = [];
+
+    // Buscar módulos vinculados da aplicação
+    fetch(`/admin/integrations/movidesk/modules/${appId}/ticket-modules`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.ticket_modules) {
+                // Carregar informações completas dos módulos
+                data.ticket_modules.forEach(moduleId => {
+                    const suggestion = document.querySelector(`.module-suggestion[data-id="${moduleId}"]`);
+                    if (suggestion) {
+                        const description = suggestion.dataset.description;
+                        selectedModulesData.push({ id: moduleId, description: description });
+                    }
+                });
+                updateModuleBadges();
+            }
+        })
+        .catch(error => console.error('Erro ao carregar módulos:', error));
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').classList.add('hidden');
+    document.getElementById('editForm').reset();
+    selectedModulesData = [];
+    updateModuleBadges();
+}
+
+function saveApplication(event) {
+    event.preventDefault();
+
+    // Validar campos obrigatórios
+    let isValid = true;
+
+    // Validar nome
+    const name = $('#edit_name').val().trim();
+    if (!name) {
+        $('#edit_name').addClass('border-red-500');
+        $('#name_feedback').removeClass('hidden');
+        isValid = false;
+    } else {
+        $('#edit_name').removeClass('border-red-500');
+        $('#name_feedback').addClass('hidden');
+    }
+
+    // Validar categoria
+    const category = $('#edit_category').val();
+    if (!category) {
+        $('#edit_category').addClass('border-red-500');
+        $('#category_feedback').removeClass('hidden');
+        isValid = false;
+    } else {
+        $('#edit_category').removeClass('border-red-500');
+        $('#category_feedback').addClass('hidden');
+    }
+
+    // Se não for válido, não prosseguir
+    if (!isValid) {
+        showToast('Por favor, preencha todos os campos obrigatórios', 'error');
+        return;
+    }
+
+    const appId = $('#edit_app_id').val();
+    const isEditMode = appId !== '';
+
+    // Obter módulos selecionados dos badges
+    const selectedModules = selectedModulesData.map(m => m.id);
+
+    // Preparar dados
+    const data = {
+        name: name,
+        description: $('#edit_description').val(),
+        category: category,
+        is_active: $('#edit_is_active').prop('checked'),
+        ticket_modules: selectedModules
+    };
+
+    // Definir URL e método baseado no modo
+    const url = isEditMode
+        ? `/admin/integrations/movidesk/modules/${appId}/update`
+        : '/admin/integrations/movidesk/applications/create';
+    const successMessage = isEditMode
+        ? 'Módulo atualizado com sucesso!'
+        : 'Aplicação criada com sucesso!';
+
+    $.ajax({
+        url: url,
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: function(response) {
+            if (response.success) {
+                showToast(successMessage, 'success');
+                closeEditModal();
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                showToast(response.error || 'Erro ao salvar aplicação', 'error');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Erro:', error);
+            showToast('Erro ao salvar aplicação', 'error');
+        }
+    });
+}
+
+function toggleApplicationStatus(appId, isActive) {
+    const action = isActive ? 'ativar' : 'desativar';
+    const actionText = isActive ? 'ativado' : 'desativado';
+
+    if (confirm(`Tem certeza que deseja ${action} este módulo?`)) {
+        fetch(`/admin/integrations/movidesk/modules/${appId}/toggle`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ is_active: isActive })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(`Módulo ${actionText} com sucesso!`, 'success');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                showToast(data.error || `Erro ao ${action} módulo`, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            showToast(`Erro ao ${action} módulo`, 'error');
+        });
+    }
+}
+
+// ===== FUNÇÕES DO MODAL DE MÓDULO DE TICKET =====
+function openTicketModuleModal() {
+    document.getElementById('ticketModuleModal').classList.remove('hidden');
+}
+
+function closeTicketModuleModal() {
+    document.getElementById('ticketModuleModal').classList.add('hidden');
+    document.getElementById('ticketModuleForm').reset();
+}
+
+function saveTicketModule(event) {
+    event.preventDefault();
+
+    const description = document.getElementById('module_description').value;
+
+    fetch('/admin/integrations/movidesk/modules/ticket-modules/create', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ description: description })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Módulo de ticket criado com sucesso!', 'success');
+            closeTicketModuleModal();
+            // Atualizar apenas o tab de módulos
+            loadTicketModulesList();
+        } else {
+            showToast(data.error || 'Erro ao criar módulo de ticket', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showToast('Erro ao criar módulo de ticket', 'error');
+    });
+}
+
+function loadTicketModulesList() {
+    // Buscar a lista atualizada de módulos
+    fetch('/admin/integrations/movidesk/modules/ticket-modules/list')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateTicketModulesTab(data.modules);
+            }
+        })
+        .catch(error => console.error('Erro ao carregar módulos:', error));
+}
+
+function updateTicketModulesTab(modules) {
+    const container = document.getElementById('ticket-modules-list');
+
+    if (modules && modules.length > 0) {
+        let html = `
+            <div class="bg-white shadow-sm rounded-b-xl overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                ID
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Descrição
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+        `;
+
+        modules.forEach(module => {
+            html += `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-hashtag text-orange-600 text-xs"></i>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-900">${module.id}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-700">${module.description || 'Sem descrição'}</div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `
+                    </tbody>
+                </table>
+                <div class="bg-gray-50 px-6 py-3 border-t border-gray-200">
+                    <div class="text-xs text-gray-600 text-center">
+                        Total: <span class="font-bold text-gray-900">${modules.length}</span> módulo${modules.length !== 1 ? 's' : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+        container.innerHTML = html;
+    } else {
+        container.innerHTML = `
+            <div class="bg-white shadow-sm rounded-xl p-8 text-center">
+                <div class="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-puzzle-piece text-4xl text-gray-400"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Nenhum módulo de ticket cadastrado</h3>
+                <p class="text-gray-600 mb-4">Adicione módulos para vincular às aplicações</p>
+                <button onclick="openTicketModuleModal()"
+                        class="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md inline-flex items-center gap-2">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Adicionar Primeiro Módulo</span>
+                </button>
+            </div>
+        `;
+    }
+}
+
+// Fechar modals ao clicar fora
+document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEditModal();
+    }
+});
+
+document.getElementById('ticketModuleModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeTicketModuleModal();
+    }
+});
+</script>
 {% endblock %}

@@ -15,6 +15,9 @@ from app.services.client_service import client_service
 from app.services.ticket_service import ticket_service
 from app.models.client_organization import ClientOrganization
 from app.models.organization import Organization
+from app.models.application_ticket_module import ApplicationTicketModule
+from app.models.ticket_module import TicketModule
+from app.models.client_application import ClientApplication
 from app.models.database import db_session
 
 
@@ -68,6 +71,21 @@ def tickets_report_pdf(client_id):
         ClientOrganization.client_id == client_id
     ).order_by(Organization.business_name).all()
 
+    # Buscar os módulos de ticket vinculados às aplicações contratadas pelo cliente
+    allowed_ticket_modules = db_session.query(TicketModule.description).join(
+        ApplicationTicketModule,
+        TicketModule.id == ApplicationTicketModule.ticket_module_id
+    ).join(
+        ClientApplication,
+        ApplicationTicketModule.application_id == ClientApplication.application_id
+    ).filter(
+        ClientApplication.client_id == client_id,
+        ClientApplication.is_active == True
+    ).distinct().all()
+
+    # Converter para lista de strings (descrições dos módulos)
+    allowed_modules_list = [module[0] for module in allowed_ticket_modules]
+
     # Buscar tickets para cada organização (mesma lógica da view)
     tickets_by_org = {}
     total_tickets = 0
@@ -76,18 +94,24 @@ def tickets_report_pdf(client_id):
         tickets = ticket_service.get_tickets_by_organization(org.business_name)
         org_tickets = []
 
-        # Filtrar tickets por período
+        # Filtrar tickets por período e por módulos contratados
         for ticket in tickets:
             if ticket.get('createdDate'):
                 try:
                     ticket_date = datetime.fromisoformat(ticket['createdDate'])
+                    # Verificar se o ticket está no período E se o módulo está na lista de contratados
                     if start_date <= ticket_date.date() <= end_date:
-                        org_tickets.append({
-                            'numero': ticket.get('id'),
-                            'modulo': ticket.get('serviceFull', 'Não especificado'),
-                            'setor': ticket.get('ownerName', 'Não atribuído')
-                        })
-                        total_tickets += 1
+                        # Obter o módulo do ticket do campo customFieldModule
+                        ticket_module = ticket.get('customFieldModule')
+
+                        # Apenas incluir o ticket se o módulo estiver na lista de módulos contratados
+                        if ticket_module and ticket_module in allowed_modules_list:
+                            org_tickets.append({
+                                'numero': ticket.get('id'),
+                                'modulo': ticket.get('serviceFull', 'Não especificado'),
+                                'setor': ticket.get('ownerName', 'Não atribuído')
+                            })
+                            total_tickets += 1
                 except Exception as e:
                     continue
 

@@ -284,7 +284,7 @@ def tickets_report_pdf(client_id):
     # CABEÇALHO DA EMPRESA CENTRALIZADO
     story.append(Paragraph("<b>BETTER TECH INFORMÁTICA, SERVIÇOS DE AUTOMAÇÃO LTDA.</b>", style_header))
     story.append(Paragraph("Rua Leonório Perdocini, nº 1997 • Bairro Eldorado • CEP 76.966-192 • Cacoal/RO", style_header))
-    story.append(Paragraph("CNPJ: 07.114.391/0001-14 • Telefone: (69) 3441-1304 • E-mail: contato@bettertech.com.br", style_header))
+    story.append(Paragraph("CNPJ: 07.114.391/0001-14 • Telefone: (69) 3441-1304 • E-mail: bettertech@bettertech.com.br", style_header))
     story.append(Spacer(1, 0.8*cm))
 
     # NÚMERO DO OFÍCIO

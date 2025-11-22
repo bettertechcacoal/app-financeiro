@@ -120,11 +120,23 @@ def financial_payouts_list():
         if not can_review_all:
             query = query.filter(TravelPayout.member_id == user_id)
         else:
-            from sqlalchemy import or_
+            from sqlalchemy import or_, and_
+            from datetime import datetime
+
+            # Data atual para comparar com data de retorno
+            today = datetime.now().date()
+
             query = query.filter(
                 or_(
+                    # Seus próprios repasses
                     TravelPayout.member_id == user_id,
-                    TravelStatement.status.in_([StatementStatus.APPROVED, StatementStatus.SUBMITTED])
+                    # Repasses já enviados ou aprovados
+                    TravelStatement.status.in_([StatementStatus.APPROVED, StatementStatus.SUBMITTED]),
+                    # Repasses cuja data de retorno já passou (independente do status)
+                    and_(
+                        Travel.return_date.isnot(None),
+                        Travel.return_date < today
+                    )
                 )
             )
 

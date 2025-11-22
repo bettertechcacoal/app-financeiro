@@ -56,11 +56,20 @@
 
                         <!-- Header do Card -->
                         <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between flex-wrap gap-2">
-                            <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-3 flex-wrap">
                                 <span class="text-xs font-bold text-purple-900">Repasse #{{ payout.id }}</span>
                                 <div class="flex items-center text-xs text-gray-600">
                                     <i class="fas fa-plane-departure text-purple-900 mr-1"></i>
                                     <span class="font-medium">Viagem #{{ payout.travel_info.id if payout.travel_info else '-' }}</span>
+                                </div>
+                                <div class="flex items-center text-xs text-gray-600">
+                                    <i class="fas fa-map-marker-alt text-purple-900 mr-1"></i>
+                                    <span class="font-medium">
+                                        {{ payout.travel_info.city.name if payout.travel_info and payout.travel_info.city else 'Não informado' }}
+                                        {% if payout.travel_info and payout.travel_info.city and payout.travel_info.city.state %}
+                                            - {{ payout.travel_info.city.state.uf }}
+                                        {% endif %}
+                                    </span>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
@@ -120,48 +129,69 @@
                                 <!-- Coluna Left: Informações da Viagem (escrita depois, aparece embaixo em mobile) -->
                                 <div class="lg:w-1/2">
                                     {% if payout.travel_info %}
-                                    <h3 class="text-sm font-semibold text-gray-900 leading-snug mb-1">
-                                        <i class="fas fa-map-marker-alt text-purple-900 mr-1"></i>
-                                        {{ payout.travel_info.city.name if payout.travel_info.city else 'Destino não informado' }}
-                                        {% if payout.travel_info.city and payout.travel_info.city.state %}
-                                            <span class="text-gray-500">- {{ payout.travel_info.city.state.uf }}</span>
-                                        {% endif %}
-                                    </h3>
-                                    <p class="text-xs text-gray-700 font-medium mb-3">
-                                        {{ payout.travel_info.purpose }}
-                                    </p>
+                                    <!-- Nome do Colaborador em destaque -->
+                                    <div class="mb-3">
+                                        <h3 class="text-sm font-bold text-gray-700">
+                                            <i class="fas fa-user text-gray-700 mr-2"></i>
+                                            {{ payout.member.name if payout.member else 'Colaborador não informado' }}
+                                        </h3>
+                                    </div>
 
-                                    <!-- Datas da viagem -->
-                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs mt-3">
+                                    <!-- Grid de informações -->
+                                    <div class="space-y-2 text-xs">
+                                        <!-- Motivo -->
                                         <div>
-                                            <span class="text-gray-500">Saída:</span>
-                                            <p class="font-medium text-gray-900 mt-0.5">
-                                                {% if payout.travel_info.departure_date %}
-                                                    {{ payout.travel_info.departure_date[8:10] }}/{{ payout.travel_info.departure_date[5:7] }}/{{ payout.travel_info.departure_date[:4] }}
-                                                {% else %}
-                                                    -
-                                                {% endif %}
+                                            <span class="text-gray-500 block mb-1">
+                                                <i class="fas fa-clipboard-list mr-1"></i>Motivo:
+                                            </span>
+                                            <p class="font-medium text-gray-900">
+                                                {{ payout.travel_info.purpose }}
                                             </p>
                                         </div>
-                                        <div>
-                                            <span class="text-gray-500">Retorno:</span>
-                                            <p class="font-medium text-gray-900 mt-0.5">
-                                                {% if payout.travel_info.return_date %}
-                                                    {{ payout.travel_info.return_date[8:10] }}/{{ payout.travel_info.return_date[5:7] }}/{{ payout.travel_info.return_date[:4] }}
-                                                {% else %}
-                                                    -
-                                                {% endif %}
-                                            </p>
-                                        </div>
-                                        <div class="hidden sm:block">
-                                            <span class="text-gray-500">Cadastrado em:</span>
-                                            <p class="font-medium text-gray-900 mt-0.5">
-                                                {% if payout.created_at %}
-                                                    {{ payout.created_at[8:10] }}/{{ payout.created_at[5:7] }}/{{ payout.created_at[:4] }}
-                                                {% else %}
-                                                    -
-                                                {% endif %}
-                                            </p>
+
+                                        <!-- Datas (Saída, Retorno, Cadastrado) -->
+                                        <div class="grid grid-cols-3 gap-3">
+                                            <!-- Saída -->
+                                            <div>
+                                                <span class="text-gray-500 block mb-1">
+                                                    <i class="fas fa-plane-departure mr-1"></i>Saída:
+                                                </span>
+                                                <p class="font-medium text-gray-900">
+                                                    {% if payout.travel_info.departure_date %}
+                                                        {{ payout.travel_info.departure_date[8:10] }}/{{ payout.travel_info.departure_date[5:7] }}/{{ payout.travel_info.departure_date[:4] }}
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+
+                                            <!-- Retorno -->
+                                            <div>
+                                                <span class="text-gray-500 block mb-1">
+                                                    <i class="fas fa-plane-arrival mr-1"></i>Retorno:
+                                                </span>
+                                                <p class="font-medium text-gray-900">
+                                                    {% if payout.travel_info.return_date %}
+                                                        {{ payout.travel_info.return_date[8:10] }}/{{ payout.travel_info.return_date[5:7] }}/{{ payout.travel_info.return_date[:4] }}
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+
+                                            <!-- Cadastrado em -->
+                                            <div>
+                                                <span class="text-gray-500 block mb-1">
+                                                    <i class="fas fa-calendar mr-1"></i>Cadastrado:
+                                                </span>
+                                                <p class="font-medium text-gray-900">
+                                                    {% if payout.created_at %}
+                                                        {{ payout.created_at[8:10] }}/{{ payout.created_at[5:7] }}/{{ payout.created_at[:4] }}
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
 

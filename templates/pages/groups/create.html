@@ -11,21 +11,25 @@
 {% endblock %}
 
 {% block content %}
-<div class="py-8">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <div class="flex items-center">
-            <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
-                <i class="fas fa-users text-white text-2xl sm:text-3xl"></i>
+<div class="tw-page-transition">
+    <!-- Page Header -->
+    <div class="tw-page-header">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
             </div>
             <div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Criar Novo Grupo</h1>
-                <p class="text-sm sm:text-base text-gray-600">Defina as informações e permissões do grupo</p>
+                <h1 class="text-2xl font-bold text-gray-900">Criar Novo Grupo</h1>
+                <p class="text-gray-500">Defina as informações e permissões do grupo</p>
             </div>
         </div>
-        <div class="flex items-center gap-3">
-            <a href="{{ url_for('admin.groups_permissions') }}" class="btn-secondary px-6 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all inline-flex items-center">
-                <i class="fas fa-arrow-left mr-2"></i>
+        <div class="tw-header-actions">
+            <a href="{{ url_for('admin.groups_permissions') }}" class="btn btn-secondary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
                 Voltar
             </a>
         </div>

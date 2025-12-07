@@ -167,16 +167,175 @@ textarea:focus-visible {
     transform: translateY(-2px);
 }
 
+/* Classe base para botões */
+.btn {
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Variantes de cor */
+.btn-primary {
+    background: #1a1a1a;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #333333;
+}
+
+.btn-secondary {
+    background-color: #f5f5f5;
+    color: #374151;
+    border: 1px solid #e5e5e5;
+}
+
+.btn-secondary:hover {
+    background-color: #ebebeb;
+    border-color: #d4d4d4;
+}
+
 .btn-success {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-    transition: all 0.3s ease;
+    background: #0d9488;
+    color: white;
 }
 
 .btn-success:hover {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-    transform: translateY(-2px);
+    background: #0f766e;
+}
+
+.btn-danger {
+    background: #dc2626;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
+}
+
+/* Action dropdown menu */
+.action-dropdown {
+    position: relative;
+    display: none;
+}
+
+.action-dropdown-btn {
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+}
+
+.action-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 200px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    border: 1px solid #e5e7eb;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+}
+
+.action-dropdown-menu.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.action-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    transition: background 0.15s;
+    text-align: left;
+}
+
+.action-dropdown-item:hover {
+    background: #f3f4f6;
+}
+
+.action-dropdown-item:first-child {
+    border-radius: 16px 16px 0 0;
+}
+
+.action-dropdown-item:last-child {
+    border-radius: 0 0 16px 16px;
+}
+
+.action-dropdown-item.primary {
+    background: #3b82f6;
+    color: white;
+}
+
+.action-dropdown-item.primary:hover {
+    background: #2563eb;
+}
+
+.action-dropdown-item.danger {
+    color: #dc2626;
+}
+
+.action-dropdown-item.danger:hover {
+    background: #fef2f2;
+}
+
+.action-dropdown-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 8px 0;
+}
+
+@media (max-width: 640px) {
+    .action-dropdown {
+        display: block;
+    }
+    .desktop-actions {
+        display: none !important;
+    }
+}
+
+@media (min-width: 641px) {
+    .action-dropdown {
+        display: none;
+    }
+    .desktop-actions {
+        display: flex !important;
+    }
 }
 
 .nav-link {
@@ -354,4 +513,291 @@ textarea:focus-visible {
 /* Remover helper do jQuery UI */
 .ui-helper-hidden-accessible {
     display: none;
+}
+
+/* =====================================================
+   ESTILOS PERSONALIZADOS COM PREFIXO tw-
+   Tela: Análise de Viagem (analyze.html)
+   ===================================================== */
+
+/* Card shadows */
+.tw-card-shadow {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.tw-card-shadow-lg {
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+}
+
+/* Card section */
+.tw-card-section {
+    background: white;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+}
+
+.tw-card-section:hover {
+    box-shadow: 0 8px 25px -5px rgba(0,0,0,0.08);
+}
+
+/* Status badge */
+.tw-status-badge {
+    padding: 6px 16px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tw-status-approved {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.tw-status-pending {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.tw-status-cancelled {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.tw-status-in-progress {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+/* Input fields */
+.tw-input-field {
+    width: 100%;
+    padding: 12px 16px;
+    background-color: #ffffff;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #111827;
+    transition: all 0.2s ease;
+}
+
+.tw-input-field:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Timeline */
+.tw-timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 32px;
+    bottom: -16px;
+    width: 2px;
+    background: #e5e7eb;
+}
+
+.tw-timeline-item:last-child::before {
+    display: none;
+}
+
+/* Coluna direita fixa com scroll interno */
+.tw-col-right {
+    position: sticky;
+    top: 1rem;
+    height: calc(100vh - 2rem);
+    overflow-y: auto;
+}
+
+.tw-col-right::-webkit-scrollbar {
+    width: 0;
+    background: transparent;
+}
+
+.tw-col-right {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+/* Page transition animation */
+.tw-page-transition {
+    animation: twFadeIn 0.3s ease-in-out;
+}
+
+@keyframes twFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Accordion inline para lançamentos */
+.tw-lancamento-accordion {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.25s ease;
+}
+
+.tw-lancamento-accordion.open {
+    grid-template-rows: 1fr;
+}
+
+.tw-lancamento-accordion-content {
+    overflow: hidden;
+}
+
+.tw-lancamento-accordion.open .tw-lancamento-accordion-content {
+    background: linear-gradient(to right, #ecfdf5, #f0fdfa);
+    border: 1px solid #a7f3d0;
+}
+
+.tw-lancamento-form-row {
+    padding: 0;
+}
+
+.tw-accordion-row td {
+    background: transparent;
+}
+
+/* Remover border-bottom do último participante */
+.tw-accordion-row:last-of-type {
+    border-bottom: none;
+}
+
+.tw-accordion-row:last-of-type td {
+    border-bottom: none;
+}
+
+/* Quando só tem um item ou é o último, remover border */
+#financial-section tbody tr.tw-accordion-row:last-child {
+    border-bottom: none;
+}
+
+/* Input de lançamento */
+.tw-lancamento-input {
+    background: #f9fafb;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.tw-lancamento-input:focus {
+    outline: none;
+    background: white;
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.tw-lancamento-input::placeholder {
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+/* Botão add lançamento */
+.tw-btn-add-lancamento {
+    width: 24px;
+    height: 24px;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.tw-btn-add-lancamento:hover {
+    background: #059669;
+    transform: scale(1.1);
+}
+
+.tw-btn-add-lancamento:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+}
+
+.tw-btn-add-lancamento.active {
+    background: #dc2626;
+    transform: rotate(45deg);
+}
+
+.tw-btn-add-lancamento.active:hover {
+    background: #b91c1c;
+}
+
+/* Hint de teclado */
+.tw-keyboard-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+.tw-keyboard-hint kbd {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: inherit;
+    font-size: 10px;
+}
+
+/* Main grid responsivo */
+.tw-main-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+}
+
+/* Page header responsivo */
+.tw-page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+}
+
+.tw-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Mobile responsivo */
+@media (max-width: 1024px) {
+    .tw-main-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .tw-col-right {
+        position: static;
+        height: auto;
+        overflow-y: visible;
+    }
+    .tw-summary-sidebar {
+        order: -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .tw-page-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 16px;
+    }
+    .tw-header-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+    .tw-header-actions button {
+        flex: 1;
+        min-width: 120px;
+    }
 }

@@ -11,25 +11,27 @@
 {% endblock %}
 
 {% block content %}
-<div class="py-8">
-    <!-- Header -->
-    <div class="mb-8 animate-fade-in">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-            <div class="flex items-center">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gray-600 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
-                    <i class="fas fa-clipboard-list text-white text-2xl sm:text-3xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Resumo da Viagem #{{ travel.id }}</h1>
-                    <p class="text-sm sm:text-base text-gray-600">Detalhes completos da viagem</p>
-                </div>
+<div class="tw-page-transition">
+    <!-- Page Header -->
+    <div class="tw-page-header">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 bg-gradient-to-br from-gray-500 to-gray-600 rounded-2xl flex items-center justify-center shadow-lg shadow-gray-500/30">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
             </div>
-            <div class="flex items-center gap-3">
-                <a href="{{ url_for('admin.travels_list') }}" class="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 transition-all inline-flex items-center">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    Voltar
-                </a>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Resumo da Viagem #{{ travel.id }}</h1>
+                <p class="text-gray-500">Detalhes completos da viagem</p>
             </div>
+        </div>
+        <div class="tw-header-actions">
+            <a href="{{ url_for('admin.travels_list') }}" class="btn btn-secondary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Voltar
+            </a>
         </div>
     </div>
 

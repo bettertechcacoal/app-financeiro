@@ -11,21 +11,25 @@
 {% endblock %}
 
 {% block content %}
-<div class="py-8">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <div class="flex items-center">
-            <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
-                <i class="fas fa-shield-alt text-white text-2xl sm:text-3xl"></i>
+<div class="tw-page-transition">
+    <!-- Page Header -->
+    <div class="tw-page-header">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/30">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
             </div>
             <div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Gerenciamento de Permissões</h1>
-                <p class="text-sm sm:text-base text-gray-600">Configure as permissões de cada grupo de usuários</p>
+                <h1 class="text-2xl font-bold text-gray-900">Gerenciamento de Permissões</h1>
+                <p class="text-gray-500">Configure as permissões de cada grupo de usuários</p>
             </div>
         </div>
-        <div class="flex items-center gap-3">
-            <a href="{{ url_for('admin.groups_create') }}" class="btn-primary text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all inline-flex items-center">
-                <i class="fas fa-plus-circle mr-2"></i>
+        <div class="tw-header-actions">
+            <a href="{{ url_for('admin.groups_create') }}" class="btn bg-amber-600 hover:bg-amber-700 text-white">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
                 Novo Grupo
             </a>
         </div>

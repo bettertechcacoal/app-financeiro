@@ -11,29 +11,35 @@
 {% endblock %}
 
 {% block content %}
-<div class="py-8">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <div class="flex items-center">
-            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0" style="background: linear-gradient(135deg, {{ group.color }}, {{ group.color }}dd);">
-                <i class="fas {{ group.icon }} text-white text-2xl sm:text-3xl"></i>
+<div class="tw-page-transition">
+    <!-- Page Header -->
+    <div class="tw-page-header">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg" style="background: linear-gradient(135deg, {{ group.color }}, {{ group.color }}dd);">
+                <i class="fas {{ group.icon }} text-white text-2xl"></i>
             </div>
             <div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Editar Grupo</h1>
-                <p class="text-sm sm:text-base text-gray-600">Atualize as informações do grupo {{ group.name }}</p>
+                <h1 class="text-2xl font-bold text-gray-900">Editar Grupo</h1>
+                <p class="text-gray-500">Atualize as informações do grupo {{ group.name }}</p>
             </div>
         </div>
-        <div class="flex items-center gap-3">
-            <a href="{{ url_for('admin.groups_permissions') }}" class="btn-secondary px-6 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all inline-flex items-center">
-                <i class="fas fa-arrow-left mr-2"></i>
+        <div class="tw-header-actions">
+            <a href="{{ url_for('admin.groups_permissions') }}" class="btn btn-secondary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
                 Voltar
             </a>
-            <button type="submit" form="edit-group-form" class="btn-primary px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all inline-flex items-center">
-                <i class="fas fa-save mr-2"></i>
+            <button type="submit" form="edit-group-form" class="btn bg-purple-600 hover:bg-purple-700 text-white">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
                 Salvar
             </button>
-            <button type="button" onclick="confirmDelete()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all inline-flex items-center">
-                <i class="fas fa-trash mr-2"></i>
+            <button type="button" onclick="confirmDelete()" class="btn bg-red-600 hover:bg-red-700 text-white">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
                 Excluir
             </button>
         </div>

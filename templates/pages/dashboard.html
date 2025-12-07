@@ -3,277 +3,310 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="flex flex-col lg:flex-row gap-6 py-8">
+<div class="tw-page-transition">
+    <div class="flex flex-col lg:flex-row gap-6">
 
-    <!-- Sidebar -->
-    <aside class="w-full lg:w-80 flex-shrink-0 lg:sticky lg:top-24 lg:self-start">
-        <div class="space-y-6">
-            
-            <!-- User Profile Card -->
-            <div class="relative overflow-hidden rounded-2xl shadow-lg animate-fade-in">
-                <!-- Background Base -->
-                <div class="absolute inset-0 bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-700"></div>
+        <!-- Sidebar -->
+        <aside class="w-full lg:w-80 flex-shrink-0 lg:sticky lg:top-24 lg:self-start">
+            <div class="space-y-6">
 
-                <!-- Wavy Splash SVG Background -->
-                <svg class="absolute bottom-0 left-0 w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" preserveAspectRatio="none">
-                    <!-- Large organic wave 1 -->
-                    <path d="M0,60 C80,30 120,80 200,70 C280,60 320,90 400,60 L400,120 L0,120 Z" fill="rgba(99, 102, 241, 0.4)" opacity="0.8"/>
+                <!-- Card de Data/Hora -->
+                <div class="tw-card-section tw-card-shadow relative overflow-hidden animate-fade-in">
+                    <!-- Background Gradiente -->
+                    <div class="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-violet-700"></div>
 
-                    <!-- Medium wave 2 -->
-                    <path d="M0,75 C100,50 150,95 250,80 C320,70 360,100 400,75 L400,120 L0,120 Z" fill="rgba(139, 92, 246, 0.5)" opacity="0.7"/>
+                    <!-- Ondas decorativas -->
+                    <svg class="absolute bottom-0 left-0 w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" preserveAspectRatio="none">
+                        <path d="M0,60 C80,30 120,80 200,70 C280,60 320,90 400,60 L400,120 L0,120 Z" fill="rgba(99, 102, 241, 0.4)" opacity="0.8"/>
+                        <path d="M0,75 C100,50 150,95 250,80 C320,70 360,100 400,75 L400,120 L0,120 Z" fill="rgba(139, 92, 246, 0.5)" opacity="0.7"/>
+                        <path d="M0,85 C70,70 140,100 220,90 C300,80 350,105 400,90 L400,120 L0,120 Z" fill="rgba(168, 85, 247, 0.4)" opacity="0.6"/>
+                    </svg>
 
-                    <!-- Small wave 3 -->
-                    <path d="M0,85 C70,70 140,100 220,90 C300,80 350,105 400,90 L400,120 L0,120 Z" fill="rgba(168, 85, 247, 0.4)" opacity="0.6"/>
-                </svg>
-
-                <!-- Content -->
-                <div class="relative px-5 py-5 z-10">
-                    <div class="text-center">
-                        <div class="flex items-center justify-center mb-2">
-                            <i class="fas fa-cloud-sun text-white text-4xl drop-shadow-lg"></i>
+                    <!-- Conteúdo -->
+                    <div class="relative px-6 py-6 z-10">
+                        <div class="text-center">
+                            <div class="flex items-center justify-center mb-3">
+                                <div class="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                                    <i class="fas fa-cloud-sun text-white text-2xl"></i>
+                                </div>
+                            </div>
+                            <div id="currentTime" class="text-4xl font-bold text-white drop-shadow-md mb-1">--:--</div>
+                            <div id="currentDate" class="text-sm text-white/90 font-medium"></div>
+                            <div class="mt-4 flex items-center justify-center gap-4">
+                                <div class="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                                    <i class="fas fa-temperature-high text-white/80 text-sm"></i>
+                                    <span class="text-sm text-white font-medium">25°C</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                                    <i class="fas fa-tint text-white/80 text-sm"></i>
+                                    <span class="text-sm text-white font-medium">60%</span>
+                                </div>
+                            </div>
                         </div>
-                        <div id="currentTime" class="text-3xl font-bold text-white drop-shadow-md mb-1">--:--</div>
-                        <div id="currentDate" class="text-sm text-white text-opacity-90 drop-shadow"></div>
-                        <div class="mt-3 flex items-center justify-center gap-2">
-                            <i class="fas fa-temperature-high text-white text-opacity-80"></i>
-                            <span class="text-sm text-white text-opacity-90">25°C</span>
-                            <span class="mx-2 text-white text-opacity-50">•</span>
-                            <i class="fas fa-tint text-white text-opacity-80"></i>
-                            <span class="text-sm text-white text-opacity-90">60%</span>
+                    </div>
+
+                    <script>
+                    function updateTime() {
+                        const now = new Date();
+                        const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        const date = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+                        document.getElementById('currentTime').textContent = time;
+                        document.getElementById('currentDate').textContent = date.charAt(0).toUpperCase() + date.slice(1);
+                    }
+                    updateTime();
+                    setInterval(updateTime, 1000);
+                    </script>
+                </div>
+
+                <!-- Minhas Notas -->
+                {% if 'notes_view' in user_permissions %}
+                <div class="tw-card-section tw-card-shadow overflow-hidden animate-fade-in">
+                    <!-- Header -->
+                    <div class="px-5 py-4 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
+                                    <i class="fas fa-sticky-note text-white"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-gray-900">Minhas Notas</h3>
+                                    <p class="text-xs text-gray-500">Anotações rápidas</p>
+                                </div>
+                            </div>
+                            {% if 'notes_create' in user_permissions %}
+                            <button onclick="openNoteModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors">
+                                <i class="fas fa-plus text-xs"></i>
+                                Nova
+                            </button>
+                            {% endif %}
                         </div>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="p-4">
+                        <div class="space-y-3" id="notes-container">
+                            {% if notes %}
+                                {% for note in notes %}
+                                {% set color_classes = {
+                                    'yellow': 'from-yellow-100 to-yellow-200 border-yellow-400',
+                                    'pink': 'from-pink-100 to-pink-200 border-pink-400',
+                                    'green': 'from-green-100 to-green-200 border-green-400',
+                                    'blue': 'from-blue-100 to-blue-200 border-blue-400',
+                                    'purple': 'from-purple-100 to-purple-200 border-purple-400'
+                                } %}
+                                {% set color_accent = {
+                                    'yellow': 'bg-yellow-300 text-yellow-600',
+                                    'pink': 'bg-pink-300 text-pink-600',
+                                    'green': 'bg-green-300 text-green-600',
+                                    'blue': 'bg-blue-300 text-blue-600',
+                                    'purple': 'bg-purple-300 text-purple-600'
+                                } %}
+                                <div class="relative p-4 bg-gradient-to-br {{ color_classes[note.color.value] }} border-l-4 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer" onclick="openEditModal({{ note.id }})">
+                                    <div class="absolute top-0 right-4 w-12 h-5 {{ color_accent[note.color.value].split()[0] }} opacity-50 rounded-b-lg"></div>
+                                    <p class="text-sm font-bold text-gray-800 mb-1.5 line-clamp-1">{{ note.title }}</p>
+                                    <p class="text-xs text-gray-600 line-clamp-2">{{ note.content }}</p>
+                                    <div class="mt-2.5 flex items-center justify-between">
+                                        {% if note.label %}
+                                        <span class="inline-flex items-center gap-1 text-xs text-gray-500 bg-white/50 px-2 py-0.5 rounded-full">
+                                            <i class="{{ note.icon }} text-[10px]"></i>{{ note.label }}
+                                        </span>
+                                        {% else %}
+                                        <span></span>
+                                        {% endif %}
+                                        <i class="fas fa-thumbtack {{ color_accent[note.color.value].split()[1] }} text-sm"></i>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-8">
+                                    <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                        <i class="fas fa-sticky-note text-2xl text-gray-400"></i>
+                                    </div>
+                                    <p class="text-sm font-medium text-gray-900 mb-1">Nenhuma nota</p>
+                                    <p class="text-xs text-gray-500">Crie sua primeira nota</p>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {% if total_notes > 5 %}
+                        <a href="{{ url_for('admin.notes_list') }}" class="flex items-center justify-center gap-2 w-full mt-4 text-amber-700 text-sm font-semibold py-2.5 bg-amber-50 hover:bg-amber-100 rounded-xl transition-colors">
+                            <i class="fas fa-list text-xs"></i>
+                            Ver Todas ({{ total_notes }})
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </aside>
+
+        <!-- Main Area -->
+        <main class="flex-1">
+            <div class="space-y-6">
+
+                <!-- Header da Seção -->
+                <div class="flex items-center justify-between animate-fade-in">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">Módulos do Sistema</h2>
+                        <p class="text-sm text-gray-500">Clique em um módulo para acessar</p>
                     </div>
                 </div>
 
-                <script>
-                function updateTime() {
-                    const now = new Date();
-                    const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                    const date = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
-                    document.getElementById('currentTime').textContent = time;
-                    document.getElementById('currentDate').textContent = date.charAt(0).toUpperCase() + date.slice(1);
-                }
-                updateTime();
-                setInterval(updateTime, 1000);
-                </script>
-            </div>
-
-            <!-- Minhas Notas (Sticky Notes) -->
-            {% if 'notes_view' in user_permissions %}
-            <div class="card p-6 animate-fade-in">
-                <div class="flex items-center justify-between mb-5">
-                    <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide">Minhas Notas</h3>
-                    {% if 'notes_create' in user_permissions %}
-                    <button onclick="openNoteModal()" class="text-blue-600 hover:text-blue-700 flex items-center gap-1">
-                        <i class="fas fa-plus-circle"></i>
-                        <span class="text-sm font-semibold">Adicionar</span>
-                    </button>
-                    {% endif %}
-                </div>
-
-                <div class="space-y-3" id="notes-container">
-                    {% if notes %}
-                        {% for note in notes %}
-                        {% set color_classes = {
-                            'yellow': 'from-yellow-100 to-yellow-200 border-yellow-400',
-                            'pink': 'from-pink-100 to-pink-200 border-pink-400',
-                            'green': 'from-green-100 to-green-200 border-green-400',
-                            'blue': 'from-blue-100 to-blue-200 border-blue-400',
-                            'purple': 'from-purple-100 to-purple-200 border-purple-400'
-                        } %}
-                        {% set color_accent = {
-                            'yellow': 'bg-yellow-300 text-yellow-600',
-                            'pink': 'bg-pink-300 text-pink-600',
-                            'green': 'bg-green-300 text-green-600',
-                            'blue': 'bg-blue-300 text-blue-600',
-                            'purple': 'bg-purple-300 text-purple-600'
-                        } %}
-                        <div class="relative p-4 bg-gradient-to-br {{ color_classes[note.color.value] }} border-l-4 rounded-sm shadow-md hover:shadow-lg transition-shadow cursor-pointer" onclick="openEditModal({{ note.id }})">
-                            <div class="absolute top-0 right-4 w-16 h-6 {{ color_accent[note.color.value].split()[0] }} opacity-50 rounded-b-lg"></div>
-                            <p class="text-sm font-bold text-gray-800 mb-2">{{ note.title }}</p>
-                            <p class="text-xs text-gray-600">{{ note.content }}</p>
-                            <div class="mt-3 flex items-center justify-between">
-                                {% if note.label %}
-                                <span class="text-xs text-gray-500">
-                                    <i class="{{ note.icon }} mr-1"></i>{{ note.label }}
-                                </span>
-                                {% else %}
-                                <span></span>
-                                {% endif %}
-                                <i class="fas fa-thumbtack {{ color_accent[note.color.value].split()[1] }}"></i>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="text-center py-8 text-gray-500">
-                            <i class="fas fa-sticky-note text-4xl mb-3"></i>
-                            <p class="text-sm">Nenhuma nota criada</p>
-                        </div>
-                    {% endif %}
-                </div>
-
-                {% if total_notes > 5 %}
-                <a href="{{ url_for('admin.notes_list') }}" class="block w-full mt-2 text-gray-600 text-sm font-semibold py-3 hover:bg-gray-50 rounded-xl text-center transition-all border border-gray-300">
-                    <i class="fas fa-list mr-2"></i>
-                    Ver Todas ({{ total_notes }})
-                </a>
-                {% endif %}
-            </div>
-            {% endif %}
-        </div>
-    </aside>
-
-    <!-- Main Area -->
-    <main class="flex-1">
-        <div class="space-y-6">
-            
-            <!-- System Modules Grid -->
-            <div>
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-bold text-gray-900">Módulos do Sistema</h2>
-                    <span class="text-sm text-gray-500">Clique em um módulo para acessar</span>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Grid de Módulos Soltos -->
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 animate-fade-in">
 
                     <!-- Tickets -->
                     {% if 'tickets_view' in user_permissions %}
-                    <a href="{{ url_for('admin.tickets_list') }}" class="block">
-                        <div class="module-card">
-                            <div class="module-icon bg-gradient-to-br from-green-500 to-green-600">
-                                <i class="fas fa-ticket-alt"></i>
+                    <a href="{{ url_for('admin.tickets_list') }}" class="group block">
+                        <div class="tw-card-section tw-card-shadow p-6 hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-emerald-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                            <div class="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/30 mb-4 group-hover:scale-110 group-hover:rotate-[-5deg] transition-transform duration-300">
+                                <i class="fas fa-ticket-alt text-white text-xl"></i>
                             </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">Tickets</h3>
-                            <p class="text-sm text-gray-600">Gestão de tickets de atendimento</p>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors">Tickets</h3>
+                            <p class="text-sm text-gray-500">Gestão de tickets de atendimento</p>
                         </div>
                     </a>
                     {% endif %}
 
                     <!-- Viagens -->
                     {% if 'travels_view' in user_permissions or 'travels_view_all' in user_permissions %}
-                    <a href="{{ url_for('admin.travels_list') }}" class="block">
-                        <div class="module-card">
-                            <div class="module-icon bg-gradient-to-br from-blue-500 to-blue-600">
-                                <i class="fas fa-plane-departure"></i>
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">Viagens</h3>
-                            <p class="text-sm text-gray-600">Agendamento e histórico de viagens</p>
+                    <a href="{{ url_for('admin.travels_list') }}" class="group block">
+                        <div class="tw-card-section tw-card-shadow p-6 hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-blue-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                             {% if pending_travels_count > 0 and 'travels_approve' in user_permissions %}
-                            <div class="module-badge">{{ pending_travels_count }}</div>
+                            <span class="absolute top-4 right-4 inline-flex items-center justify-center px-2.5 py-1 text-xs font-bold text-white bg-gradient-to-br from-red-500 to-red-600 rounded-full shadow-lg shadow-red-500/40">{{ pending_travels_count }}</span>
                             {% endif %}
+                            <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 mb-4 group-hover:scale-110 group-hover:rotate-[-5deg] transition-transform duration-300">
+                                <svg class="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 640 640">
+                                    <path d="M568.4 37.7C578.2 34.2 589 36.7 596.4 44C603.8 51.3 606.2 62.2 602.7 72L424.7 568.9C419.7 582.8 406.6 592 391.9 592C377.7 592 364.9 583.4 359.6 570.3L295.4 412.3C290.9 401.3 292.9 388.7 300.6 379.7L395.1 267.3C400.2 261.2 399.8 252.3 394.2 246.7C388.6 241.1 379.6 240.7 373.6 245.8L261.2 340.1C252.1 347.7 239.6 349.7 228.6 345.3L70.1 280.8C57 275.5 48.4 262.7 48.4 248.5C48.4 233.8 57.6 220.7 71.5 215.7L568.4 37.7z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">Viagens</h3>
+                            <p class="text-sm text-gray-500">Agendamento e histórico de viagens</p>
                         </div>
                     </a>
                     {% endif %}
 
                     <!-- Financeiro -->
                     {% if 'financial_view' in user_permissions %}
-                    <a href="{{ url_for('admin.financial_payouts_list') }}" class="block">
-                        <div class="module-card">
-                            <div class="module-icon bg-gradient-to-br from-purple-500 to-purple-600">
-                                <i class="fas fa-dollar-sign"></i>
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">Financeiro</h3>
-                            <p class="text-sm text-gray-600">Prestação de Contas</p>
+                    <a href="{{ url_for('admin.financial_payouts_list') }}" class="group block">
+                        <div class="tw-card-section tw-card-shadow p-6 hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-purple-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                             {% if pending_payouts_count > 0 %}
-                            <div class="module-badge">{{ pending_payouts_count }}</div>
+                            <span class="absolute top-4 right-4 inline-flex items-center justify-center px-2.5 py-1 text-xs font-bold text-white bg-gradient-to-br from-red-500 to-red-600 rounded-full shadow-lg shadow-red-500/40">{{ pending_payouts_count }}</span>
                             {% endif %}
+                            <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30 mb-4 group-hover:scale-110 group-hover:rotate-[-5deg] transition-transform duration-300">
+                                <i class="fas fa-dollar-sign text-white text-xl"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors">Financeiro</h3>
+                            <p class="text-sm text-gray-500">Prestação de Contas</p>
                         </div>
                     </a>
                     {% endif %}
 
                     <!-- Clientes -->
                     {% if 'clients_view' in user_permissions %}
-                    <a href="{{ url_for('admin.clients_list') }}" class="block">
-                        <div class="module-card">
-                            <div class="module-icon bg-gradient-to-br from-orange-500 to-orange-600">
-                                <i class="fas fa-users"></i>
+                    <a href="{{ url_for('admin.clients_list') }}" class="group block">
+                        <div class="tw-card-section tw-card-shadow p-6 hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-orange-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                            <div class="w-14 h-14 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/30 mb-4 group-hover:scale-110 group-hover:rotate-[-5deg] transition-transform duration-300">
+                                <i class="fas fa-users text-white text-xl"></i>
                             </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">Clientes</h3>
-                            <p class="text-sm text-gray-600">Cadastro e gestão de organizações</p>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">Clientes</h3>
+                            <p class="text-sm text-gray-500">Cadastro e gestão de organizações</p>
                         </div>
                     </a>
                     {% endif %}
 
                     <!-- Licenças -->
                     {% if 'licenses_view' in user_permissions %}
-                    <a href="{{ url_for('admin.licenses_list') }}" class="block">
-                        <div class="module-card">
-                            <div class="module-icon bg-gradient-to-br from-pink-500 to-pink-600">
-                                <i class="fas fa-key"></i>
+                    <a href="{{ url_for('admin.licenses_list') }}" class="group block">
+                        <div class="tw-card-section tw-card-shadow p-6 hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 to-pink-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                            <div class="w-14 h-14 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/30 mb-4 group-hover:scale-110 group-hover:rotate-[-5deg] transition-transform duration-300">
+                                <i class="fas fa-key text-white text-xl"></i>
                             </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">Licenças</h3>
-                            <p class="text-sm text-gray-600">Gerenciamento de licenças e senhas</p>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-pink-600 transition-colors">Licenças</h3>
+                            <p class="text-sm text-gray-500">Gerenciamento de licenças e senhas</p>
                         </div>
                     </a>
                     {% endif %}
 
                     <!-- Veículos -->
                     {% if 'vehicles_view' in user_permissions %}
-                    <a href="{{ url_for('admin.vehicles_list') }}" class="block">
-                        <div class="module-card">
-                            <div class="module-icon bg-gradient-to-br from-cyan-500 to-cyan-600">
-                                <i class="fas fa-car"></i>
+                    <a href="{{ url_for('admin.vehicles_list') }}" class="group block">
+                        <div class="tw-card-section tw-card-shadow p-6 hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-cyan-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                            <div class="w-14 h-14 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/30 mb-4 group-hover:scale-110 group-hover:rotate-[-5deg] transition-transform duration-300">
+                                <i class="fas fa-car text-white text-xl"></i>
                             </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">Veículos</h3>
-                            <p class="text-sm text-gray-600">Gestão de frota e manutenções</p>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-cyan-600 transition-colors">Veículos</h3>
+                            <p class="text-sm text-gray-500">Gestão de frota e manutenções</p>
                         </div>
                     </a>
                     {% endif %}
 
                     <!-- Configurações -->
                     {% if 'settings_view' in user_permissions %}
-                    <a href="{{ url_for('admin.settings_list') }}" class="block">
-                        <div class="module-card">
-                            <div class="module-icon bg-gradient-to-br from-gray-600 to-gray-700">
-                                <i class="fas fa-cog"></i>
+                    <a href="{{ url_for('admin.settings_list') }}" class="group block">
+                        <div class="tw-card-section tw-card-shadow p-6 hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gray-500 to-gray-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                            <div class="w-14 h-14 bg-gradient-to-br from-gray-600 to-gray-700 rounded-xl flex items-center justify-center shadow-lg shadow-gray-500/30 mb-4 group-hover:scale-110 group-hover:rotate-[-5deg] transition-transform duration-300">
+                                <i class="fas fa-cog text-white text-xl"></i>
                             </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">Configurações</h3>
-                            <p class="text-sm text-gray-600">Preferências e ajustes do sistema</p>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors">Configurações</h3>
+                            <p class="text-sm text-gray-500">Preferências e ajustes do sistema</p>
                         </div>
                     </a>
                     {% endif %}
 
                     <!-- Permissões -->
                     {% if 'permissions_manage' in user_permissions %}
-                    <a href="{{ url_for('admin.groups_permissions') }}" class="block">
-                        <div class="module-card">
-                            <div class="module-icon bg-gradient-to-br from-amber-500 to-amber-600">
-                                <i class="fas fa-shield-alt"></i>
+                    <a href="{{ url_for('admin.groups_permissions') }}" class="group block">
+                        <div class="tw-card-section tw-card-shadow p-6 hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-amber-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                            <div class="w-14 h-14 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30 mb-4 group-hover:scale-110 group-hover:rotate-[-5deg] transition-transform duration-300">
+                                <i class="fas fa-shield-alt text-white text-xl"></i>
                             </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">Permissões</h3>
-                            <p class="text-sm text-gray-600">Gerenciar acessos e permissões</p>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-amber-600 transition-colors">Permissões</h3>
+                            <p class="text-sm text-gray-500">Gerenciar acessos e permissões</p>
                         </div>
                     </a>
                     {% endif %}
 
                     <!-- Usuários -->
                     {% if 'users_view' in user_permissions %}
-                    <a href="{{ url_for('admin.users_list') }}" class="block">
-                        <div class="module-card">
-                            <div class="module-icon bg-gradient-to-br from-teal-500 to-teal-600">
-                                <i class="fas fa-user-shield"></i>
+                    <a href="{{ url_for('admin.users_list') }}" class="group block">
+                        <div class="tw-card-section tw-card-shadow p-6 hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 to-teal-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                            <div class="w-14 h-14 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/30 mb-4 group-hover:scale-110 group-hover:rotate-[-5deg] transition-transform duration-300">
+                                <i class="fas fa-user-shield text-white text-xl"></i>
                             </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">Usuários</h3>
-                            <p class="text-sm text-gray-600">Gestão de permissões e acessos</p>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-teal-600 transition-colors">Usuários</h3>
+                            <p class="text-sm text-gray-500">Gestão de permissões e acessos</p>
                         </div>
                     </a>
                     {% endif %}
 
-                    <!-- Integrations -->
+                    <!-- Integrações -->
                     {% if 'integrations_view' in user_permissions %}
-                    <a href="{{ url_for('admin.integrations_list') }}" class="block">
-                        <div class="module-card">
-                            <div class="module-icon bg-gradient-to-br from-violet-500 to-violet-600">
-                                <i class="fas fa-plug"></i>
+                    <a href="{{ url_for('admin.integrations_list') }}" class="group block">
+                        <div class="tw-card-section tw-card-shadow p-6 hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 to-violet-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                            <div class="w-14 h-14 bg-gradient-to-br from-violet-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-violet-500/30 mb-4 group-hover:scale-110 group-hover:rotate-[-5deg] transition-transform duration-300">
+                                <i class="fas fa-plug text-white text-xl"></i>
                             </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">Integrações</h3>
-                            <p class="text-sm text-gray-600">Conecte com outras plataformas</p>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-violet-600 transition-colors">Integrações</h3>
+                            <p class="text-sm text-gray-500">Conecte com outras plataformas</p>
                         </div>
                     </a>
                     {% endif %}
+
                 </div>
             </div>
-        </div>
-    </main>
+        </main>
+    </div>
 </div>
 
 <!-- Modal para Criar/Editar Nota -->

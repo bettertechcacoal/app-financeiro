@@ -10,25 +10,28 @@
 {% endblock %}
 
 {% block content %}
-<div class="py-8">
-    <!-- Header -->
-    <div class="mb-8 animate-fade-in">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-            <div class="flex items-center">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-gray-600 to-gray-700 rounded-2xl flex items-center justify-center shadow-lg mr-4 flex-shrink-0">
-                    <i class="fas fa-cog text-white text-2xl sm:text-3xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Configurações do Sistema</h1>
-                    <p class="text-sm sm:text-base text-gray-600">Gerencie os parâmetros de configuração</p>
-                </div>
+<div class="tw-page-transition">
+    <!-- Page Header -->
+    <div class="tw-page-header">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 bg-gradient-to-br from-gray-600 to-gray-700 rounded-2xl flex items-center justify-center shadow-lg shadow-gray-500/30">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
             </div>
-            <div class="flex items-center gap-3">
-                <button id="saveChangesBtn" disabled class="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all inline-flex items-center disabled:bg-gray-400 disabled:cursor-not-allowed disabled:shadow-none">
-                    <i class="fas fa-save mr-2"></i>
-                    Salvar Alterações
-                </button>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Configurações do Sistema</h1>
+                <p class="text-gray-500">Gerencie os parâmetros de configuração</p>
             </div>
+        </div>
+        <div class="tw-header-actions">
+            <button id="saveChangesBtn" disabled class="btn bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-400 disabled:cursor-not-allowed disabled:shadow-none">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Salvar Alterações
+            </button>
         </div>
     </div>
 
@@ -235,7 +238,7 @@
 
     <!-- Botão Voltar -->
     <div class="mt-6 animate-fade-in">
-        <a href="{{ url_for('admin.dashboard') }}" class="text-blue-600 hover:text-blue-700 font-semibold">
+        <a href="{{ url_for('admin.dashboard') }}" class="text-purple-900 hover:text-purple-700 font-semibold">
             <i class="fas fa-arrow-left mr-2"></i>
             Voltar para Dashboard
         </a>

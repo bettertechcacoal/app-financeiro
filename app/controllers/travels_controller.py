@@ -13,7 +13,111 @@ from app.utils.permissions_helper import permission_required
 from datetime import datetime
 from decimal import Decimal
 from sqlalchemy import case, or_, and_
+from sqlalchemy.orm.attributes import flag_modified
 import sqlalchemy
+import json
+from datetime import datetime as dt
+
+
+def _process_payout_data(db, travel, payout_data_str, current_user_id):
+    """
+    Processa os dados de repasses financeiros (payouts) para uma viagem.
+    Função auxiliar para evitar duplicação de código entre approve e save.
+    """
+    try:
+        payout_data = json.loads(payout_data_str)
+    except (json.JSONDecodeError, TypeError):
+        payout_data = {}
+
+    # Novo formato: { pending: {...}, deleted: {...} }
+    # Formato antigo: { member_id: [...entries] }
+    pending_data = payout_data.get('pending', payout_data) if isinstance(payout_data.get('pending'), dict) else payout_data
+    deleted_data = payout_data.get('deleted', {}) if isinstance(payout_data.get('deleted'), dict) else {}
+
+    # Processar exclusões (soft delete)
+    for member_id_str, deleted_entries in deleted_data.items():
+        member_id = int(member_id_str)
+
+        existing_payout = db.query(TravelPayout).filter_by(
+            travel_id=travel.id,
+            member_id=member_id
+        ).first()
+
+        if existing_payout and existing_payout.payout_history:
+            current_history = list(existing_payout.payout_history)
+            amount_to_subtract = Decimal('0')
+
+            for entry_id in deleted_entries:
+                # entry_id vem no formato "payoutDbId-entryIndex" (ex: "5-1")
+                parts = entry_id.split('-')
+                if len(parts) == 2:
+                    payout_db_id = int(parts[0])
+                    entry_index = int(parts[1]) - 1  # índice começa em 1 no template
+
+                    if payout_db_id == existing_payout.id and 0 <= entry_index < len(current_history):
+                        entry = current_history[entry_index]
+                        if entry.get('status') != 'deleted':
+                            entry['status'] = 'deleted'
+                            entry['deleted_by'] = current_user_id
+                            entry['deleted_at'] = dt.now().isoformat()
+                            amount_to_subtract += Decimal(str(entry.get('amount', 0)))
+
+            existing_payout.payout_history = current_history
+            existing_payout.amount = max(Decimal('0'), existing_payout.amount - amount_to_subtract)
+            flag_modified(existing_payout, 'payout_history')
+
+    # Processar novos lançamentos
+    for member_id_str, entries in pending_data.items():
+        member_id = int(member_id_str)
+
+        if not entries:
+            continue
+
+        # Calcular total dos lançamentos para este membro
+        total_amount = Decimal('0')
+        payout_history = []
+
+        for entry in entries:
+            try:
+                amount = Decimal(str(entry.get('amount', 0)))
+                if amount > 0:
+                    total_amount += amount
+                    payout_history.append({
+                        'amount': float(amount),
+                        'date': entry.get('date'),
+                        'observation': entry.get('observation', ''),
+                        'created_by': current_user_id,
+                        'created_at': dt.now().isoformat(),
+                        'status': 'launched'
+                    })
+            except (ValueError, TypeError):
+                pass
+
+        if total_amount > 0 or payout_history:
+            # Verificar se já existe payout para este membro
+            existing_payout = db.query(TravelPayout).filter_by(
+                travel_id=travel.id,
+                member_id=member_id
+            ).first()
+
+            if existing_payout:
+                # Atualizar payout existente (adicionar ao histórico)
+                # Criar nova lista para forçar SQLAlchemy detectar a mudança
+                current_history = list(existing_payout.payout_history or [])
+                current_history.extend(payout_history)
+                existing_payout.payout_history = current_history
+                existing_payout.amount = existing_payout.amount + total_amount
+                # Forçar SQLAlchemy a detectar mudança no campo JSON
+                flag_modified(existing_payout, 'payout_history')
+            else:
+                # Criar novo payout
+                payout = TravelPayout(
+                    travel_id=travel.id,
+                    member_id=member_id,
+                    amount=total_amount,
+                    payout_history=payout_history
+                )
+                db.add(payout)
 
 
 def travels_list():
@@ -627,7 +731,21 @@ def travels_analyze(travel_id):
     # Buscar repasses financeiros já cadastrados
     from app.models.user import User
     payouts = db.query(TravelPayout).filter_by(travel_id=travel_id).all()
-    payouts_dict = {payout.member_id: float(payout.amount) for payout in payouts}
+
+    # Criar dicionário de payouts por membro (com lista de todos os payouts)
+    payouts_by_member = {}
+    for payout in payouts:
+        if payout.member_id not in payouts_by_member:
+            payouts_by_member[payout.member_id] = {
+                'payouts': [],
+                'total': 0,
+                'entries_count': 0
+            }
+        payouts_by_member[payout.member_id]['payouts'].append(payout)
+        payouts_by_member[payout.member_id]['total'] += float(payout.amount) if payout.amount else 0
+        # Contar entradas no payout_history
+        if payout.payout_history:
+            payouts_by_member[payout.member_id]['entries_count'] += len(payout.payout_history)
 
     # Buscar passageiros para montar lista de membros
     passengers = db.query(TravelPassenger).filter_by(travel_id=travel_id).all()
@@ -635,22 +753,43 @@ def travels_analyze(travel_id):
 
     # Adicionar motorista (driver)
     if travel.driver_user:
+        member_payouts = payouts_by_member.get(travel.driver_user.id, {'payouts': [], 'total': 0, 'entries_count': 0})
         members.append({
             'id': travel.driver_user.id,
             'name': travel.driver_user.name,
             'email': travel.driver_user.email,
-            'amount': payouts_dict.get(travel.driver_user.id, 0)
+            'amount': member_payouts['total'],
+            'payouts': member_payouts['payouts'],
+            'entries_count': member_payouts['entries_count']
         })
 
     # Adicionar passageiros
     for passenger in passengers:
         if passenger.user:
+            member_payouts = payouts_by_member.get(passenger.user.id, {'payouts': [], 'total': 0, 'entries_count': 0})
             members.append({
                 'id': passenger.user.id,
                 'name': passenger.user.name,
                 'email': passenger.user.email,
-                'amount': payouts_dict.get(passenger.user.id, 0)
+                'amount': member_payouts['total'],
+                'payouts': member_payouts['payouts'],
+                'entries_count': member_payouts['entries_count']
             })
+
+    # Coletar IDs de usuários que criaram lançamentos para buscar seus nomes
+    creator_ids = set()
+    for payout in payouts:
+        if payout.payout_history:
+            for entry in payout.payout_history:
+                if entry.get('created_by'):
+                    creator_ids.add(entry['created_by'])
+
+    # Buscar nomes dos usuários criadores
+    users_map = {}
+    if creator_ids:
+        creators = db.query(User).filter(User.id.in_(creator_ids)).all()
+        for user in creators:
+            users_map[user.id] = user.name
 
     db.close()
 
@@ -658,7 +797,8 @@ def travels_analyze(travel_id):
         'pages/travels/analyze.html',
         travel=travel_data,
         allocated_vehicle=allocated_vehicle,
-        members=members
+        members=members,
+        users_map=users_map
     )
 
 
@@ -716,30 +856,9 @@ def travels_analyze_process(travel_id):
                         db.add(vehicle_history)
 
             # Processar repasses financeiros
-            # Primeiro, remover todos os payouts existentes desta viagem para recriá-los
-            db.query(TravelPayout).filter_by(travel_id=travel.id).delete()
-
-            # Buscar todos os campos que começam com 'financial_amount_user_'
-            for key in request.form.keys():
-                if key.startswith('financial_amount_user_'):
-                    member_id = int(key.replace('financial_amount_user_', ''))
-                    amount_str = request.form.get(key, '0').strip()
-
-                    if amount_str and amount_str != '':
-                        try:
-                            amount = Decimal(amount_str)
-
-                            if amount >= 0:
-                                # Criar registro de payout (mesmo com valor 0 para prestação de contas)
-                                payout = TravelPayout(
-                                    travel_id=travel.id,
-                                    member_id=member_id,
-                                    amount=amount
-                                )
-                                db.add(payout)
-                        except (ValueError, TypeError):
-                            # Ignorar valores inválidos
-                            pass
+            payout_data_str = request.form.get('payout_data', '{}')
+            current_user_id = session.get('user_id')
+            _process_payout_data(db, travel, payout_data_str, current_user_id)
 
             if admin_notes:
                 travel.admin_notes = admin_notes
@@ -842,6 +961,21 @@ def travels_analyze_process(travel_id):
                     )
             except Exception as e:
                 print(f"Erro ao enviar notificações: {e}")
+
+        elif action == 'save':
+            # Salvar alterações em viagem já aprovada
+            payout_data_str = request.form.get('payout_data', '{}')
+            current_user_id = session.get('user_id')
+            _process_payout_data(db, travel, payout_data_str, current_user_id)
+
+            if admin_notes:
+                travel.admin_notes = admin_notes
+
+            db.commit()
+            flash('Alterações salvas com sucesso!', 'success')
+            db.close()
+            # Redirecionar para a mesma página de análise
+            return redirect(url_for('admin.travels_analyze', travel_id=travel_id))
 
         else:
             flash('Ação inválida', 'error')

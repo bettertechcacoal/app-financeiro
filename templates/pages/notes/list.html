@@ -11,21 +11,25 @@
 {% endblock %}
 
 {% block content %}
-<div class="py-8">
-    <!-- Header -->
-    <div class="mb-8 animate-fade-in">
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg mr-4">
-                    <i class="fas fa-sticky-note text-white text-2xl sm:text-3xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Minhas Notas</h1>
-                    <p class="text-sm sm:text-base text-gray-600">Gerenciar todas as suas anotações</p>
-                </div>
+<div class="tw-page-transition">
+    <!-- Page Header -->
+    <div class="tw-page-header">
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-yellow-500/30">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
             </div>
-            <button onclick="openNoteModal()" class="btn-primary">
-                <i class="fas fa-plus mr-2"></i>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Minhas Notas</h1>
+                <p class="text-gray-500">Gerenciar todas as suas anotações</p>
+            </div>
+        </div>
+        <div class="tw-header-actions">
+            <button onclick="openNoteModal()" class="btn bg-yellow-600 hover:bg-yellow-700 text-white">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
                 Nova Nota
             </button>
         </div>
@@ -82,7 +86,7 @@
 
     <!-- Botão Voltar -->
     <div class="mt-6 animate-fade-in">
-        <a href="{{ url_for('admin.dashboard') }}" class="text-blue-600 hover:text-blue-700 font-semibold">
+        <a href="{{ url_for('admin.dashboard') }}" class="text-purple-900 hover:text-purple-700 font-semibold">
             <i class="fas fa-arrow-left mr-2"></i>
             Voltar para Dashboard
         </a>

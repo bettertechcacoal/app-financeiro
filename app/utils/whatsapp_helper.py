@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 import requests
 from typing import Optional
 from config import app as app_config
@@ -19,25 +20,18 @@ def send_whatsapp_message(phone_number: str, message: str, instance_name: Option
         api_url = app_config.EVOLUTION_API_URL
         api_key = app_config.EVOLUTION_API_KEY
 
-        print(f"[WHATSAPP] Tentando enviar para: {phone_number}")
-        print(f"[WHATSAPP] Instância fornecida: {instance_name}")
-
         # Se não foi especificada instância, busca a primeira disponível
         if not instance_name:
-            print(f"[WHATSAPP] Buscando instâncias disponíveis...")
             response = requests.get(
                 f'{api_url}/instance/fetchInstances',
                 headers={'apikey': api_key},
                 timeout=5
             )
 
-            print(f"[WHATSAPP] Status da busca de instâncias: {response.status_code}")
-
             if response.status_code == 200:
                 instances = response.json()
-                print(f"[WHATSAPP] Instâncias encontradas: {instances}")
                 if not instances:
-                    print(f"[WHATSAPP] Nenhuma instância disponível")
+                    logging.warning("WhatsApp: Nenhuma instância disponível")
                     return False
 
                 # Pegar primeira instância disponível
@@ -47,17 +41,15 @@ def send_whatsapp_message(phone_number: str, message: str, instance_name: Option
                                first_instance.get('instanceName') or
                                first_instance.get('instance', {}).get('instanceName') or
                                first_instance.get('instance', {}).get('name'))
-                print(f"[WHATSAPP] Instância selecionada: {instance_name}")
 
                 if not instance_name:
-                    print(f"[WHATSAPP] Nome da instância não encontrado")
+                    logging.warning("WhatsApp: Nome da instância não encontrado")
                     return False
             else:
-                print(f"[WHATSAPP] Erro ao buscar instâncias: {response.status_code}")
+                logging.error(f"WhatsApp: Erro ao buscar instâncias: {response.status_code}")
                 return False
 
         # Enviar mensagem
-        print(f"[WHATSAPP] Enviando mensagem para {phone_number} via instância {instance_name}")
         response = requests.post(
             f'{api_url}/message/sendText/{instance_name}',
             headers={
@@ -71,15 +63,14 @@ def send_whatsapp_message(phone_number: str, message: str, instance_name: Option
             timeout=10
         )
 
-        print(f"[WHATSAPP] Status do envio: {response.status_code}")
-        print(f"[WHATSAPP] Resposta: {response.text}")
-
-        return response.status_code == 201 or response.status_code == 200
+        if response.status_code in [200, 201]:
+            return True
+        else:
+            logging.error(f"WhatsApp: Erro ao enviar mensagem: {response.status_code}")
+            return False
 
     except Exception as e:
-        print(f"[WHATSAPP] Erro ao enviar WhatsApp: {e}")
-        import traceback
-        print(f"[WHATSAPP] Traceback: {traceback.format_exc()}")
+        logging.error(f"WhatsApp: Erro ao enviar mensagem")
         return False
 
 
@@ -100,17 +91,12 @@ def format_phone_number(phone: str) -> Optional[str]:
     # Remove todos os caracteres não numéricos
     clean_phone = ''.join(filter(str.isdigit, phone))
 
-    print(f"[WHATSAPP] Telefone limpo: {clean_phone} (tamanho: {len(clean_phone)})")
-
     # Se não tem código do país (10 ou 11 dígitos), adiciona 55 (Brasil)
     if len(clean_phone) == 11 or len(clean_phone) == 10:
         clean_phone = '55' + clean_phone
-        print(f"[WHATSAPP] Adicionado código do país: {clean_phone}")
 
     # Validar tamanho mínimo
     if len(clean_phone) < 12:
-        print(f"[WHATSAPP] Telefone inválido - tamanho menor que 12: {len(clean_phone)}")
         return None
 
-    print(f"[WHATSAPP] Telefone final formatado: {clean_phone}")
     return clean_phone

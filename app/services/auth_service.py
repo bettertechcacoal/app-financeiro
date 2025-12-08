@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 import requests
 from typing import Optional, Dict, Any
 from config import AUTH_SERVICE_URL, AUTH_SERVICE_TIMEOUT
@@ -35,7 +36,7 @@ class AuthService:
                 return None
 
         except requests.exceptions.RequestException as e:
-            print(f"Erro ao comunicar com auth-service: {e}")
+            logging.error(f"Erro ao comunicar com auth-service: {e}")
             return None
 
     def validate_token(self, access_token: str) -> Optional[Dict[str, Any]]:
@@ -61,7 +62,7 @@ class AuthService:
                 return None
 
         except requests.exceptions.RequestException as e:
-            print(f"Erro ao comunicar com auth-service: {e}")
+            logging.error(f"Erro ao comunicar com auth-service: {e}")
             return None
 
     def get_user_info(self, access_token: str) -> Optional[Dict[str, Any]]:
@@ -87,7 +88,7 @@ class AuthService:
                 return None
 
         except requests.exceptions.RequestException as e:
-            print(f"Erro ao comunicar com auth-service: {e}")
+            logging.error(f"Erro ao comunicar com auth-service: {e}")
             return None
 
     def register_user(self, user_data: Dict[str, Any], password: str) -> Optional[Dict[str, Any]]:
@@ -120,11 +121,11 @@ class AuthService:
             if response.status_code in [200, 201]:
                 return response.json()
             else:
-                print(f"Erro ao registrar usuário no auth-service: {response.status_code} - {response.text}")
+                logging.error(f"Erro ao registrar usuário no auth-service: {response.status_code} - {response.text}")
                 return None
 
         except requests.exceptions.RequestException as e:
-            print(f"Erro ao comunicar com auth-service: {e}")
+            logging.error(f"Erro ao comunicar com auth-service: {e}")
             return None
 
     def change_password(self, user_uuid: str, new_password: str) -> Optional[Dict[str, Any]]:
@@ -153,11 +154,11 @@ class AuthService:
             if response.status_code in [200, 201]:
                 return response.json()
             else:
-                print(f"Erro ao alterar senha no auth-service: {response.status_code} - {response.text}")
+                logging.error(f"Erro ao alterar senha no auth-service: {response.status_code} - {response.text}")
                 return None
 
         except requests.exceptions.RequestException as e:
-            print(f"Erro ao comunicar com auth-service: {e}")
+            logging.error(f"Erro ao comunicar com auth-service: {e}")
             return None
 
 

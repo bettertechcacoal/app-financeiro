@@ -2,6 +2,7 @@
 """
 Controller para gerenciar o perfil do usuário
 """
+import logging
 from flask import render_template, session, redirect, url_for, flash, request, jsonify
 from app.models.database import SessionLocal
 from app.models.user import User
@@ -41,7 +42,7 @@ def profile_view():
         return render_template('pages/profile/profile.html', user=user_data, is_admin_edit=False, is_new=False)
 
     except Exception as e:
-        print(f"Erro ao carregar perfil: {str(e)}")
+        logging.error(f"Erro ao carregar perfil: {str(e)}")
         flash('Erro ao carregar perfil do usuário', 'error')
         return redirect(url_for('admin.dashboard'))
     finally:
@@ -81,7 +82,7 @@ def profile_update():
 
     except Exception as e:
         db.rollback()
-        print(f"Erro ao atualizar perfil: {str(e)}")
+        logging.error(f"Erro ao atualizar perfil: {str(e)}")
         flash('Erro ao atualizar perfil', 'error')
         return redirect(url_for('admin.profile_view'))
     finally:
@@ -126,5 +127,5 @@ def profile_change_password():
         return jsonify({'success': True, 'message': 'Senha alterada com sucesso!'}), 200
 
     except Exception as e:
-        print(f"Erro ao alterar senha: {str(e)}")
+        logging.error(f"Erro ao alterar senha: {str(e)}")
         return jsonify({'success': False, 'error': f'Erro ao alterar senha: {str(e)}'}), 500

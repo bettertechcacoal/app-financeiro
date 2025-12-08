@@ -14,6 +14,7 @@ Uso:
         action_text="Ver Viagem"
     )
 """
+import logging
 
 from app.models.notification import Notification, NotificationType
 from app.models.database import get_db
@@ -69,28 +70,16 @@ def send_notification(user_id, title, message, notification_type=NotificationTyp
             from app.models.user import User
             from app.utils.whatsapp_helper import send_whatsapp_message, format_phone_number
 
-            print(f"[WHATSAPP DEBUG] Iniciando envio para user_id: {user_id}")
             user = db.query(User).filter_by(id=user_id).first()
-            print(f"[WHATSAPP DEBUG] Usuário encontrado: {user.name if user else 'None'}")
-            print(f"[WHATSAPP DEBUG] Telefone do usuário: {user.phone if user else 'None'}")
 
             if user and user.phone:
                 phone = format_phone_number(user.phone)
-                print(f"[WHATSAPP DEBUG] Telefone formatado: {phone}")
                 if phone:
                     whatsapp_message = f"*{title}*\n\n{message}"
-                    print(f"[WHATSAPP DEBUG] Enviando mensagem: {whatsapp_message}")
-                    result = send_whatsapp_message(phone, whatsapp_message)
-                    print(f"[WHATSAPP DEBUG] Resultado do envio: {result}")
-                else:
-                    print(f"[WHATSAPP DEBUG] Telefone formatado é None")
-            else:
-                print(f"[WHATSAPP DEBUG] Usuário não tem telefone ou não existe")
+                    send_whatsapp_message(phone, whatsapp_message)
         except Exception as e:
             # Falha silenciosa - notificação já está no banco e via Socket.IO
-            print(f"[WHATSAPP DEBUG] Erro ao enviar WhatsApp: {e}")
-            import traceback
-            print(f"[WHATSAPP DEBUG] Traceback: {traceback.format_exc()}")
+            logging.error("Erro ao enviar notificação WhatsApp")
 
         return notification
 

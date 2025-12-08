@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 from flask import render_template, request, redirect, url_for, flash, jsonify, make_response, session
 from app.services.license_service import license_service
 from datetime import datetime
@@ -63,9 +64,7 @@ def license_upload_process():
                     )
 
             except Exception as e:
-                import traceback
-                print(f"[ERRO] Erro ao processar arquivo: {str(e)}")
-                print(traceback.format_exc())
+                logging.exception(f"Erro ao processar arquivo: {str(e)}")
 
                 # Enviar notificação de erro
                 if user_id:
@@ -220,9 +219,7 @@ def license_generate_bulk():
         return response
 
     except Exception as e:
-        import traceback
-        print(f"[ERRO] Erro ao gerar arquivo em massa: {str(e)}")
-        print(traceback.format_exc())
+        logging.exception(f"Erro ao gerar arquivo em massa: {str(e)}")
         flash(f'Erro ao gerar arquivo: {str(e)}', 'error')
         return redirect(url_for('admin.licenses_list'))
 
@@ -373,9 +370,7 @@ def license_view_pdf():
         return response
 
     except Exception as e:
-        import traceback
-        print(f"[ERRO] Erro ao gerar PDF: {str(e)}")
-        print(traceback.format_exc())
+        logging.exception(f"Erro ao gerar PDF: {str(e)}")
         return f'Erro ao gerar PDF: {str(e)}', 500
 
 

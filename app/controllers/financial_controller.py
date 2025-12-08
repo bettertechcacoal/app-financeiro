@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
+import logging
 from flask import render_template, request, redirect, url_for, flash, session, jsonify
 from app.models.database import SessionLocal
 from app.models.travel_payout import TravelPayout
 from app.models.travel_statement import TravelStatement, StatementStatus
-from app.models.travel import Travel
+from app.models.travel import Travel, TravelStatus
 from app.models.user import User
 from app.models.city import City
 from app.models.state import State
@@ -83,7 +84,7 @@ def financial_accountability(payout_id):
         )
 
     except Exception as e:
-        print(f"Erro ao carregar prestação de contas: {e}")
+        logging.error(f"Erro ao carregar prestação de contas: {e}")
         flash('Erro ao carregar prestação de contas', 'error')
         return redirect(url_for('admin.financial_payouts_list'))
 
@@ -111,6 +112,7 @@ def financial_payouts_list():
         query = db.query(TravelPayout, TravelStatement.status)\
             .outerjoin(TravelStatement, TravelPayout.id == TravelStatement.payout_id)\
             .join(Travel, TravelPayout.travel_id == Travel.id)\
+            .filter(Travel.status != TravelStatus.CANCELLED)\
             .options(
                 joinedload(TravelPayout.travel).joinedload(Travel.city).joinedload(City.state),
                 joinedload(TravelPayout.travel).joinedload(Travel.driver_user),
@@ -180,7 +182,7 @@ def financial_payouts_list():
         )
 
     except Exception as e:
-        print(f"Erro ao listar repasses financeiros: {e}")
+        logging.error(f"Erro ao listar repasses financeiros: {e}")
         flash('Erro ao carregar lista de repasses financeiros', 'error')
         return redirect(url_for('admin.dashboard'))
 
@@ -307,12 +309,12 @@ def save_accountability(payout_id):
 
         if statement:
             # Atualizar existente
-            print(f"Atualizando statement existente ID: {statement.id}")
+            logging.debug(f"Atualizando statement existente ID: {statement.id}")
             statement.statement_content = statement_content
             statement.status = status_enum
         else:
             # Criar nova
-            print(f"Criando nova statement")
+            logging.debug(f"Criando nova statement para payout_id: {payout_id}")
             statement = TravelStatement(
                 payout_id=payout_id,
                 statement_content=statement_content,
@@ -322,11 +324,6 @@ def save_accountability(payout_id):
 
         db.commit()
         db.refresh(statement)
-
-        # Debug: Verificar o que foi salvo
-        print(f"Statement ID após commit: {statement.id}")
-        print(f"Statement Content salvo no banco: {json.dumps(statement.statement_content, indent=2)}")
-        print(f"=== FIM DEBUG ===")
 
         # Mensagem de sucesso baseada no status
         messages = {
@@ -349,7 +346,7 @@ def save_accountability(payout_id):
         if db:
             db.rollback()
             db.close()
-        print(f"Erro ao salvar prestação de contas: {e}")
+        logging.error(f"Erro ao salvar prestação de contas: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -785,7 +782,7 @@ def financial_accountability_report_pdf(payout_id):
         return response
 
     except Exception as e:
-        print(f"Erro ao gerar relatório: {e}")
+        logging.error(f"Erro ao gerar relatório: {e}")
         return f"Erro ao gerar relatório: {str(e)}", 500
     finally:
         db.close()

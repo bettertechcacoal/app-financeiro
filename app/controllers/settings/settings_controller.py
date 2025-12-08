@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 from flask import render_template, request, redirect, url_for, flash, session, jsonify
 from app.models.parameter import Parameter, ParameterType
 from app.models.parameter_group import ParameterGroup
@@ -182,7 +183,7 @@ def update_parameter_api(parameter_name):
         if parameter_name.upper() == 'MOVIDESK_SYNC_SCHEDULES':
             from app.services.scheduler_service import load_sync_schedules
             load_sync_schedules()
-            print("[SCHEDULER] Horários recarregados imediatamente após alteração")
+            logging.info("Horários do scheduler recarregados após alteração")
 
         return jsonify({
             'success': True,

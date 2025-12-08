@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 from flask import render_template, request, redirect, url_for, flash, session, jsonify
 from app.models.database import SessionLocal
 from app.models.travel import Travel, TravelStatus
@@ -196,7 +197,7 @@ def travels_list():
         )
 
     except Exception as e:
-        print(f"Erro ao listar viagens: {e}")
+        logging.error(f"Erro ao listar viagens: {e}")
         flash('Erro ao carregar lista de viagens', 'error')
         return redirect(url_for('admin.dashboard'))
 
@@ -242,7 +243,7 @@ def travels_create():
         )
 
     except Exception as e:
-        print(f"Erro ao carregar formulário: {e}")
+        logging.error(f"Erro ao carregar formulário: {e}")
         flash('Erro ao carregar formulário de viagem', 'error')
         return redirect(url_for('admin.travels_list'))
 
@@ -366,7 +367,7 @@ def travels_store():
                 )
         except Exception as e:
             # Falha silenciosa - viagem já foi criada
-            print(f"Erro ao enviar notificações: {e}")
+            logging.error(f"Erro ao enviar notificações: {e}")
 
         db.close()
 
@@ -376,7 +377,7 @@ def travels_store():
     except Exception as e:
         db.rollback()
         db.close()
-        print(f"Erro ao criar viagem: {e}")
+        logging.error(f"Erro ao criar viagem: {e}")
         flash('Erro ao cadastrar viagem', 'error')
         return redirect(url_for('admin.travels_create'))
 
@@ -455,7 +456,7 @@ def travels_edit(travel_id):
         )
 
     except Exception as e:
-        print(f"Erro ao carregar viagem: {e}")
+        logging.error(f"Erro ao carregar viagem: {e}")
         flash('Erro ao carregar dados da viagem', 'error')
         return redirect(url_for('admin.travels_list'))
 
@@ -619,7 +620,7 @@ def travels_update(travel_id):
                 )
         except Exception as e:
             # Falha silenciosa - viagem já foi atualizada
-            print(f"Erro ao enviar notificações: {e}")
+            logging.error(f"Erro ao enviar notificações: {e}")
 
         db.close()
 
@@ -629,7 +630,7 @@ def travels_update(travel_id):
     except Exception as e:
         db.rollback()
         db.close()
-        print(f"Erro ao atualizar viagem: {e}")
+        logging.error(f"Erro ao atualizar viagem: {e}")
         flash('Erro ao atualizar viagem', 'error')
         return redirect(url_for('admin.travels_edit', travel_id=travel_id))
 
@@ -656,7 +657,7 @@ def travels_delete(travel_id):
     except Exception as e:
         db.rollback()
         db.close()
-        print(f"Erro ao remover viagem: {e}")
+        logging.error(f"Erro ao remover viagem: {e}")
         flash('Erro ao remover viagem', 'error')
         return redirect(url_for('admin.travels_list'))
 
@@ -673,9 +674,12 @@ def travels_cancel(travel_id):
             flash('Viagem não encontrada', 'error')
             return redirect(url_for('admin.travels_list'))
 
-        # Verificar se o usuário pode cancelar (apenas motorista ou quem registrou)
+        # Verificar se o usuário pode cancelar (motorista ou quem tem permissão de análise)
         current_user_id = session.get('user_id')
-        if travel.driver_user_id != current_user_id and travel.record_user_id != current_user_id:
+        from app.utils.permissions_helper import user_has_permission
+        can_approve = user_has_permission('travels_approve')
+
+        if travel.driver_user_id != current_user_id and not can_approve:
             flash('Você não tem permissão para cancelar esta viagem', 'error')
             return redirect(url_for('admin.travels_list'))
 
@@ -696,7 +700,7 @@ def travels_cancel(travel_id):
     except Exception as e:
         db.rollback()
         db.close()
-        print(f"Erro ao cancelar viagem: {e}")
+        logging.error(f"Erro ao cancelar viagem: {e}")
         flash('Erro ao cancelar viagem', 'error')
         return redirect(url_for('admin.travels_list'))
 
@@ -920,7 +924,7 @@ def travels_analyze_process(travel_id):
                         action_text='Ver Viagem'
                     )
             except Exception as e:
-                print(f"Erro ao enviar notificações: {e}")
+                logging.error(f"Erro ao enviar notificações: {e}")
 
         elif action == 'reject':
             # Rejeitar viagem
@@ -960,7 +964,7 @@ def travels_analyze_process(travel_id):
                         action_text='Ver Viagem'
                     )
             except Exception as e:
-                print(f"Erro ao enviar notificações: {e}")
+                logging.error(f"Erro ao enviar notificações: {e}")
 
         elif action == 'save':
             # Salvar alterações em viagem já aprovada
@@ -986,7 +990,7 @@ def travels_analyze_process(travel_id):
     except Exception as e:
         db.rollback()
         db.close()
-        print(f"Erro ao processar análise: {e}")
+        logging.error(f"Erro ao processar análise: {e}")
         flash('Erro ao processar análise da viagem', 'error')
         return redirect(url_for('admin.travels_list'))
 
@@ -1061,7 +1065,7 @@ def travels_check_conflicts():
             return jsonify({'success': True, 'has_conflicts': False, 'conflicts': []}), 200
 
     except Exception as e:
-        print(f"Erro ao verificar conflitos: {e}")
+        logging.error(f"Erro ao verificar conflitos: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -1094,7 +1098,7 @@ def travels_view(travel_id):
         )
 
     except Exception as e:
-        print(f"Erro ao carregar resumo da viagem: {e}")
+        logging.error(f"Erro ao carregar resumo da viagem: {e}")
         flash('Erro ao carregar dados da viagem', 'error')
         return redirect(url_for('admin.travels_list'))
 
@@ -1161,5 +1165,5 @@ def get_available_vehicles_api():
         return jsonify({'success': True, 'vehicles': vehicles_data})
 
     except Exception as e:
-        print(f"Erro ao buscar veículos: {e}")
+        logging.error(f"Erro ao buscar veículos: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500

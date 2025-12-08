@@ -595,7 +595,7 @@
                 </div>
 
                 <div class="space-y-4">
-                    <!-- Timeline item 1 -->
+                    <!-- Viagem criada -->
                     <div class="tw-timeline-item relative flex gap-4">
                         <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                             <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -606,14 +606,19 @@
                             <p class="font-medium text-gray-900">Viagem criada</p>
                             <p class="text-sm text-gray-500">
                                 {% if travel.created_at %}
-                                    {{ travel.created_at[8:10] }}/{{ travel.created_at[5:7] }}/{{ travel.created_at[:4] }}
+                                    {% if travel.created_at is string %}
+                                        {{ travel.created_at[8:10] }}/{{ travel.created_at[5:7] }}/{{ travel.created_at[:4] }} às {{ travel.created_at[11:16] }}
+                                    {% else %}
+                                        {{ travel.created_at.strftime('%d/%m/%Y às %H:%M') }}
+                                    {% endif %}
                                 {% endif %}
-                                por {{ travel.driver_user.name if travel.driver_user else 'N/A' }}
+                                por {{ travel.record_user.name if travel.record_user else (travel.driver_user.name if travel.driver_user else 'N/A') }}
                             </p>
                         </div>
                     </div>
 
-                    <!-- Timeline item 2 -->
+                    {% if travel.status == 'pending' %}
+                    <!-- Aguardando aprovação -->
                     <div class="tw-timeline-item relative flex gap-4">
                         <div class="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
                             <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -625,6 +630,82 @@
                             <p class="text-sm text-gray-500">Pendente de aprovação</p>
                         </div>
                     </div>
+                    {% endif %}
+
+                    {% if travel.status in ['approved', 'in_progress', 'completed'] and travel.approved_at %}
+                    <!-- Viagem aprovada -->
+                    <div class="tw-timeline-item relative flex gap-4">
+                        <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                        <div class="pb-4">
+                            <p class="font-medium text-gray-900">Viagem aprovada</p>
+                            <p class="text-sm text-gray-500">
+                                {% if travel.approved_at is string %}
+                                    {{ travel.approved_at[8:10] }}/{{ travel.approved_at[5:7] }}/{{ travel.approved_at[:4] }} às {{ travel.approved_at[11:16] }}
+                                {% else %}
+                                    {{ travel.approved_at.strftime('%d/%m/%Y às %H:%M') }}
+                                {% endif %}
+                                por {{ travel.approved_by_user.name if travel.approved_by_user else 'N/A' }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if travel.status == 'in_progress' %}
+                    <!-- Em andamento -->
+                    <div class="tw-timeline-item relative flex gap-4">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-900">Em andamento</p>
+                            <p class="text-sm text-gray-500">Viagem em curso</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if travel.status == 'completed' %}
+                    <!-- Concluída -->
+                    <div class="tw-timeline-item relative flex gap-4">
+                        <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-900">Viagem concluída</p>
+                            <p class="text-sm text-gray-500">Finalizada com sucesso</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if travel.status == 'cancelled' %}
+                    <!-- Cancelada -->
+                    <div class="tw-timeline-item relative flex gap-4">
+                        <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-900">Viagem cancelada</p>
+                            <p class="text-sm text-gray-500">
+                                {% if travel.updated_at %}
+                                    {% if travel.updated_at is string %}
+                                        {{ travel.updated_at[8:10] }}/{{ travel.updated_at[5:7] }}/{{ travel.updated_at[:4] }} às {{ travel.updated_at[11:16] }}
+                                    {% else %}
+                                        {{ travel.updated_at.strftime('%d/%m/%Y às %H:%M') }}
+                                    {% endif %}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

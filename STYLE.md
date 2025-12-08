@@ -588,3 +588,118 @@ function clearSearch() {
 - [ ] Estado vazio estilizado
 - [ ] Ícones SVG (não Font Awesome)
 - [ ] Cores consistentes com o tema da página
+
+---
+
+
+---
+
+## Popover de Confirmação (Estilo Nuvem)
+
+Popover flutuante compacto que aparece próximo ao elemento que o acionou, com uma setinha (triângulo) apontando para o botão. Segue o mesmo padrão visual dos cards do sistema.
+
+### Estrutura HTML
+
+```html
+<div id="meu-popover" class="hidden fixed z-50">
+    <div class="tw-card-section tw-card-shadow rounded-2xl w-72 relative overflow-hidden">
+        <!-- Header -->
+        <div class="px-4 py-2.5 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="..."/>
+                </svg>
+                <h3 class="text-sm font-semibold text-gray-900">Título da Ação</h3>
+            </div>
+        </div>
+        <!-- Body -->
+        <div class="p-4">
+            <p class="text-xs text-gray-600 mb-4">Descrição da ação e suas consequências.</p>
+            <div class="flex gap-2">
+                <button type="button" id="btn-cancel" class="flex-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-confirm" class="flex-1 px-3 py-1.5 text-xs font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors">
+                    Confirmar
+                </button>
+            </div>
+        </div>
+        <!-- Setinha (triângulo) -->
+        <div class="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-gray-200 rotate-45"></div>
+    </div>
+</div>
+```
+
+### Variações da Setinha
+
+```html
+<!-- Setinha apontando para cima (popover aparece ABAIXO do botão) -->
+<div class="absolute -top-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-gray-200 rotate-45"></div>
+
+<!-- Setinha apontando para baixo (popover aparece ACIMA do botão) -->
+<div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white border-r border-b border-gray-200 rotate-45"></div>
+```
+
+### JavaScript de Posicionamento
+
+```javascript
+// Abrir popover posicionado abaixo do botão
+$(document).on('click', '#btn-acao', function() {
+    var btn = $(this);
+    var popover = $('#meu-popover');
+    var rect = btn[0].getBoundingClientRect();
+
+    var popoverWidth = 288; // w-72 = 18rem = 288px
+    var left = rect.left + (rect.width / 2) - (popoverWidth / 2);
+    var top = rect.bottom + 10; // 10px abaixo do botão
+
+    // Ajuste para não sair da tela
+    if (left + popoverWidth > window.innerWidth - 10) left = window.innerWidth - popoverWidth - 10;
+    if (left < 10) left = 10;
+
+    popover.css({ left: left + 'px', top: top + 'px' });
+    popover.removeClass('hidden');
+});
+
+// Fechar popover
+$(document).on('click', '#btn-cancel', function() {
+    $('#meu-popover').addClass('hidden');
+});
+
+// Fechar ao clicar fora
+$(document).on('click', function(e) {
+    if (!$(e.target).closest('#meu-popover').length && !$(e.target).closest('#btn-acao').length) {
+        $('#meu-popover').addClass('hidden');
+    }
+});
+```
+
+### Cores do Ícone no Header
+
+| Tipo | Cor do Ícone |
+|------|--------------|
+| Perigo/Exclusão | `text-red-500` |
+| Alerta/Atenção | `text-amber-500` |
+| Sucesso | `text-emerald-500` |
+| Info | `text-blue-500` |
+
+### Cores dos Botões
+
+| Tipo | Botão Cancelar | Botão Confirmar |
+|------|----------------|-----------------|
+| Perigo | `bg-gray-100 text-gray-700` | `bg-red-500 text-white` |
+| Sucesso | `bg-gray-100 text-gray-700` | `bg-emerald-500 text-white` |
+| Padrão | `bg-gray-100 text-gray-700` | `bg-blue-500 text-white` |
+
+### Classes Principais
+
+| Classe | Descrição |
+|--------|-----------|
+| `tw-card-section` | Estilo base do card |
+| `tw-card-shadow` | Sombra suave |
+| `rounded-2xl` | Bordas bem arredondadas |
+| `w-72` | Largura fixa (288px) |
+| `fixed z-50` | Posicionamento flutuante |
+| `overflow-hidden` | Esconde overflow do header |
+| `text-xs` | Texto pequeno para proporção |
+| `px-3 py-1.5` | Padding compacto nos botões |

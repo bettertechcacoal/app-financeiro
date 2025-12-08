@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 import requests
 import os
 from datetime import datetime, timedelta
@@ -31,7 +32,7 @@ class MovideskService:
 
             return response.json()
         except Exception as e:
-            print(f"Erro ao buscar organizações do Movidesk: {e}")
+            logging.error(f"Erro ao buscar organizações do Movidesk: {e}")
             raise Exception(f"Erro ao buscar organizações: {str(e)}")
 
     def sync_organizations(self):
@@ -158,7 +159,7 @@ class MovideskService:
 
             return response.json()
         except Exception as e:
-            print(f"Erro ao buscar tickets do Movidesk: {e}")
+            logging.error(f"Erro ao buscar tickets do Movidesk: {e}")
             raise Exception(f"Erro ao buscar tickets: {str(e)}")
 
     def sync_tickets(self, start_date, end_date):

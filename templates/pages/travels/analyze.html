@@ -788,6 +788,38 @@
         <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white border-r border-b border-gray-200 rotate-45"></div>
     </div>
 </div>
+
+<!-- Popover de Confirmação de Cancelamento de Viagem -->
+<div id="cancel-travel-popover" class="hidden fixed z-50">
+    <div class="relative">
+        <!-- Setinha no topo (alinhada à direita) -->
+        <div class="absolute -top-2 right-6 w-4 h-4 bg-white border-l border-t border-gray-200 rotate-45 z-0"></div>
+        <!-- Card -->
+        <div class="tw-card-section tw-card-shadow rounded-2xl w-72 overflow-hidden relative z-10">
+            <!-- Header -->
+            <div class="px-4 py-2.5 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                    </svg>
+                    <h3 class="text-sm font-semibold text-gray-900">Cancelar Viagem</h3>
+                </div>
+            </div>
+            <!-- Body -->
+            <div class="p-4">
+                <p class="text-xs text-gray-600 mb-4">Esta ação não pode ser desfeita. A viagem será marcada como cancelada.</p>
+                <div class="flex gap-2">
+                    <button type="button" id="btn-cancel-travel-popover-close" class="flex-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="button" id="btn-confirm-cancel-travel" class="flex-1 px-3 py-1.5 text-xs font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors">
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -1276,10 +1308,37 @@ $(document).ready(function() {
         $('#analyze-form').submit();
     });
 
-    // Cancelar viagem
+    // Cancelar viagem - abrir popover
     $(document).on('click', '#btn-cancel-travel', function() {
-        if (confirm('Tem certeza que deseja cancelar esta viagem? Esta ação não pode ser desfeita.')) {
-            window.location.href = '{{ url_for("admin.travels_cancel", travel_id=travel.id) }}';
+        var btn = $(this);
+        var popover = $('#cancel-travel-popover');
+        var rect = btn[0].getBoundingClientRect();
+
+        var popoverWidth = 288;
+        // Alinhar right do popover com right do botão
+        var left = rect.right - popoverWidth;
+        var top = rect.bottom + 12;
+
+        if (left < 10) left = 10;
+
+        popover.css({ left: left + 'px', top: top + 'px' });
+        popover.removeClass('hidden');
+    });
+
+    // Fechar popover de cancelamento
+    $(document).on('click', '#btn-cancel-travel-popover-close', function() {
+        $('#cancel-travel-popover').addClass('hidden');
+    });
+
+    // Confirmar cancelamento de viagem
+    $(document).on('click', '#btn-confirm-cancel-travel', function() {
+        window.location.href = '{{ url_for("admin.travels_cancel", travel_id=travel.id) }}';
+    });
+
+    // Fechar popover de cancelamento ao clicar fora
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#cancel-travel-popover').length && !$(e.target).closest('#btn-cancel-travel').length) {
+            $('#cancel-travel-popover').addClass('hidden');
         }
     });
 

@@ -5,8 +5,10 @@ from app.services.ticket_service import ticket_service
 
 
 def tickets_list():
-    """Lista de clientes com opção de visualizar tickets"""
-    clients = client_service.get_all_clients()
+    """Lista de clientes com opção de visualizar tickets (apenas com organizações vinculadas)"""
+    all_clients = client_service.get_all_clients()
+    # Filtrar apenas clientes que tenham organizações vinculadas
+    clients = [c for c in all_clients if c.get('organizations') and len(c.get('organizations', [])) > 0]
     return render_template('pages/tickets/list.html', clients=clients)
 
 

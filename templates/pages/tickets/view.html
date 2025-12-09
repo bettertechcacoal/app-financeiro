@@ -377,11 +377,17 @@
         <form id="reportForm" method="GET" action="{{ url_for('admin.tickets_report_pdf', client_id=client.id) }}" target="_blank">
             <div class="px-6 py-6 space-y-6">
                 <!-- Informações do Cliente -->
-                <div class="bg-gray-50 rounded-xl p-4">
-                    <div class="text-xs text-gray-500 mb-1">Cliente</div>
-                    <div class="font-bold text-gray-900">{{ client.name }}</div>
-                    <div class="text-xs text-gray-600 mt-1">CNPJ: {{ client.document }}</div>
-                </div>
+                <a href="{{ url_for('admin.client_edit', client_id=client.id) }}" target="_blank"
+                   class="block bg-gray-50 hover:bg-gray-100 rounded-xl p-4 transition-colors group">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-xs text-gray-500 mb-1">Cliente</div>
+                            <div class="font-bold text-gray-900 group-hover:text-green-600 transition-colors">{{ client.name }}</div>
+                            <div class="text-xs text-gray-600 mt-1">CNPJ: {{ client.document }}</div>
+                        </div>
+                        <i class="fas fa-external-link-alt text-gray-400 group-hover:text-green-500 transition-colors"></i>
+                    </div>
+                </a>
 
                 <!-- Número do Ofício -->
                 <div>
@@ -419,31 +425,65 @@
                     </div>
                 </div>
 
-                <!-- Seleção de Mês/Ano -->
+                <!-- Toggle Selecione o Período -->
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Selecione o Mês</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <select name="month" id="monthSelect" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all" required>
-                                <option value="">Mês</option>
-                                <option value="1">Janeiro</option>
-                                <option value="2">Fevereiro</option>
-                                <option value="3">Março</option>
-                                <option value="4">Abril</option>
-                                <option value="5">Maio</option>
-                                <option value="6">Junho</option>
-                                <option value="7">Julho</option>
-                                <option value="8">Agosto</option>
-                                <option value="9">Setembro</option>
-                                <option value="10">Outubro</option>
-                                <option value="11">Novembro</option>
-                                <option value="12">Dezembro</option>
-                            </select>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-sm font-semibold text-gray-700">Selecione o Período</label>
+                        <div class="flex items-center bg-gray-100 rounded-lg p-0.5">
+                            <button type="button" id="btnPorCiclo"
+                                    class="px-3 py-1 text-xs font-medium rounded-md transition-all {% if client.billing_cycle_type != 'on_demand' %}bg-white text-gray-900 shadow-sm{% else %}text-gray-500 hover:text-gray-700{% endif %}"
+                                    onclick="setPeriodMode('cycle')">
+                                Por Ciclo
+                            </button>
+                            <button type="button" id="btnPorDemanda"
+                                    class="px-3 py-1 text-xs font-medium rounded-md transition-all {% if client.billing_cycle_type == 'on_demand' %}bg-white text-gray-900 shadow-sm{% else %}text-gray-500 hover:text-gray-700{% endif %}"
+                                    onclick="setPeriodMode('on_demand')">
+                                Sob Demanda
+                            </button>
                         </div>
-                        <div>
-                            <select name="year" id="yearSelect" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all" required>
-                                <option value="">Ano</option>
-                            </select>
+                    </div>
+
+                    <!-- Seleção de Mês/Ano (Por Ciclo) -->
+                    <div id="monthYearSection" {% if client.billing_cycle_type == 'on_demand' %}class="hidden"{% endif %}>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <select name="month" id="monthSelect" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all">
+                                    <option value="">Mês</option>
+                                    <option value="1">Janeiro</option>
+                                    <option value="2">Fevereiro</option>
+                                    <option value="3">Março</option>
+                                    <option value="4">Abril</option>
+                                    <option value="5">Maio</option>
+                                    <option value="6">Junho</option>
+                                    <option value="7">Julho</option>
+                                    <option value="8">Agosto</option>
+                                    <option value="9">Setembro</option>
+                                    <option value="10">Outubro</option>
+                                    <option value="11">Novembro</option>
+                                    <option value="12">Dezembro</option>
+                                </select>
+                            </div>
+                            <div>
+                                <select name="year" id="yearSelect" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all">
+                                    <option value="">Ano</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seleção de Período Personalizado (Sob Demanda) -->
+                    <div id="customDateSection" {% if client.billing_cycle_type != 'on_demand' %}class="hidden"{% endif %}>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Data Inicial</label>
+                                <input type="date" name="start_date" id="startDate"
+                                       class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Data Final</label>
+                                <input type="date" name="end_date" id="endDate"
+                                       class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -537,6 +577,54 @@
         billingCycle: {{ client.billing_cycle or 'null' }},
         fixedStartDay: {{ client.fixed_start_day or 'null' }}
     };
+
+    // Modo de período atual (cycle ou on_demand)
+    let currentPeriodMode = clientData.billingCycleType === 'on_demand' ? 'on_demand' : 'cycle';
+
+    // Alternar modo de período (Por Ciclo / Sob Demanda)
+    function setPeriodMode(mode) {
+        currentPeriodMode = mode;
+
+        const btnPorCiclo = document.getElementById('btnPorCiclo');
+        const btnPorDemanda = document.getElementById('btnPorDemanda');
+        const monthYearSection = document.getElementById('monthYearSection');
+        const customDateSection = document.getElementById('customDateSection');
+
+        if (mode === 'cycle') {
+            // Ativar "Por Ciclo"
+            btnPorCiclo.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+            btnPorCiclo.classList.remove('text-gray-500', 'hover:text-gray-700');
+            btnPorDemanda.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+            btnPorDemanda.classList.add('text-gray-500', 'hover:text-gray-700');
+
+            // Mostrar mês/ano, esconder datas
+            monthYearSection.classList.remove('hidden');
+            customDateSection.classList.add('hidden');
+
+            // Limpar datas personalizadas
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+
+            // Selecionar mês anterior e calcular período
+            selectPreviousMonth();
+        } else {
+            // Ativar "Sob Demanda"
+            btnPorDemanda.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+            btnPorDemanda.classList.remove('text-gray-500', 'hover:text-gray-700');
+            btnPorCiclo.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+            btnPorCiclo.classList.add('text-gray-500', 'hover:text-gray-700');
+
+            // Mostrar datas, esconder mês/ano
+            customDateSection.classList.remove('hidden');
+            monthYearSection.classList.add('hidden');
+
+            // Limpar mês/ano
+            document.getElementById('monthSelect').value = '';
+
+            // Inicializar datas padrão
+            initCustomDates();
+        }
+    }
 
     // Popular anos (últimos 5 anos + ano atual, sem anos futuros)
     function populateYears() {
@@ -636,15 +724,15 @@
             endDate = new Date(year, month, 0); // Último dia do mês
 
         } else if (clientData.billingCycleType === 'fixo') {
-            // Ciclo Fixo: do dia fixo até o mesmo dia do mês seguinte
+            // Ciclo Fixo: do dia fixo até um dia antes no mês seguinte (ex: dia 4 ao dia 3)
             const startDay = clientData.fixedStartDay || 1;
 
             startDate = new Date(year, month - 1, startDay);
-            endDate = new Date(year, month, startDay);
+            endDate = new Date(year, month, startDay - 1);
 
-            // Se o dia não existir no próximo mês (ex: 31 em fevereiro), usar último dia
-            if (endDate.getDate() !== startDay) {
-                endDate = new Date(year, month, 0); // Último dia do mês seguinte
+            // Se o dia não existir no próximo mês (ex: dia 1 resultaria em dia 0), ajustar para último dia do mês anterior
+            if (endDate.getDate() !== startDay - 1 || startDay === 1) {
+                endDate = new Date(year, month, 0); // Último dia do mês
             }
 
         } else {
@@ -692,6 +780,53 @@
         }
     });
 
+    // Inicializar datas personalizadas (data final = hoje, data inicial = hoje - 30 dias)
+    function initCustomDates() {
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+
+        // Formatar para YYYY-MM-DD (formato do input date)
+        const formatDateInput = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        document.getElementById('startDate').value = formatDateInput(thirtyDaysAgo);
+        document.getElementById('endDate').value = formatDateInput(today);
+
+        // Atualizar exibição do período
+        updateCustomPeriodDisplay();
+    }
+
+    // Atualizar exibição do período para datas personalizadas
+    function updateCustomPeriodDisplay() {
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+
+        if (!startDateInput.value || !endDateInput.value) {
+            document.getElementById('periodInfo').classList.add('hidden');
+            return;
+        }
+
+        const startDate = new Date(startDateInput.value + 'T00:00:00');
+        const endDate = new Date(endDateInput.value + 'T00:00:00');
+
+        // Formatar para exibição DD/MM/YYYY
+        const formatDate = (date) => {
+            const day = String(date.getDate()).padStart(2, '0');
+            const mon = String(date.getMonth() + 1).padStart(2, '0');
+            const yr = date.getFullYear();
+            return `${day}/${mon}/${yr}`;
+        };
+
+        const periodText = `${formatDate(startDate)} até ${formatDate(endDate)}`;
+        document.getElementById('periodText').textContent = periodText;
+        document.getElementById('periodInfo').classList.remove('hidden');
+    }
+
     // Abrir modal
     function openReportModal() {
         document.getElementById('reportModal').classList.remove('hidden');
@@ -700,6 +835,14 @@
         // Garantir que o ano está preenchido
         if (!$('#oficioAno').val()) {
             $('#oficioAno').val(currentYear);
+        }
+
+        // Inicializar conforme modo atual
+        if (currentPeriodMode === 'on_demand') {
+            initCustomDates();
+        } else {
+            // Para modo ciclo, selecionar mês anterior e calcular período
+            selectPreviousMonth();
         }
     }
 
@@ -715,6 +858,10 @@
         updateMonthsAvailability();
         calculatePeriod();
     });
+
+    // Event listeners para datas personalizadas (sempre registrados)
+    document.getElementById('startDate').addEventListener('change', updateCustomPeriodDisplay);
+    document.getElementById('endDate').addEventListener('change', updateCustomPeriodDisplay);
 
     // Fechar modal ao clicar fora
     document.getElementById('reportModal').addEventListener('click', function(e) {
@@ -741,32 +888,90 @@
         }
     });
 
-    // Função para baixar PDF
-    function downloadPDF() {
+    // Função para construir URL do relatório (sempre envia start_date e end_date)
+    function buildReportUrl(download = false) {
         const form = document.getElementById('reportForm');
-        const month = document.getElementById('monthSelect').value;
-        const year = document.getElementById('yearSelect').value;
         const oficioNumero = document.getElementById('oficioNumero').value;
         const oficioAno = document.getElementById('oficioAno').value;
         const invoiceNumber = document.getElementById('invoiceNumber').value;
 
-        if (!month || !year) {
-            alert('Por favor, selecione o mês e o ano.');
-            return;
+        let startDate, endDate;
+
+        // Calcular datas baseado no modo atual
+        if (currentPeriodMode === 'on_demand') {
+            startDate = document.getElementById('startDate').value;
+            endDate = document.getElementById('endDate').value;
+
+            if (!startDate || !endDate) {
+                alert('Por favor, selecione a data inicial e final.');
+                return null;
+            }
+        } else {
+            // Modo ciclo: calcular datas baseado no mês/ano selecionado
+            const month = parseInt(document.getElementById('monthSelect').value);
+            const year = parseInt(document.getElementById('yearSelect').value);
+
+            if (!month || !year) {
+                alert('Por favor, selecione o mês e o ano.');
+                return null;
+            }
+
+            // Calcular período baseado no tipo de ciclo do cliente
+            let start, end;
+
+            if (clientData.billingCycleType === 'mensal') {
+                start = new Date(year, month - 1, 1);
+                end = new Date(year, month, 0);
+            } else if (clientData.billingCycleType === 'fixo') {
+                const startDay = clientData.fixedStartDay || 1;
+                start = new Date(year, month - 1, startDay);
+                end = new Date(year, month, startDay - 1);
+                if (end.getDate() !== startDay - 1 || startDay === 1) {
+                    end = new Date(year, month, 0);
+                }
+            } else {
+                start = new Date(year, month - 1, 1);
+                end = new Date(year, month, 0);
+            }
+
+            // Formatar para YYYY-MM-DD
+            const formatDate = (date) => {
+                const y = date.getFullYear();
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const d = String(date.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            };
+
+            startDate = formatDate(start);
+            endDate = formatDate(end);
         }
 
-        // Criar URL com parâmetros
-        let url = form.action + '?month=' + month + '&year=' + year + '&download=1';
+        let url = form.action + '?start_date=' + startDate + '&end_date=' + endDate;
+
+        if (download) {
+            url += '&download=1';
+        }
 
         // Combinar número e ano do ofício
         if (oficioNumero && oficioAno) {
             const oficioNumber = oficioNumero + '/' + oficioAno;
             url += '&oficio_number=' + encodeURIComponent(oficioNumber);
+        } else if (oficioAno) {
+            // Enviar apenas o ano para gerar número automático
+            url += '&oficio_year=' + oficioAno;
         }
 
         if (invoiceNumber) {
             url += '&invoice_number=' + encodeURIComponent(invoiceNumber);
         }
+
+        return url;
+    }
+
+    // Função para baixar PDF
+    function downloadPDF() {
+        const url = buildReportUrl(true);
+        if (!url) return;
 
         // Abrir em nova aba para download
         window.open(url, '_blank');
@@ -778,30 +983,8 @@
 
     // Função para visualizar PDF
     function viewPDF() {
-        const form = document.getElementById('reportForm');
-        const month = document.getElementById('monthSelect').value;
-        const year = document.getElementById('yearSelect').value;
-        const oficioNumero = document.getElementById('oficioNumero').value;
-        const oficioAno = document.getElementById('oficioAno').value;
-        const invoiceNumber = document.getElementById('invoiceNumber').value;
-
-        if (!month || !year) {
-            alert('Por favor, selecione o mês e o ano.');
-            return;
-        }
-
-        // Criar URL com parâmetros (sem forçar download)
-        let url = form.action + '?month=' + month + '&year=' + year;
-
-        // Combinar número e ano do ofício
-        if (oficioNumero && oficioAno) {
-            const oficioNumber = oficioNumero + '/' + oficioAno;
-            url += '&oficio_number=' + encodeURIComponent(oficioNumber);
-        }
-
-        if (invoiceNumber) {
-            url += '&invoice_number=' + encodeURIComponent(invoiceNumber);
-        }
+        const url = buildReportUrl(false);
+        if (!url) return;
 
         // Abrir em nova aba para visualização
         window.open(url, '_blank');

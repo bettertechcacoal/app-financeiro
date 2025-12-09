@@ -50,18 +50,28 @@ def add_page_number(canvas, doc):
 def tickets_report_pdf(client_id):
     """Gera relatório de serviço em PDF no formato de ofício"""
     # Parâmetros da requisição
-    month = int(request.args.get('month', datetime.now().month))
-    year = int(request.args.get('year', datetime.now().year))
     oficio_number_custom = request.args.get('oficio_number', '')
+    oficio_year = request.args.get('oficio_year', '')
     invoice_number = request.args.get('invoice_number', '')
+    param_start_date = request.args.get('start_date')
+    param_end_date = request.args.get('end_date')
 
     # Buscar cliente
     client = client_service.get_client_by_id(client_id)
     if not client:
         return "Cliente não encontrado", 404
 
-    # Calcular período baseado no ciclo de cobrança
-    start_date, end_date = calculate_billing_period(client, month, year)
+    # Validar datas obrigatórias
+    if not param_start_date or not param_end_date:
+        return "Parâmetros start_date e end_date são obrigatórios", 400
+
+    # Converter datas
+    start_date = datetime.strptime(param_start_date, '%Y-%m-%d').date()
+    end_date = datetime.strptime(param_end_date, '%Y-%m-%d').date()
+
+    # Validar intervalo máximo de 31 dias
+    if (end_date - start_date).days > 31:
+        return "O intervalo máximo permitido é de 31 dias", 400
 
     # Buscar todas as organizações vinculadas ao cliente (mesma lógica da view)
     organizations = db_session.query(Organization).join(
@@ -122,7 +132,9 @@ def tickets_report_pdf(client_id):
     if oficio_number_custom:
         oficio_numero = oficio_number_custom
     else:
-        oficio_numero = f"{client_id:03d}/Better Tech/{year}"
+        # Usar ano do ofício informado no modal ou o ano da data inicial
+        ano_oficio = oficio_year if oficio_year else start_date.year
+        oficio_numero = f"{client_id:03d}/Better Tech/{ano_oficio}"
 
     # Gerar data por extenso em português
     meses_pt = {
@@ -493,7 +505,7 @@ def tickets_report_pdf(client_id):
 
     # Verificar se deve forçar download ou visualizar
     download = request.args.get('download', '0')
-    filename = f'relatorio_servico_{client["name"].replace(" ", "_")}_{month:02d}_{year}.pdf'
+    filename = f'relatorio_servico_{client["name"].replace(" ", "_")}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.pdf'
 
     if download == '1':
         # Forçar download
@@ -519,16 +531,17 @@ def calculate_billing_period(client, month, year):
         end_date = datetime(next_year, next_month, 1).date() - timedelta(days=1)
 
     elif billing_cycle_type == 'fixo':
-        # Ciclo Fixo: do dia fixo até o mesmo dia do mês seguinte
+        # Ciclo Fixo: do dia fixo até um dia antes no mês seguinte (ex: dia 4 ao dia 3)
         start_day = client.get('fixed_start_day', 1)
         start_date = datetime(year, month, start_day).date()
 
-        # Próximo mês, mesmo dia
+        # Próximo mês, um dia antes do dia inicial
         next_month = month + 1 if month < 12 else 1
         next_year = year if month < 12 else year + 1
 
         try:
-            end_date = datetime(next_year, next_month, start_day).date()
+            # Data final é um dia antes do dia inicial no próximo mês
+            end_date = datetime(next_year, next_month, start_day).date() - timedelta(days=1)
         except ValueError:
             # Se o dia não existir no próximo mês (ex: 31 em fevereiro), usar último dia do mês
             end_date = datetime(next_year, next_month, 1).date() - timedelta(days=1)
@@ -551,6 +564,9 @@ def get_billing_cycle_text(client):
         return "Mensal (dia 1 ao último dia do mês)"
     elif billing_cycle_type == 'fixo':
         fixed_start_day = client.get('fixed_start_day', 1)
-        return f"Fixo (dia {fixed_start_day} ao dia {fixed_start_day} do mês seguinte)"
+        end_day = fixed_start_day - 1 if fixed_start_day > 1 else "último"
+        return f"Fixo (dia {fixed_start_day} ao dia {end_day} do mês seguinte)"
+    elif billing_cycle_type == 'on_demand':
+        return "Sob Demanda (período personalizado)"
     else:
         return "Não definido"
